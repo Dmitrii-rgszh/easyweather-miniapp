@@ -1,7 +1,7 @@
-// Создайте файл frontend/src/ClothingRecommendations.js
+// Замените весь файл frontend/src/ClothingRecommendations.js на этот код:
 
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Функция определения рекомендаций одежды
 function getClothingRecommendations(temp, desc, humidity, windSpeed, isNight) {
@@ -158,10 +158,36 @@ function getClothingRecommendations(temp, desc, humidity, windSpeed, isNight) {
     .slice(0, 4);
 }
 
+// SVG стрелка
+const ChevronIcon = ({ isOpen }) => (
+  <motion.svg
+    width="22"
+    height="22"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    animate={{ rotate: isOpen ? 180 : 0 }}
+    transition={{ duration: 0.3 }}
+    style={{ color: "#6b7280" }}
+  >
+    <path
+      d="M6 9L12 15L18 9"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </motion.svg>
+);
+
 export default function ClothingRecommendations({ temp, desc, humidity, windSpeed, isNight }) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const recommendations = getClothingRecommendations(temp, desc, humidity || 50, windSpeed || 0, isNight);
 
   if (recommendations.length === 0) return null;
+
+  // Берем первые 2 иконки для превью
+  const previewIcons = recommendations.slice(0, 2).map(item => item.icon);
 
   return (
     <motion.div
@@ -172,94 +198,136 @@ export default function ClothingRecommendations({ temp, desc, humidity, windSpee
         margin: "16px auto 0",
         maxWidth: 300,
         backdropFilter: "blur(10px)",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.1)"
+        boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+        cursor: "pointer"
       }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.3 }}
+      onClick={() => setIsExpanded(!isExpanded)}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
     >
+      {/* Заголовок с превью */}
       <div style={{
-        fontSize: 16,
-        fontWeight: 600,
-        color: "#374151",
-        marginBottom: 12,
-        textAlign: "center",
-        fontFamily: "Montserrat, Arial, sans-serif"
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between"
       }}>
-        👔 Рекомендации одежды
-      </div>
-
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: 8
-      }}>
-        {recommendations.map((item, index) => (
-          <motion.div
-            key={index}
-            style={{
-              background: "rgba(255, 255, 255, 0.7)",
-              borderRadius: 12,
-              padding: "10px 8px",
-              textAlign: "center",
-              border: `2px solid ${item.color}20`,
-              position: "relative",
-              overflow: "hidden"
-            }}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, delay: index * 0.1 + 0.4 }}
-            whileHover={{ scale: 1.05 }}
-          >
-            {/* Цветной акцент */}
-            <div style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 3,
-              background: item.color,
-              borderRadius: "12px 12px 0 0"
-            }} />
-            
-            <div style={{
-              fontSize: 18,
-              marginBottom: 4
-            }}>
-              {item.icon}
-            </div>
-            
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8
+        }}>
+          <span style={{ fontSize: 16 }}>👔</span>
+          <div>
             <div style={{
               fontSize: 16,
-              fontWeight: 500,
+              fontWeight: 600,
               color: "#374151",
-              lineHeight: 1.3,
               fontFamily: "Montserrat, Arial, sans-serif"
             }}>
-              {item.text}
+              Рекомендации одежды
             </div>
-          </motion.div>
-        ))}
+            {!isExpanded && (
+              <div style={{
+                display: "flex",
+                gap: 4,
+                marginTop: 2
+              }}>
+                {previewIcons.map((icon, index) => (
+                  <span key={index} style={{ fontSize: 16 }}>
+                    {icon}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <ChevronIcon isOpen={isExpanded} />
       </div>
 
-      {/* Мотивирующий текст */}
-      <motion.div
-        style={{
-          marginTop: 12,
-          fontSize: 16,
-          textAlign: "center",
-          color: "#6b7280",
-          fontStyle: "italic",
-          fontFamily: "Montserrat, Arial, sans-serif"
-        }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1 }}
-      >
-        {temp < 0 ? "🥶 Береги себя в мороз!" : 
-         temp > 25 ? "☀️ Отличная погода!" : 
-         "🌤️ Одевайся комфортно!"}
-      </motion.div>
+      {/* Развернутый контент */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{ overflow: "hidden" }}
+          >
+            <div style={{ marginTop: 16 }}>
+              <div style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 6,
+                flexWrap: "wrap"
+              }}>
+                {recommendations.map((item, index) => (
+                  <motion.div
+                    key={index}
+                    style={{
+                      background: "rgba(255, 255, 255, 0.7)",
+                      borderRadius: 12,
+                      padding: "12px 8px",
+                      textAlign: "center",
+                      border: `2px solid ${item.color}20`,
+                      position: "relative",
+                      overflow: "hidden",
+                      flex: "1 1 auto",
+                      minWidth: "60px",
+                      maxWidth: "70px"
+                    }}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    {/* Цветной акцент */}
+                    <div style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: 3,
+                      background: item.color,
+                      borderRadius: "12px 12px 0 0"
+                    }} />
+                    
+                    <div style={{
+                      fontSize: 28,
+                      lineHeight: 1
+                    }}>
+                      {item.icon}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Мотивирующий текст */}
+              <motion.div
+                style={{
+                  marginTop: 12,
+                  fontSize: 14,
+                  textAlign: "center",
+                  color: "#6b7280",
+                  fontStyle: "italic",
+                  fontFamily: "Montserrat, Arial, sans-serif"
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+              >
+                {temp < 0 ? "🥶 Береги себя в мороз!" : 
+                 temp > 25 ? "☀️ Отличная погода!" : 
+                 "🌤️ Одевайся комфортно!"}
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

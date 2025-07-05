@@ -12,6 +12,7 @@ import AirQuality from "./AirQuality";
 import UVIndex from "./UVIndex";
 import { fetchWeather, fetchForecast, fetchAirQuality, fetchUVIndex } from "./weatherApi";
 import { getCityByCoords } from "./geoApi";
+import Astronomy from "./Astronomy";
 
 function CloudsEffect() {
   return (
@@ -140,7 +141,7 @@ function SunEffect() {
           background: "linear-gradient(135deg, #fbbf2488 0%, #f59e0b88 100%)",
           filter: "blur(30px)",
           opacity: 0.6,
-          zIndex: 1,
+          zIndex: 0,
           pointerEvents: "none"
         }}
         animate={{
@@ -304,6 +305,7 @@ function App() {
   
   const [airQualityData, setAirQualityData] = useState(null);
   const [uvData, setUvData] = useState(null);
+  const [coords, setCoords] = useState(null);
 
   // --- Функция поделиться погодой ---
   const handleShareWeather = (weather) => {
@@ -405,6 +407,10 @@ function App() {
 
         setDesc(data.weather[0].description);
         setIsNight(data.weather[0].icon.includes("n"));
+
+        if (data.coord) {
+          setCoords({ lat: data.coord.lat, lon: data.coord.lon });
+        }
 
         try {
           const airData = await fetchAirQuality(city);
@@ -536,6 +542,7 @@ function App() {
 
             setDesc(data.weather[0].description);
             setIsNight(data.weather[0].icon.includes("n"));
+            setCoords({ lat, lon });
 
             try {
               const airData = await fetchAirQuality({ lat, lon });
@@ -804,7 +811,7 @@ function App() {
           >
             <div style={{
               color: "#fff",
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: 500,
               marginBottom: 8,
               textAlign: "center",
@@ -832,7 +839,7 @@ function App() {
                     borderRadius: 16,
                     padding: "6px 12px",
                     color: "#fff",
-                    fontSize: 12,
+                    fontSize: 18,
                     fontWeight: 500,
                     cursor: "pointer",
                     backdropFilter: "blur(10px)",
@@ -875,6 +882,13 @@ function App() {
 
             {/* 🆕 UV ИНДЕКС - ВСТАВИТЬ ЗДЕСЬ */}
             <UVIndex uvData={uvData} isNight={isNight} />
+
+            {/* 🆕 АСТРОНОМИЯ */}
+            <Astronomy 
+              weatherData={weather} 
+              coords={coords}
+              date={date}
+            />
             
             {/* 🆕 БЫСТРЫЕ ДЕЙСТВИЯ */}
             <QuickActions 

@@ -1,7 +1,7 @@
-// Создайте файл frontend/src/UVIndex.js
+// Замените весь файл frontend/src/UVIndex.js на этот код:
 
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Функция определения уровня UV индекса
 function getUVInfo(uvIndex) {
@@ -67,7 +67,31 @@ function getSafeTime(uvIndex) {
   return "Менее 10 минут";
 }
 
+// SVG стрелка
+const ChevronIcon = ({ isOpen }) => (
+  <motion.svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    animate={{ rotate: isOpen ? 180 : 0 }}
+    transition={{ duration: 0.3 }}
+    style={{ color: "#6b7280" }}
+  >
+    <path
+      d="M6 9L12 15L18 9"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </motion.svg>
+);
+
 export default function UVIndex({ uvData, isNight }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   if (!uvData || isNight) {
     return null; // Не показываем UV индекс ночью
   }
@@ -85,174 +109,234 @@ export default function UVIndex({ uvData, isNight }) {
         margin: "16px auto 0",
         maxWidth: 300,
         backdropFilter: "blur(10px)",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.1)"
+        boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+        cursor: "pointer"
       }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.5 }}
+      onClick={() => setIsExpanded(!isExpanded)}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
     >
-      {/* Заголовок */}
+      {/* Заголовок с превью */}
       <div style={{
-        fontSize: 16,
-        fontWeight: 600,
-        color: "#374151",
-        marginBottom: 12,
-        textAlign: "center",
-        fontFamily: "Montserrat, Arial, sans-serif"
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between"
       }}>
-        ☀️ UV индекс
-      </div>
-
-      {/* Основной индикатор */}
-      <motion.div
-        style={{
-          background: uvInfo.bgColor,
-          borderRadius: 12,
-          padding: "12px",
-          marginBottom: 12,
-          border: `2px solid ${uvInfo.color}30`,
-          position: "relative",
-          overflow: "hidden"
-        }}
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4, delay: 0.6 }}
-      >
-        {/* Цветная полоска сверху */}
-        <div style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 3,
-          background: uvInfo.color,
-          borderRadius: "12px 12px 0 0"
-        }} />
-
         <div style={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 8
+          gap: 8
         }}>
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8
-          }}>
-            <span style={{ fontSize: 20 }}>{uvInfo.icon}</span>
-            <div>
+          <span style={{ fontSize: 16 }}>☀️</span>
+          <div>
+            <div style={{
+              fontSize: 16,
+              fontWeight: 600,
+              color: "#374151",
+              fontFamily: "Montserrat, Arial, sans-serif"
+            }}>
+              UV индекс
+            </div>
+            {!isExpanded && (
               <div style={{
-                fontSize: 16,
-                fontWeight: 700,
-                color: uvInfo.color,
-                fontFamily: "Montserrat, Arial, sans-serif"
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                marginTop: 2
               }}>
-                {uvInfo.level}
+                <span style={{ fontSize: 14 }}>{uvInfo.icon}</span>
+                <span style={{ 
+                  fontSize: 14, 
+                  fontWeight: 600,
+                  color: uvInfo.color,
+                  fontFamily: "Montserrat, Arial, sans-serif"
+                }}>
+                  {uvInfo.level}
+                </span>
+                <span style={{ 
+                  fontSize: 14, 
+                  fontWeight: 700,
+                  color: uvInfo.color,
+                  fontFamily: "Montserrat, Arial, sans-serif"
+                }}>
+                  {uvIndex}
+                </span>
               </div>
+            )}
+          </div>
+        </div>
+        
+        <ChevronIcon isOpen={isExpanded} />
+      </div>
+
+      {/* Развернутый контент */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{ overflow: "hidden" }}
+          >
+            <div style={{ marginTop: 16 }}>
+              {/* Основной индикатор */}
+              <motion.div
+                style={{
+                  background: uvInfo.bgColor,
+                  borderRadius: 12,
+                  padding: "12px",
+                  marginBottom: 12,
+                  border: `2px solid ${uvInfo.color}30`,
+                  position: "relative",
+                  overflow: "hidden"
+                }}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+              >
+                {/* Цветная полоска сверху */}
+                <div style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 3,
+                  background: uvInfo.color,
+                  borderRadius: "12px 12px 0 0"
+                }} />
+
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 8
+                }}>
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8
+                  }}>
+                    <span style={{ fontSize: 20 }}>{uvInfo.icon}</span>
+                    <div>
+                      <div style={{
+                        fontSize: 16,
+                        fontWeight: 700,
+                        color: uvInfo.color,
+                        fontFamily: "Montserrat, Arial, sans-serif"
+                      }}>
+                        {uvInfo.level}
+                      </div>
+                      <div style={{
+                        fontSize: 11,
+                        color: "#6b7280",
+                        fontFamily: "Montserrat, Arial, sans-serif"
+                      }}>
+                        UV: {uvIndex}/11+
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Большая цифра UV индекса */}
+                  <div style={{
+                    fontSize: 24,
+                    fontWeight: 800,
+                    color: uvInfo.color,
+                    fontFamily: "Montserrat, Arial, sans-serif"
+                  }}>
+                    {uvIndex}
+                  </div>
+                </div>
+
+                <div style={{
+                  fontSize: 14,
+                  color: "#374151",
+                  fontFamily: "Montserrat, Arial, sans-serif",
+                  lineHeight: 1.4
+                }}>
+                  {uvInfo.description}
+                </div>
+              </motion.div>
+
+              {/* Рекомендации */}
               <div style={{
-                fontSize: 11,
-                color: "#6b7280",
-                fontFamily: "Montserrat, Arial, sans-serif"
+                display: "grid",
+                gridTemplateColumns: "1fr",
+                gap: 8
               }}>
-                UV: {uvIndex}/11+
+                {/* SPF рекомендация */}
+                <motion.div
+                  style={{
+                    background: "#fef3cd",
+                    borderRadius: 8,
+                    padding: "8px 10px",
+                    borderLeft: `3px solid ${uvInfo.color}`
+                  }}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: 0.3 }}
+                >
+                  <div style={{
+                    fontSize: 13,
+                    color: "#374151",
+                    fontFamily: "Montserrat, Arial, sans-serif",
+                    lineHeight: 1.4
+                  }}>
+                    🧴 <strong>{uvInfo.spf}</strong>
+                  </div>
+                </motion.div>
+
+                {/* Время безопасного пребывания */}
+                <motion.div
+                  style={{
+                    background: "#f0f9ff",
+                    borderRadius: 8,
+                    padding: "8px 10px",
+                    borderLeft: `3px solid ${uvInfo.color}`
+                  }}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: 0.4 }}
+                >
+                  <div style={{
+                    fontSize: 13,
+                    color: "#374151",
+                    fontFamily: "Montserrat, Arial, sans-serif",
+                    lineHeight: 1.4
+                  }}>
+                    ⏱️ Безопасно на солнце: <strong>{safeTime}</strong>
+                  </div>
+                </motion.div>
+
+                {/* Основная рекомендация */}
+                <motion.div
+                  style={{
+                    background: "#f8fafc",
+                    borderRadius: 8,
+                    padding: "8px 10px",
+                    borderLeft: `3px solid ${uvInfo.color}`
+                  }}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: 0.5 }}
+                >
+                  <div style={{
+                    fontSize: 11,
+                    color: "#374151",
+                    fontFamily: "Montserrat, Arial, sans-serif",
+                    lineHeight: 1.4
+                  }}>
+                    💡 {uvInfo.advice}
+                  </div>
+                </motion.div>
               </div>
             </div>
-          </div>
-          
-          {/* Большая цифра UV индекса */}
-          <div style={{
-            fontSize: 24,
-            fontWeight: 800,
-            color: uvInfo.color,
-            fontFamily: "Montserrat, Arial, sans-serif"
-          }}>
-            {uvIndex}
-          </div>
-        </div>
-
-        <div style={{
-          fontSize: 12,
-          color: "#374151",
-          fontFamily: "Montserrat, Arial, sans-serif",
-          lineHeight: 1.4
-        }}>
-          {uvInfo.description}
-        </div>
-      </motion.div>
-
-      {/* Рекомендации */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "1fr",
-        gap: 8
-      }}>
-        {/* SPF рекомендация */}
-        <motion.div
-          style={{
-            background: "#fef3cd",
-            borderRadius: 8,
-            padding: "8px 10px",
-            borderLeft: `3px solid ${uvInfo.color}`
-          }}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4, delay: 0.8 }}
-        >
-          <div style={{
-            fontSize: 11,
-            color: "#374151",
-            fontFamily: "Montserrat, Arial, sans-serif",
-            lineHeight: 1.4
-          }}>
-            🧴 <strong>{uvInfo.spf}</strong>
-          </div>
-        </motion.div>
-
-        {/* Время безопасного пребывания */}
-        <motion.div
-          style={{
-            background: "#f0f9ff",
-            borderRadius: 8,
-            padding: "8px 10px",
-            borderLeft: `3px solid ${uvInfo.color}`
-          }}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4, delay: 0.9 }}
-        >
-          <div style={{
-            fontSize: 11,
-            color: "#374151",
-            fontFamily: "Montserrat, Arial, sans-serif",
-            lineHeight: 1.4
-          }}>
-            ⏱️ Безопасно на солнце: <strong>{safeTime}</strong>
-          </div>
-        </motion.div>
-
-        {/* Основная рекомендация */}
-        <motion.div
-          style={{
-            background: "#f8fafc",
-            borderRadius: 8,
-            padding: "8px 10px",
-            borderLeft: `3px solid ${uvInfo.color}`
-          }}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4, delay: 1 }}
-        >
-          <div style={{
-            fontSize: 11,
-            color: "#374151",
-            fontFamily: "Montserrat, Arial, sans-serif",
-            lineHeight: 1.4
-          }}>
-            💡 {uvInfo.advice}
-          </div>
-        </motion.div>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
