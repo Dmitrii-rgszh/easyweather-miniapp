@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  frontend:
+    image: zerotlt/easyweather-frontend:latest   # ← тянем готовый образ с DockerHub!
+    container_name: easyweather-app
+    ports:
+      - "8080:80"
+    environment:
+    - REACT_APP_WEATHER_API_KEY=61e36d8b6d0a171b685c5658b023c23a
+    - REACT_APP_UNSPLASH_KEY=9ho2EDWMLi9bQOlhqJY0s_NaZNRt_EbVqij0SUhFD7U
+
+  bot:
+    image: zerotlt/easyweather-bot:latest        # ← тянем готовый образ с DockerHub!
+    container_name: easyweather-bot
+    env_file:
+      - ./bot/.env
