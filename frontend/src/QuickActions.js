@@ -36,7 +36,7 @@ export default function QuickActions({ weather, onShareWeather, onSaveToFavorite
       style={{
         display: "flex",
         justifyContent: "center",
-        gap: 12,
+        gap: 16,
         margin: "16px auto 0",
         maxWidth: 300
       }}
@@ -52,16 +52,19 @@ export default function QuickActions({ weather, onShareWeather, onSaveToFavorite
             background: "rgba(255, 255, 255, 0.9)",
             border: `2px solid ${action.color}30`,
             borderRadius: 12,
-            width: 64,  // 👈 ЗДЕСЬ изменить с 60 на 64
-            height: 64, // 👈 ЗДЕСЬ изменить с 60 на 64
+            width: 80,     // 👈 ИЗМЕНИТЬ с 72 на 80 (фиксированная ширина)
+            height: 80,    // 👈 ИЗМЕНИТЬ с 72 на 80 (фиксированная высота)
+            minWidth: 80,  // 👈 ДОБАВИТЬ - минимальная ширина
+            maxWidth: 80,  // 👈 ДОБАВИТЬ - максимальная ширина
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
             cursor: "pointer",
             backdropFilter: "blur(10px)",
-            transition: "all 0.2s"
-        }}
+            transition: "all 0.2s",
+            flexShrink: 0  // 👈 ДОБАВИТЬ - не сжимается
+          }}
           whileHover={{ 
             scale: 1.1,
             backgroundColor: `${action.color}20`
@@ -71,15 +74,19 @@ export default function QuickActions({ weather, onShareWeather, onSaveToFavorite
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1 + 0.9 }}
         >
-          <div style={{ fontSize: 16, marginBottom: 2 }}>
+          <div style={{ fontSize: 20, marginBottom: 2 }}>
             {action.icon}
           </div>
           <div style={{
-            fontSize: 9,
-            fontWeight: 500,
+            fontSize: 12,
+            fontWeight: 600,
             color: "#374151",
             fontFamily: "Montserrat, Arial, sans-serif",
-            textAlign: "center"
+            textAlign: "center",
+            lineHeight: 1.2,  // 👈 ДОБАВИТЬ - межстрочный интервал
+            whiteSpace: "nowrap", // 👈 ДОБАВИТЬ - текст не переносится
+            overflow: "hidden",   // 👈 ДОБАВИТЬ - скрываем лишний текст
+            textOverflow: "ellipsis"
           }}>
             {action.label}
           </div>

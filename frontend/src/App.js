@@ -13,6 +13,7 @@ import UVIndex from "./UVIndex";
 import { fetchWeather, fetchForecast, fetchAirQuality, fetchUVIndex } from "./weatherApi";
 import { getCityByCoords } from "./geoApi";
 import Astronomy from "./Astronomy";
+import WeatherTrends from "./WeatherTrends";
 
 function CloudsEffect() {
   return (
@@ -890,6 +891,9 @@ function App() {
               date={date}
             />
             
+            {/* 🆕 ТРЕНДЫ ПОГОДЫ */}
+            <WeatherTrends weather={weather} />
+
             {/* 🆕 БЫСТРЫЕ ДЕЙСТВИЯ */}
             <QuickActions 
               weather={weather}

@@ -140,9 +140,11 @@ export default function AirQuality({ airQualityData }) {
       style={{
         background: "rgba(255, 255, 255, 0.9)",
         borderRadius: 16,
-        padding: "16px",
+        padding: "10px",
         margin: "16px auto 0",
-        maxWidth: 300,
+        maxWidth: 340,
+        width: "100%",        // 👈 ДОБАВИТЬ
+        boxSizing: "border-box", // 👈 ДОБАВИТЬ
         backdropFilter: "blur(10px)",
         boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
         cursor: "pointer"
