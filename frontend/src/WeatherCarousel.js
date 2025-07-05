@@ -143,8 +143,8 @@ export default function WeatherCarousel({
             backgroundImage: `url(${photoUrl})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
-            opacity: 0.55,
-            filter: "blur(1px)",
+            opacity: 0.5,
+            filter: "blur(2px)",
             pointerEvents: "none",
             transition: "opacity 0.3s"
           }}
@@ -160,7 +160,7 @@ export default function WeatherCarousel({
           fontWeight: 600,
           color: "#1e293b",
           margin: "0 0 16px 0",
-          letterSpacing: 1,
+          letterSpacing: 3,
           fontFamily: "Montserrat, Arial, sans-serif"
         }}>
           {city}
@@ -226,60 +226,7 @@ export default function WeatherCarousel({
                     {weather.time}
                   </div>
 
-                  {/* Иконка погоды */}
-                  <div style={{
-                    width: 60,
-                    height: 60,
-                    borderRadius: "50%",
-                    background: "linear-gradient(135deg, #38bdf8 0%, #bae6fd 100%)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginBottom: 12,
-                    boxShadow: "0 4px 12px rgba(56, 189, 248, 0.3)"
-                  }}>
-                    <img
-                      src={weather.icon}
-                      alt={weather.desc}
-                      style={{
-                        width: 50,
-                        height: 50,
-                        objectFit: "contain"
-                      }}
-                    />
-                  </div>
-
-                  {/* Температура */}
-                  <div style={{
-                    fontSize: 24,
-                    fontWeight: 700,
-                    color: "#2563eb",
-                    fontFamily: "Montserrat, Arial, sans-serif"
-                  }}>
-                    {weather.temp}°
-                  </div>
-
-                  {/* Описание (только для активного) */}
-                  {isActive && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      style={{
-                        fontSize: 12,
-                        color: "#64748b",
-                        textAlign: "center",
-                        marginTop: 8,
-                        fontFamily: "Montserrat, Arial, sans-serif"
-                      }}
-                    >
-                      {weather.desc}
-                    </motion.div>
-                  )}
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        </div>
+                  
 
         {/* Детали погоды для активного времени */}
         <AnimatePresence mode="wait">
@@ -373,33 +320,43 @@ export default function WeatherCarousel({
           </motion.div>
         </AnimatePresence>
 
-        {/* Индикаторы */}
+        {/* Индикаторы с белым фоном */}
         {hourlyData.length > 1 && (
           <div style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: 8,
-            marginTop: 8
+            background: "rgba(255, 255, 255, 0.9)",
+            borderRadius: 12,
+            padding: "8px 12px",
+            margin: "12px auto 0",
+            backdropFilter: "blur(10px)",
+            boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+            border: "1px solid rgba(255,255,255,0.3)",
+            width: "fit-content"
           }}>
-            {hourlyData.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => handleDotClick(index)}
-                style={{
-                  width: activeIndex === index ? 20 : 8,
-                  height: 8,
-                  borderRadius: 4,
-                  border: "none",
-                  background: activeIndex === index 
-                    ? "#3b82f6" 
-                    : "#cbd5e1",
-                  cursor: "pointer",
-                  transition: "all 0.3s ease",
-                  padding: 0
-                }}
-                aria-label={`Переключиться на ${hourlyData[index].time}`}
-              />
-            ))}
+            <div style={{
+              display: "flex",
+              justifyContent: "center",
+              gap: 8
+            }}>
+              {hourlyData.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleDotClick(index)}
+                  style={{
+                    width: activeIndex === index ? 20 : 8,
+                    height: 8,
+                    borderRadius: 4,
+                    border: "none",
+                    background: activeIndex === index 
+                       ? "#3b82f6" 
+                       : "#cbd5e1",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                    padding: 0
+                  }}
+                  aria-label={`Переключиться на ${hourlyData[index].time}`}
+                />
+              ))}
+            </div>
           </div>
         )}
       </div>
