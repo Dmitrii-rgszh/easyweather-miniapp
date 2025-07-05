@@ -143,8 +143,8 @@ export default function WeatherCarousel({
             backgroundImage: `url(${photoUrl})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
-            opacity: 0.45,
-            filter: "blur(3px)",
+            opacity: 0.55,
+            filter: "blur(1px)",
             pointerEvents: "none",
             transition: "opacity 0.3s"
           }}

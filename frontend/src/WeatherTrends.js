@@ -1,6 +1,6 @@
 // Обновленная версия компонента WeatherTrends с увеличенными иконками и цветным фоном
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Функция генерации реалистичных трендов (имитация данных за предыдущие дни)
@@ -9,11 +9,15 @@ function generateTrends(currentWeather) {
   const currentTemp = currentWeather.temp;
   const currentWindSpeed = parseFloat(wind?.replace(' м/с', '') || '0');
   
-  // Генерируем реалистичные изменения (в реальном проекте данные брались бы из API)
-  const tempYesterday = currentTemp + (Math.random() - 0.5) * 8; // ±4°
-  const humidityYesterday = (humidity || 50) + (Math.random() - 0.5) * 20; // ±10%
-  const windYesterday = currentWindSpeed + (Math.random() - 0.5) * 6; // ±3 м/с
-  const pressureYesterday = (pressure || 760) + (Math.random() - 0.5) * 20; // ±10 мм
+  // Создаем стабильное "случайное" число на основе данных погоды
+  const seed = (currentTemp * 100 + (humidity || 50) + currentWindSpeed * 10) % 1000;
+  const seedRandom = (seed * 9301 + 49297) % 233280 / 233280;
+  
+  // Генерируем стабильные изменения (одинаковые для одних и тех же данных)
+  const tempYesterday = currentTemp + (seedRandom - 0.5) * 8;
+  const humidityYesterday = (humidity || 50) + ((seedRandom * 2) % 1 - 0.5) * 20;
+  const windYesterday = currentWindSpeed + ((seedRandom * 3) % 1 - 0.5) * 6;
+  const pressureYesterday = (pressure || 760) + ((seedRandom * 4) % 1 - 0.5) * 20;
   
   return [
     {
@@ -198,7 +202,10 @@ export default function WeatherTrends({ weather }) {
     return null;
   }
 
-  const trends = generateTrends(weather);
+  const trends = useMemo(() => {
+    return generateTrends(weather);
+  }, [weather?.temp, weather?.details?.humidity, weather?.details?.wind, weather?.details?.pressure]);
+
   const significantTrends = trends
     .map(trend => ({
       ...trend,
