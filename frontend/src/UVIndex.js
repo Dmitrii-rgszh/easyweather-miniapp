@@ -1,4 +1,4 @@
-// Замените весь файл frontend/src/UVIndex.js на этот код:
+// Обновленная версия компонента UVIndex с увеличенными иконками и цветным фоном
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,6 +10,7 @@ function getUVInfo(uvIndex) {
       level: "Низкий",
       color: "#10b981",
       bgColor: "#10b98120",
+      iconBgColor: "#10b98115",
       icon: "🟢",
       description: "Минимальный риск",
       advice: "Можно находиться на солнце без защиты",
@@ -20,6 +21,7 @@ function getUVInfo(uvIndex) {
       level: "Умеренный",
       color: "#f59e0b",
       bgColor: "#f59e0b20",
+      iconBgColor: "#f59e0b15",
       icon: "🟡",
       description: "Умеренный риск",
       advice: "Используйте солнцезащитный крем при длительном пребывании",
@@ -30,6 +32,7 @@ function getUVInfo(uvIndex) {
       level: "Высокий",
       color: "#ef4444",
       bgColor: "#ef444420",
+      iconBgColor: "#ef444415",
       icon: "🟠",
       description: "Высокий риск ожогов",
       advice: "Защищайте кожу, избегайте солнца в полдень",
@@ -40,6 +43,7 @@ function getUVInfo(uvIndex) {
       level: "Очень высокий",
       color: "#dc2626",
       bgColor: "#dc262620",
+      iconBgColor: "#dc262615",
       icon: "🔴",
       description: "Очень высокий риск",
       advice: "Обязательно используйте защиту, ограничьте время на солнце",
@@ -50,6 +54,7 @@ function getUVInfo(uvIndex) {
       level: "Экстремальный",
       color: "#7c2d12",
       bgColor: "#7c2d1220",
+      iconBgColor: "#7c2d1215",
       icon: "🟣",
       description: "Экстремальный риск",
       advice: "Избегайте пребывания на солнце, оставайтесь в тени",
@@ -108,8 +113,8 @@ export default function UVIndex({ uvData, isNight }) {
         padding: "10px",
         margin: "16px auto 0",
         maxWidth: 340,
-        width: "100%",        // 👈 ДОБАВИТЬ
-        boxSizing: "border-box", // 👈 ДОБАВИТЬ
+        width: "100%",
+        boxSizing: "border-box",
         backdropFilter: "blur(10px)",
         boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
         cursor: "pointer"
@@ -127,18 +132,59 @@ export default function UVIndex({ uvData, isNight }) {
         alignItems: "center",
         justifyContent: "space-between"
       }}>
+        {/* Левая часть с иконкой и текстом */}
         <div style={{
           display: "flex",
           alignItems: "center",
-          gap: 8
+          gap: 12,
+          flex: 1
         }}>
-          <span style={{ fontSize: 16 }}>☀️</span>
-          <div>
+          {/* Контейнер иконки с цветным фоном */}
+          <motion.div
+            style={{
+              width: 48, // Увеличили размер контейнера
+              height: 48,
+              borderRadius: 12,
+              background: `linear-gradient(135deg, ${uvInfo.iconBgColor}, ${uvInfo.bgColor})`,
+              border: `1px solid ${uvInfo.color}30`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              position: "relative",
+              overflow: "hidden"
+            }}
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.2 }}
+          >
+            {/* Декоративная полоска */}
+            <div style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 2,
+              background: uvInfo.color,
+              borderRadius: "12px 12px 0 0"
+            }} />
+            
+            {/* Крупная иконка */}
+            <span style={{ 
+              fontSize: 24, // Увеличили размер иконки
+              filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))"
+            }}>
+              ☀️
+            </span>
+          </motion.div>
+
+          {/* Текстовая информация */}
+          <div style={{ flex: 1 }}>
             <div style={{
               fontSize: 16,
               fontWeight: 600,
               color: "#374151",
-              fontFamily: "Montserrat, Arial, sans-serif"
+              fontFamily: "Montserrat, Arial, sans-serif",
+              marginBottom: 2
             }}>
               UV индекс
             </div>
@@ -149,7 +195,12 @@ export default function UVIndex({ uvData, isNight }) {
                 gap: 6,
                 marginTop: 2
               }}>
-                <span style={{ fontSize: 14 }}>{uvInfo.icon}</span>
+                <span style={{ 
+                  fontSize: 16, // Увеличили размер статус-иконки
+                  filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.1))"
+                }}>
+                  {uvInfo.icon}
+                </span>
                 <span style={{ 
                   fontSize: 14, 
                   fontWeight: 600,
@@ -162,7 +213,8 @@ export default function UVIndex({ uvData, isNight }) {
                   fontSize: 14, 
                   fontWeight: 700,
                   color: uvInfo.color,
-                  fontFamily: "Montserrat, Arial, sans-serif"
+                  fontFamily: "Montserrat, Arial, sans-serif",
+                  marginLeft: 4
                 }}>
                   {uvIndex}
                 </span>
@@ -244,10 +296,11 @@ export default function UVIndex({ uvData, isNight }) {
                   
                   {/* Большая цифра UV индекса */}
                   <div style={{
-                    fontSize: 24,
+                    fontSize: 32,
                     fontWeight: 800,
                     color: uvInfo.color,
-                    fontFamily: "Montserrat, Arial, sans-serif"
+                    fontFamily: "Montserrat, Arial, sans-serif",
+                    textShadow: "0 2px 4px rgba(0,0,0,0.1)"
                   }}>
                     {uvIndex}
                   </div>
@@ -263,7 +316,7 @@ export default function UVIndex({ uvData, isNight }) {
                 </div>
               </motion.div>
 
-              {/* Рекомендации */}
+              {/* Рекомендации в сетке */}
               <div style={{
                 display: "grid",
                 gridTemplateColumns: "1fr",
@@ -272,64 +325,106 @@ export default function UVIndex({ uvData, isNight }) {
                 {/* SPF рекомендация */}
                 <motion.div
                   style={{
-                    background: "#fef3cd",
+                    background: `linear-gradient(135deg, ${uvInfo.iconBgColor}, ${uvInfo.bgColor})`,
                     borderRadius: 8,
-                    padding: "8px 10px",
-                    borderLeft: `3px solid ${uvInfo.color}`
+                    padding: "10px 12px",
+                    border: `1px solid ${uvInfo.color}20`,
+                    position: "relative",
+                    overflow: "hidden"
                   }}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.4, delay: 0.3 }}
                 >
+                  {/* Тонкая цветная полоска слева */}
+                  <div style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: 3,
+                    background: uvInfo.color,
+                    borderRadius: "8px 0 0 8px"
+                  }} />
+                  
                   <div style={{
                     fontSize: 13,
                     color: "#374151",
                     fontFamily: "Montserrat, Arial, sans-serif",
-                    lineHeight: 1.4
+                    lineHeight: 1.4,
+                    fontWeight: 500
                   }}>
-                    🧴 <strong>{uvInfo.spf}</strong>
+                    🧴 <strong style={{ color: uvInfo.color }}>{uvInfo.spf}</strong>
                   </div>
                 </motion.div>
 
                 {/* Время безопасного пребывания */}
                 <motion.div
                   style={{
-                    background: "#f0f9ff",
+                    background: `linear-gradient(135deg, ${uvInfo.iconBgColor}, ${uvInfo.bgColor})`,
                     borderRadius: 8,
-                    padding: "8px 10px",
-                    borderLeft: `3px solid ${uvInfo.color}`
+                    padding: "10px 12px",
+                    border: `1px solid ${uvInfo.color}20`,
+                    position: "relative",
+                    overflow: "hidden"
                   }}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.4, delay: 0.4 }}
                 >
+                  {/* Тонкая цветная полоска слева */}
+                  <div style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: 3,
+                    background: uvInfo.color,
+                    borderRadius: "8px 0 0 8px"
+                  }} />
+                  
                   <div style={{
                     fontSize: 13,
                     color: "#374151",
                     fontFamily: "Montserrat, Arial, sans-serif",
-                    lineHeight: 1.4
+                    lineHeight: 1.4,
+                    fontWeight: 500
                   }}>
-                    ⏱️ Безопасно на солнце: <strong>{safeTime}</strong>
+                    ⏱️ Безопасно на солнце: <strong style={{ color: uvInfo.color }}>{safeTime}</strong>
                   </div>
                 </motion.div>
 
                 {/* Основная рекомендация */}
                 <motion.div
                   style={{
-                    background: "#f8fafc",
+                    background: `linear-gradient(135deg, ${uvInfo.iconBgColor}, ${uvInfo.bgColor})`,
                     borderRadius: 8,
-                    padding: "8px 10px",
-                    borderLeft: `3px solid ${uvInfo.color}`
+                    padding: "10px 12px",
+                    border: `1px solid ${uvInfo.color}20`,
+                    position: "relative",
+                    overflow: "hidden"
                   }}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.4, delay: 0.5 }}
                 >
+                  {/* Тонкая цветная полоска снизу */}
                   <div style={{
-                    fontSize: 11,
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: 2,
+                    background: uvInfo.color,
+                    borderRadius: "0 0 8px 8px"
+                  }} />
+                  
+                  <div style={{
+                    fontSize: 13,
                     color: "#374151",
                     fontFamily: "Montserrat, Arial, sans-serif",
-                    lineHeight: 1.4
+                    lineHeight: 1.4,
+                    fontWeight: 500
                   }}>
                     💡 {uvInfo.advice}
                   </div>

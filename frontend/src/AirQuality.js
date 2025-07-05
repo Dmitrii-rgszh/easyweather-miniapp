@@ -1,4 +1,4 @@
-// Замените весь файл frontend/src/AirQuality.js на этот код:
+// Обновленная версия компонента AirQuality с увеличенными иконками и цветным фоном
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,6 +11,7 @@ function getAirQualityInfo(aqi) {
         level: "Отличное",
         color: "#10b981",
         bgColor: "#10b98120",
+        iconBgColor: "#10b98115", // Новый цвет для фона иконки
         icon: "🟢",
         description: "Воздух чистый и свежий",
         advice: "Идеальное время для прогулок и спорта на улице!"
@@ -20,6 +21,7 @@ function getAirQualityInfo(aqi) {
         level: "Хорошее",
         color: "#84cc16",
         bgColor: "#84cc1620",
+        iconBgColor: "#84cc1615",
         icon: "🟢",
         description: "Качество воздуха приемлемое",
         advice: "Можно проводить время на улице без ограничений"
@@ -29,6 +31,7 @@ function getAirQualityInfo(aqi) {
         level: "Умеренное",
         color: "#f59e0b",
         bgColor: "#f59e0b20",
+        iconBgColor: "#f59e0b15",
         icon: "🟡",
         description: "Умеренное загрязнение",
         advice: "Чувствительным людям стоит ограничить время на улице"
@@ -38,6 +41,7 @@ function getAirQualityInfo(aqi) {
         level: "Плохое",
         color: "#ef4444",
         bgColor: "#ef444420",
+        iconBgColor: "#ef444415",
         icon: "🟠",
         description: "Нездоровый воздух",
         advice: "Избегайте длительных прогулок, особенно детям и пожилым"
@@ -47,6 +51,7 @@ function getAirQualityInfo(aqi) {
         level: "Очень плохое",
         color: "#dc2626",
         bgColor: "#dc262620",
+        iconBgColor: "#dc262615",
         icon: "🔴",
         description: "Опасное загрязнение",
         advice: "Оставайтесь дома, закройте окна, используйте очистители воздуха"
@@ -56,47 +61,12 @@ function getAirQualityInfo(aqi) {
         level: "Неизвестно",
         color: "#6b7280",
         bgColor: "#6b728020",
+        iconBgColor: "#6b728015",
         icon: "❓",
         description: "Данные недоступны",
         advice: ""
       };
   }
-}
-
-// Функция для определения основных загрязнителей
-function getPollutantsInfo(components) {
-  const pollutants = [
-    { 
-      name: "CO", 
-      value: components.co, 
-      unit: "μg/m³", 
-      description: "Угарный газ",
-      dangerous: components.co > 10000
-    },
-    { 
-      name: "NO₂", 
-      value: components.no2, 
-      unit: "μg/m³", 
-      description: "Диоксид азота",
-      dangerous: components.no2 > 200
-    },
-    { 
-      name: "O₃", 
-      value: components.o3, 
-      unit: "μg/m³", 
-      description: "Озон",
-      dangerous: components.o3 > 180
-    },
-    { 
-      name: "PM2.5", 
-      value: components.pm2_5, 
-      unit: "μg/m³", 
-      description: "Мелкие частицы",
-      dangerous: components.pm2_5 > 25
-    }
-  ];
-
-  return pollutants.filter(p => p.value > 0);
 }
 
 // SVG стрелка
@@ -133,7 +103,6 @@ export default function AirQuality({ airQualityData }) {
   const components = currentAir.components;
   
   const airInfo = getAirQualityInfo(aqi);
-  const pollutants = getPollutantsInfo(components);
 
   return (
     <motion.div
@@ -143,8 +112,8 @@ export default function AirQuality({ airQualityData }) {
         padding: "10px",
         margin: "16px auto 0",
         maxWidth: 340,
-        width: "100%",        // 👈 ДОБАВИТЬ
-        boxSizing: "border-box", // 👈 ДОБАВИТЬ
+        width: "100%",
+        boxSizing: "border-box",
         backdropFilter: "blur(10px)",
         boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
         cursor: "pointer"
@@ -162,18 +131,59 @@ export default function AirQuality({ airQualityData }) {
         alignItems: "center",
         justifyContent: "space-between"
       }}>
+        {/* Левая часть с иконкой и текстом */}
         <div style={{
           display: "flex",
           alignItems: "center",
-          gap: 8
+          gap: 12,
+          flex: 1
         }}>
-          <span style={{ fontSize: 16 }}>🌬️</span>
-          <div>
+          {/* Контейнер иконки с цветным фоном */}
+          <motion.div
+            style={{
+              width: 48, // Увеличили размер контейнера
+              height: 48,
+              borderRadius: 12,
+              background: `linear-gradient(135deg, ${airInfo.iconBgColor}, ${airInfo.bgColor})`,
+              border: `1px solid ${airInfo.color}30`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              position: "relative",
+              overflow: "hidden"
+            }}
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.2 }}
+          >
+            {/* Декоративная полоска */}
+            <div style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 2,
+              background: airInfo.color,
+              borderRadius: "12px 12px 0 0"
+            }} />
+            
+            {/* Крупная иконка */}
+            <span style={{ 
+              fontSize: 24, // Увеличили размер иконки
+              filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))"
+            }}>
+              🌬️
+            </span>
+          </motion.div>
+
+          {/* Текстовая информация */}
+          <div style={{ flex: 1 }}>
             <div style={{
               fontSize: 16,
               fontWeight: 600,
               color: "#374151",
-              fontFamily: "Montserrat, Arial, sans-serif"
+              fontFamily: "Montserrat, Arial, sans-serif",
+              marginBottom: 2
             }}>
               Качество воздуха
             </div>
@@ -184,7 +194,12 @@ export default function AirQuality({ airQualityData }) {
                 gap: 6,
                 marginTop: 2
               }}>
-                <span style={{ fontSize: 14 }}>{airInfo.icon}</span>
+                <span style={{ 
+                  fontSize: 16, // Увеличили размер статус-иконки
+                  filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.1))"
+                }}>
+                  {airInfo.icon}
+                </span>
                 <span style={{ 
                   fontSize: 14, 
                   fontWeight: 600,
@@ -324,47 +339,6 @@ export default function AirQuality({ airQualityData }) {
                     💡 {airInfo.advice}
                   </div>
                 </motion.div>
-              )}
-
-              {/* Основные загрязнители */}
-              {pollutants.length > 0 && (
-                <div style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 8
-                }}>
-                  {pollutants.slice(0, 4).map((pollutant, index) => (
-                    <motion.div
-                      key={pollutant.name}
-                      style={{
-                        background: pollutant.dangerous ? "#fef2f2" : "#f9fafb",
-                        borderRadius: 8,
-                        padding: "6px 8px",
-                        textAlign: "center",
-                        border: `1px solid ${pollutant.dangerous ? "#fecaca" : "#e5e7eb"}`
-                      }}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.1 + 0.5 }}
-                    >
-                      <div style={{
-                        fontSize: 12,
-                        fontWeight: 600,
-                        color: pollutant.dangerous ? "#dc2626" : "#374151",
-                        fontFamily: "Montserrat, Arial, sans-serif"
-                      }}>
-                        {pollutant.name}
-                      </div>
-                      <div style={{
-                        fontSize: 12,
-                        color: "#6b7280",
-                        fontFamily: "Montserrat, Arial, sans-serif"
-                      }}>
-                        {Math.round(pollutant.value)} {pollutant.unit}
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
               )}
             </div>
           </motion.div>

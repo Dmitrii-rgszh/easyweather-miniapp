@@ -10,6 +10,7 @@ import ClothingRecommendations from "./ClothingRecommendations";
 import QuickActions from "./QuickActions";
 import AirQuality from "./AirQuality";
 import UVIndex from "./UVIndex";
+import WeatherAlerts from "./WeatherAlerts"; // 🆕 ДОБАВЛЯЕМ ИМПОРТ
 import { fetchWeather, fetchForecast, fetchAirQuality, fetchUVIndex } from "./weatherApi";
 import { getCityByCoords } from "./geoApi";
 import Astronomy from "./Astronomy";
@@ -650,79 +651,65 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <motion.div
-        key={desc + (isNight ? 'night' : 'day')}
         style={{
-          minHeight: '100vh',
-          paddingTop: "max(36px, env(safe-area-inset-top))",
-          paddingBottom: 120, // 🆕 Увеличили отступ снизу
+          minHeight: "100vh",
+          background: getBgGradient(desc, isNight),
           position: "relative",
-          overflow: "hidden",
-          fontFamily: 'Montserrat, Arial, sans-serif'
+          overflow: "hidden"
         }}
-        animate={{ background: getBackground(desc, isNight) }}
+        animate={{ background: getBgGradient(desc, isNight) }}
         transition={{ duration: 1.2 }}
       >
-        {/* --- UNSPLASH BACKGROUND --- */}
-        {photoUrl && (
-          <div
-            style={{
-              position: "absolute",
-              zIndex: -2,
-              top: 0, left: 0, width: "100vw", height: "100vh",
-              backgroundImage: `url(${photoUrl})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              opacity: 0.14,
-              filter: "blur(2.2px)",
-              pointerEvents: "none"
-            }}
-          />
-        )}
+        {/* Эффекты погоды */}
+        {desc.toLowerCase().match(/облач|пасмур|cloud/) && <CloudsEffect />}
+        {desc.toLowerCase().includes('дожд') && <RainEffect />}
 
-        {/* --- ЭФФЕКТЫ ФОНА --- */}
-        {desc && desc.toLowerCase().match(/облач|пасмур|cloud/) && <CloudsEffect />}
-        {desc && desc.toLowerCase().includes('дожд') && <RainEffect />}
-        {desc && desc.toLowerCase().includes('снег') && <SnowEffect />}
-        {desc && desc.toLowerCase().includes('ясно') && !isNight && <SunEffect />}
-        {isNight && <NightGlow />}
-
-        {/* --- ЛОГО --- */}
-        <motion.img
-          src="/logo.png"
-          alt="EasyWeather"
-          style={{
-            display: "block",
-            position: "relative",
-            margin: `${logoTop}px auto 16px`,
-            width: 130,
-            maxWidth: "80vw",
-            zIndex: 99,
-            height: "auto"
-          }}
-          animate={{
-            scale: [1, 1.08, 0.97, 1],
-            rotate: [0, 4, -2, 0],
-            y: [0, -7, 0, 3, 0]
-          }}
-          transition={{
-            duration: 3.8,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-
-        {/* --- ФОРМА ГОРОД+ДАТА --- */}
+        {/* Логотип */}
         <motion.div
+          style={{
+            position: "absolute",
+            top: logoTop,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 99,
+            textAlign: "center"
+          }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8 }}
+        >
+          <div style={{
+            fontSize: "clamp(32px, 8vw, 48px)",
+            fontWeight: 900,
+            background: "linear-gradient(45deg, #ffffff, #e0f2fe, #ffffff)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            textShadow: "0 4px 12px rgba(0,0,0,0.3)",
+            letterSpacing: 2,
+            fontFamily: "Montserrat, Arial, sans-serif"
+          }}>
+            EasyWeather
+          </div>
+          <div style={{
+            fontSize: "clamp(14px, 3vw, 18px)",
+            color: "rgba(255,255,255,0.9)",
+            fontWeight: 400,
+            marginTop: -8,
+            textShadow: "0 2px 8px rgba(0,0,0,0.4)",
+            fontFamily: "Montserrat, Arial, sans-serif"
+          }}>
+            Погода в вашем кармане
+          </div>
+        </motion.div>
+
+        {/* Основная форма */}
+        <motion.div
+          variants={{
+            hidden: { opacity: 0 },
+            visible: { opacity: 1, transition: { staggerChildren: 0.15 } }
+          }}
           initial="hidden"
           animate="visible"
-          variants={{
-            hidden: { opacity: 0, y: 20 },
-            visible: {
-              opacity: 1,
-              y: 0,
-              transition: { staggerChildren: 0.22 }
-            }
-          }}
           style={{ maxWidth: 340, margin: "0px auto 0", textAlign: 'center', zIndex: 99 }}
         >
           <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
@@ -736,7 +723,7 @@ function App() {
             />
           </motion.div>
 
-          {/* --- КНОПКИ --- */}
+          {/* Кнопки */}
           <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
             <Button
               variant="contained"
@@ -782,23 +769,23 @@ function App() {
               disabled={loading}
             >
               <span>Погода по геолокации</span>
-                <svg
-                  style={{ marginLeft: 8, minWidth: 22 }}
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle cx="12" cy="12" r="3.5" stroke="white" strokeWidth="1.7"/>
-                  <circle cx="12" cy="12" r="8" stroke="white" strokeWidth="1.7"/>
-                  <circle cx="12" cy="12" r="1.7" fill="#2498dc"/>
-                </svg>
+              <svg
+                style={{ marginLeft: 8, minWidth: 22 }}
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle cx="12" cy="12" r="3.5" stroke="white" strokeWidth="1.7"/>
+                <circle cx="12" cy="12" r="8" stroke="white" strokeWidth="1.7"/>
+                <circle cx="12" cy="12" r="1.7" fill="#2498dc"/>
+              </svg>
             </Button>
           </motion.div>
         </motion.div>
 
-        {/* --- ИЗБРАННЫЕ ГОРОДА --- */}
+        {/* Избранные города */}
         {favorites.length > 0 && !weather && (
           <motion.div
             style={{
@@ -861,15 +848,23 @@ function App() {
 
         <div style={{ height: 24 }} />
 
-        {/* --- КАРТОЧКА ПОГОДЫ И ДОПОЛНЕНИЯ --- */}
+        {/* КАРТОЧКА ПОГОДЫ И ДОПОЛНЕНИЯ */}
         {weather && (
           <div style={{ 
             marginTop: "-15px",
-            paddingBottom: "16px" // 🆕 Отступ снизу для баннера
+            paddingBottom: "16px"
           }}>
             <WeatherCard {...weather} isNight={isNight} forecast={forecast} photoUrl={photoUrl} />
             
-            {/* 🆕 РЕКОМЕНДАЦИИ ОДЕЖДЫ */}
+            {/* 🆕 ПОГОДНЫЕ АЛЕРТЫ - САМЫЕ ВАЖНЫЕ ИДУТ ПЕРВЫМИ! */}
+            <WeatherAlerts 
+              weather={weather}
+              airQuality={airQualityData}
+              uvData={uvData}
+              forecast={forecast}
+            />
+
+            {/* РЕКОМЕНДАЦИИ ОДЕЖДЫ */}
             <ClothingRecommendations 
               temp={weather.temp}
               desc={weather.desc}
@@ -878,23 +873,23 @@ function App() {
               isNight={isNight}
             />
 
-            {/* 🆕 КАЧЕСТВО ВОЗДУХА - ВСТАВИТЬ ЗДЕСЬ */}
+            {/* КАЧЕСТВО ВОЗДУХА */}
             <AirQuality airQualityData={airQualityData} />
 
-            {/* 🆕 UV ИНДЕКС - ВСТАВИТЬ ЗДЕСЬ */}
+            {/* UV ИНДЕКС */}
             <UVIndex uvData={uvData} isNight={isNight} />
 
-            {/* 🆕 АСТРОНОМИЯ */}
+            {/* АСТРОНОМИЯ */}
             <Astronomy 
               weatherData={weather} 
               coords={coords}
               date={date}
             />
             
-            {/* 🆕 ТРЕНДЫ ПОГОДЫ */}
+            {/* ТРЕНДЫ ПОГОДЫ */}
             <WeatherTrends weather={weather} />
 
-            {/* 🆕 БЫСТРЫЕ ДЕЙСТВИЯ */}
+            {/* БЫСТРЫЕ ДЕЙСТВИЯ */}
             <QuickActions 
               weather={weather}
               onShareWeather={handleShareWeather}

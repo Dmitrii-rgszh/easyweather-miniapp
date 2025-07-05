@@ -1,4 +1,4 @@
-// Создайте файл frontend/src/WeatherTrends.js
+// Обновленная версия компонента WeatherTrends с увеличенными иконками и цветным фоном
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -71,6 +71,7 @@ function getTrendInfo(current, previous, parameter) {
       direction: "stable",
       color: "#6b7280",
       bgColor: "#6b728015",
+      iconBgColor: "#6b728010",
       icon: "➖",
       arrow: "",
       text: "без изменений",
@@ -104,6 +105,7 @@ function getTrendInfo(current, previous, parameter) {
       direction: "up",
       color: isGoodChange ? "#10b981" : "#ef4444",
       bgColor: isGoodChange ? "#10b98120" : "#ef444420",
+      iconBgColor: isGoodChange ? "#10b98115" : "#ef444415",
       icon: isGoodChange ? "📈" : "⚠️",
       arrow: "↗️",
       text: `+${absDiff.toFixed(parameter === "Ветер" ? 1 : 0)}`,
@@ -114,6 +116,7 @@ function getTrendInfo(current, previous, parameter) {
       direction: "down", 
       color: isGoodChange ? "#10b981" : "#f59e0b",
       bgColor: isGoodChange ? "#10b98120" : "#f59e0b20",
+      iconBgColor: isGoodChange ? "#10b98115" : "#f59e0b15",
       icon: isGoodChange ? "📉" : "⚠️",
       arrow: "↘️",
       text: `-${absDiff.toFixed(parameter === "Ветер" ? 1 : 0)}`,
@@ -128,11 +131,42 @@ function getTrendDescription(trend, trendInfo) {
   const { text, direction } = trendInfo;
   
   if (direction === "stable") {
-    return `${parameter} осталась без изменений`;
+    return null; // Не показываем описание для стабильных параметров
   }
   
   const changeText = direction === "up" ? "выше" : "ниже";
   return `${text}${unit} ${changeText}, чем ${period}`;
+}
+
+// Функция определения общей цветовой темы блока
+function getTrendsTheme(significantTrends) {
+  const positiveChanges = significantTrends.filter(trend => 
+    trend.trendInfo.color === "#10b981"
+  ).length;
+  
+  const negativeChanges = significantTrends.filter(trend => 
+    trend.trendInfo.color === "#ef4444"
+  ).length;
+  
+  if (positiveChanges > negativeChanges) {
+    return {
+      mainColor: "#10b981",
+      bgColor: "#10b98115",
+      iconBgColor: "#10b98110"
+    };
+  } else if (negativeChanges > positiveChanges) {
+    return {
+      mainColor: "#ef4444",
+      bgColor: "#ef444415",
+      iconBgColor: "#ef444410"
+    };
+  } else {
+    return {
+      mainColor: "#6366f1",
+      bgColor: "#6366f115",
+      iconBgColor: "#6366f110"
+    };
+  }
 }
 
 // SVG стрелка
@@ -171,7 +205,7 @@ export default function WeatherTrends({ weather }) {
       trendInfo: getTrendInfo(trend.current, trend.previous, trend.parameter)
     }))
     .filter(trend => trend.trendInfo.direction !== "stable")
-    .slice(0, 2); // Показываем максимум 2 значимых тренда
+    .slice(0, 3); // Показываем максимум 3 значимых тренда
 
   if (significantTrends.length === 0) {
     return null; // Не показываем блок, если нет значимых изменений
@@ -179,6 +213,7 @@ export default function WeatherTrends({ weather }) {
 
   // Для превью берем самый значимый тренд
   const mainTrend = significantTrends[0];
+  const theme = getTrendsTheme(significantTrends);
 
   return (
     <motion.div
@@ -188,8 +223,8 @@ export default function WeatherTrends({ weather }) {
         padding: "10px",
         margin: "16px auto 0",
         maxWidth: 340,
-        width: "100%",        // 👈 ДОБАВИТЬ
-        boxSizing: "border-box", // 👈 ДОБАВИТЬ
+        width: "100%",
+        boxSizing: "border-box",
         backdropFilter: "blur(10px)",
         boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
         cursor: "pointer"
@@ -207,18 +242,59 @@ export default function WeatherTrends({ weather }) {
         alignItems: "center",
         justifyContent: "space-between"
       }}>
+        {/* Левая часть с иконкой и текстом */}
         <div style={{
           display: "flex",
           alignItems: "center",
-          gap: 8
+          gap: 12,
+          flex: 1
         }}>
-          <span style={{ fontSize: 16 }}>📊</span>
-          <div>
+          {/* Контейнер иконки с цветным фоном */}
+          <motion.div
+            style={{
+              width: 48, // Увеличили размер контейнера
+              height: 48,
+              borderRadius: 12,
+              background: `linear-gradient(135deg, ${theme.iconBgColor}, ${theme.bgColor})`,
+              border: `1px solid ${theme.mainColor}30`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              position: "relative",
+              overflow: "hidden"
+            }}
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.2 }}
+          >
+            {/* Декоративная полоска */}
+            <div style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 2,
+              background: theme.mainColor,
+              borderRadius: "12px 12px 0 0"
+            }} />
+            
+            {/* Крупная иконка */}
+            <span style={{ 
+              fontSize: 24, // Увеличили размер иконки
+              filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))"
+            }}>
+              📊
+            </span>
+          </motion.div>
+
+          {/* Текстовая информация */}
+          <div style={{ flex: 1 }}>
             <div style={{
               fontSize: 16,
               fontWeight: 600,
               color: "#374151",
-              fontFamily: "Montserrat, Arial, sans-serif"
+              fontFamily: "Montserrat, Arial, sans-serif",
+              marginBottom: 2
             }}>
               Тренды погоды
             </div>
@@ -229,7 +305,12 @@ export default function WeatherTrends({ weather }) {
                 gap: 6,
                 marginTop: 2
               }}>
-                <span style={{ fontSize: 14 }}>{mainTrend.icon}</span>
+                <span style={{ 
+                  fontSize: 16, // Увеличили размер иконки тренда
+                  filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.1))"
+                }}>
+                  {mainTrend.icon}
+                </span>
                 <span style={{ 
                   fontSize: 12, 
                   fontWeight: 600,
@@ -238,7 +319,7 @@ export default function WeatherTrends({ weather }) {
                 }}>
                   {mainTrend.parameter}: {mainTrend.trendInfo.text}{mainTrend.unit}
                 </span>
-                <span style={{ fontSize: 12 }}>{mainTrend.trendInfo.arrow}</span>
+                <span style={{ fontSize: 14 }}>{mainTrend.trendInfo.arrow}</span>
               </div>
             )}
           </div>
@@ -273,102 +354,140 @@ export default function WeatherTrends({ weather }) {
                     <motion.div
                       key={trend.parameter}
                       style={{
-                        background: trendInfo.bgColor,
+                        background: `linear-gradient(135deg, ${trendInfo.iconBgColor}, ${trendInfo.bgColor})`,
                         borderRadius: 12,
-                        padding: "10px 12px",
-                        border: `2px solid ${trendInfo.color}30`
+                        padding: "12px",
+                        border: `2px solid ${trendInfo.color}30`,
+                        position: "relative",
+                        overflow: "hidden"
                       }}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.4, delay: index * 0.1 + 0.1 }}
+                      transition={{ duration: 0.4, delay: index * 0.1 }}
+                      whileHover={{ scale: 1.02, x: 2 }}
                     >
+                      {/* Цветная полоска слева */}
+                      <div style={{
+                        position: "absolute",
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        width: 3,
+                        background: trendInfo.color,
+                        borderRadius: "12px 0 0 12px"
+                      }} />
+
                       <div style={{
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "space-between",
-                        marginBottom: 4
+                        justifyContent: "space-between"
                       }}>
                         <div style={{
                           display: "flex",
                           alignItems: "center",
-                          gap: 8
+                          gap: 10,
+                          flex: 1
                         }}>
-                          <span style={{ fontSize: 16 }}>{trend.icon}</span>
+                          <span style={{ 
+                            fontSize: 20, // Увеличили размер иконок параметров
+                            filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))"
+                          }}>
+                            {trend.icon}
+                          </span>
                           <div>
                             <div style={{
-                              fontSize: 13,
+                              fontSize: 14,
                               fontWeight: 600,
                               color: "#374151",
                               fontFamily: "Montserrat, Arial, sans-serif"
                             }}>
                               {trend.parameter}
                             </div>
-                            <div style={{
-                              fontSize: 11,
-                              color: "#6b7280",
-                              fontFamily: "Montserrat, Arial, sans-serif"
-                            }}>
-                              Сейчас: {trend.current}{trend.unit}
-                            </div>
+                            {description && (
+                              <div style={{
+                                fontSize: 12,
+                                color: "#6b7280",
+                                fontFamily: "Montserrat, Arial, sans-serif"
+                              }}>
+                                {description}
+                              </div>
+                            )}
                           </div>
                         </div>
-                        
+
                         <div style={{
                           display: "flex",
                           alignItems: "center",
-                          gap: 4
+                          gap: 6
                         }}>
-                          <span style={{
-                            fontSize: 14,
-                            fontWeight: 700,
-                            color: trendInfo.textColor,
-                            fontFamily: "Montserrat, Arial, sans-serif"
+                          <span style={{ 
+                            fontSize: 18, // Увеличили размер иконки направления
+                            filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))"
                           }}>
-                            {trendInfo.text}{trend.unit}
+                            {trendInfo.icon}
                           </span>
-                          <span style={{ fontSize: 14 }}>{trendInfo.arrow}</span>
+                          <div style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: 2
+                          }}>
+                            <span style={{
+                              fontSize: 14,
+                              fontWeight: 700,
+                              color: trendInfo.textColor,
+                              fontFamily: "Montserrat, Arial, sans-serif"
+                            }}>
+                              {trendInfo.text}{trend.unit}
+                            </span>
+                            <span style={{ fontSize: 16 }}>{trendInfo.arrow}</span>
+                          </div>
                         </div>
-                      </div>
-                      
-                      <div style={{
-                        fontSize: 11,
-                        color: "#374151",
-                        fontFamily: "Montserrat, Arial, sans-serif",
-                        fontStyle: "italic"
-                      }}>
-                        {description}
                       </div>
                     </motion.div>
                   );
                 })}
               </div>
 
-              {/* Общий вывод */}
+              {/* Общий итог */}
               <motion.div
                 style={{
-                  background: "#f8fafc",
+                  background: `linear-gradient(135deg, ${theme.iconBgColor}, ${theme.bgColor})`,
                   borderRadius: 8,
-                  padding: "8px 12px",
+                  padding: "10px 12px",
                   marginTop: 12,
-                  borderLeft: "3px solid #3b82f6"
+                  border: `1px solid ${theme.mainColor}20`,
+                  position: "relative",
+                  overflow: "hidden"
                 }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
               >
+                {/* Тонкая цветная полоска снизу */}
                 <div style={{
-                  fontSize: 12,
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  height: 2,
+                  background: theme.mainColor,
+                  borderRadius: "0 0 8px 8px"
+                }} />
+                
+                <div style={{
+                  fontSize: 13,
                   color: "#374151",
                   fontFamily: "Montserrat, Arial, sans-serif",
-                  lineHeight: 1.4
+                  fontWeight: 500,
+                  textAlign: "center"
                 }}>
-                  💡 {significantTrends.length > 1 
-                    ? "Погода заметно изменилась по сравнению с вчерашним днем"
-                    : "Небольшие изменения в погодных условиях"
+                  {significantTrends.length === 1 
+                    ? `📈 Заметно изменилось: ${significantTrends[0].parameter.toLowerCase()}`
+                    : `📊 Изменений: ${significantTrends.length} параметра`
                   }
                 </div>
               </motion.div>
-
             </div>
           </motion.div>
         )}

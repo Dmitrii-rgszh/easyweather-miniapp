@@ -1,4 +1,4 @@
-// Создайте файл frontend/src/Astronomy.js
+// Обновленная версия компонента Astronomy с увеличенными иконками и цветным фоном
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,21 +12,58 @@ function getMoonPhase(date) {
   const currentPhase = (daysSinceKnownNewMoon % lunarCycle) / lunarCycle;
   
   if (currentPhase < 0.0625 || currentPhase >= 0.9375) {
-    return { name: "Новолуние", icon: "🌑", description: "Луна не видна" };
+    return { name: "Новолуние", icon: "🌑", description: "Луна не видна", color: "#374151" };
   } else if (currentPhase < 0.1875) {
-    return { name: "Растущий серп", icon: "🌒", description: "Молодая луна" };
+    return { name: "Растущий серп", icon: "🌒", description: "Молодая луна", color: "#6366f1" };
   } else if (currentPhase < 0.3125) {
-    return { name: "Первая четверть", icon: "🌓", description: "Половина луны" };
+    return { name: "Первая четверть", icon: "🌓", description: "Половина луны", color: "#8b5cf6" };
   } else if (currentPhase < 0.4375) {
-    return { name: "Растущая луна", icon: "🌔", description: "Почти полная" };
+    return { name: "Растущая луна", icon: "🌔", description: "Почти полная", color: "#a855f7" };
   } else if (currentPhase < 0.5625) {
-    return { name: "Полнолуние", icon: "🌕", description: "Полная луна" };
+    return { name: "Полнолуние", icon: "🌕", description: "Полная луна", color: "#fbbf24" };
   } else if (currentPhase < 0.6875) {
-    return { name: "Убывающая луна", icon: "🌖", description: "Уменьшается" };
+    return { name: "Убывающая луна", icon: "🌖", description: "Уменьшается", color: "#a855f7" };
   } else if (currentPhase < 0.8125) {
-    return { name: "Последняя четверть", icon: "🌗", description: "Половина луны" };
+    return { name: "Последняя четверть", icon: "🌗", description: "Половина луны", color: "#8b5cf6" };
   } else {
-    return { name: "Убывающий серп", icon: "🌘", description: "Старая луна" };
+    return { name: "Убывающий серп", icon: "🌘", description: "Старая луна", color: "#6366f1" };
+  }
+}
+
+// Функция определения времени дня для цветовой темы
+function getTimeTheme(sunrise, sunset, currentTime = new Date()) {
+  const currentHour = currentTime.getHours();
+  const sunriseHour = sunrise.getHours();
+  const sunsetHour = sunset.getHours();
+  
+  if (currentHour >= 5 && currentHour < 12) {
+    // Утро/рассвет
+    return {
+      mainColor: "#f59e0b",
+      bgColor: "#f59e0b15",
+      iconBgColor: "#f59e0b10"
+    };
+  } else if (currentHour >= 12 && currentHour < 17) {
+    // День
+    return {
+      mainColor: "#fbbf24",
+      bgColor: "#fbbf2415",
+      iconBgColor: "#fbbf2410"
+    };
+  } else if (currentHour >= 17 && currentHour < 21) {
+    // Вечер/закат
+    return {
+      mainColor: "#ef4444",
+      bgColor: "#ef444415",
+      iconBgColor: "#ef444410"
+    };
+  } else {
+    // Ночь
+    return {
+      mainColor: "#6366f1",
+      bgColor: "#6366f115",
+      iconBgColor: "#6366f110"
+    };
   }
 }
 
@@ -42,23 +79,23 @@ function calculateSunTimes(lat, lon, date) {
   const sunrise = new Date(date);
   const sunset = new Date(date);
   
-  sunrise.setHours(Math.floor(12 - t/2), Math.floor((12 - t/2 - Math.floor(12 - t/2)) * 60));
-  sunset.setHours(Math.floor(12 + t/2), Math.floor((12 + t/2 - Math.floor(12 + t/2)) * 60));
+  sunrise.setHours(Math.floor(12 - t/2), Math.floor(((12 - t/2) % 1) * 60), 0);
+  sunset.setHours(Math.floor(12 + t/2), Math.floor(((12 + t/2) % 1) * 60), 0);
   
-  return { sunrise, sunset, dayLength: t };
+  const dayLength = (sunset - sunrise) / (1000 * 60 * 60); // в часах
+  
+  return { sunrise, sunset, dayLength };
 }
 
-// Функция расчета золотого часа
+// Функция для золотого часа
 function getGoldenHour(sunrise, sunset) {
-  const goldenMorningStart = new Date(sunrise.getTime() - 60 * 60 * 1000); // час до восхода
-  const goldenMorningEnd = new Date(sunrise.getTime() + 60 * 60 * 1000);   // час после восхода
-  const goldenEveningStart = new Date(sunset.getTime() - 60 * 60 * 1000);  // час до заката  
-  const goldenEveningEnd = new Date(sunset.getTime() + 30 * 60 * 1000);    // 30 мин после заката
+  const goldenHourStart = new Date(sunset);
+  goldenHourStart.setMinutes(goldenHourStart.getMinutes() - 60);
   
-  return {
-    morning: { start: goldenMorningStart, end: goldenMorningEnd },
-    evening: { start: goldenEveningStart, end: goldenEveningEnd }
-  };
+  const goldenHourMorning = new Date(sunrise);
+  goldenHourMorning.setMinutes(goldenHourMorning.getMinutes() + 60);
+  
+  return { morning: goldenHourMorning, evening: goldenHourStart };
 }
 
 // SVG стрелка
@@ -109,6 +146,7 @@ export default function Astronomy({ weatherData, coords, date = new Date() }) {
 
   const moonPhase = getMoonPhase(currentDate);
   const goldenHour = getGoldenHour(sunrise, sunset);
+  const theme = getTimeTheme(sunrise, sunset);
   
   const formatTime = (time) => time.toLocaleTimeString('ru-RU', { 
     hour: '2-digit', 
@@ -129,8 +167,8 @@ export default function Astronomy({ weatherData, coords, date = new Date() }) {
         padding: "10px",
         margin: "16px auto 0",
         maxWidth: 340,
-        width: "100%",        // 👈 ДОБАВИТЬ
-        boxSizing: "border-box", // 👈 ДОБАВИТЬ
+        width: "100%",
+        boxSizing: "border-box",
         backdropFilter: "blur(10px)",
         boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
         cursor: "pointer"
@@ -148,18 +186,59 @@ export default function Astronomy({ weatherData, coords, date = new Date() }) {
         alignItems: "center",
         justifyContent: "space-between"
       }}>
+        {/* Левая часть с иконкой и текстом */}
         <div style={{
           display: "flex",
           alignItems: "center",
-          gap: 8
+          gap: 12,
+          flex: 1
         }}>
-          <span style={{ fontSize: 16 }}>🌙</span>
-          <div>
+          {/* Контейнер иконки с цветным фоном */}
+          <motion.div
+            style={{
+              width: 48, // Увеличили размер контейнера
+              height: 48,
+              borderRadius: 12,
+              background: `linear-gradient(135deg, ${theme.iconBgColor}, ${theme.bgColor})`,
+              border: `1px solid ${theme.mainColor}30`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              position: "relative",
+              overflow: "hidden"
+            }}
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.2 }}
+          >
+            {/* Декоративная полоска */}
+            <div style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 2,
+              background: theme.mainColor,
+              borderRadius: "12px 12px 0 0"
+            }} />
+            
+            {/* Крупная иконка */}
+            <span style={{ 
+              fontSize: 24, // Увеличили размер иконки
+              filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))"
+            }}>
+              🌙
+            </span>
+          </motion.div>
+
+          {/* Текстовая информация */}
+          <div style={{ flex: 1 }}>
             <div style={{
               fontSize: 16,
               fontWeight: 600,
               color: "#374151",
-              fontFamily: "Montserrat, Arial, sans-serif"
+              fontFamily: "Montserrat, Arial, sans-serif",
+              marginBottom: 2
             }}>
               Астрономия
             </div>
@@ -170,7 +249,12 @@ export default function Astronomy({ weatherData, coords, date = new Date() }) {
                 gap: 6,
                 marginTop: 2
               }}>
-                <span style={{ fontSize: 14 }}>{moonPhase.icon}</span>
+                <span style={{ 
+                  fontSize: 16, // Увеличили размер иконки фазы луны
+                  filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.1))"
+                }}>
+                  {moonPhase.icon}
+                </span>
                 <span style={{ 
                   fontSize: 12, 
                   color: "#6b7280",
@@ -201,16 +285,29 @@ export default function Astronomy({ weatherData, coords, date = new Date() }) {
               {/* Восход и закат */}
               <motion.div
                 style={{
-                  background: "linear-gradient(135deg, #fbbf2420 0%, #f59e0b20 100%)",
+                  background: `linear-gradient(135deg, ${theme.iconBgColor}, ${theme.bgColor})`,
                   borderRadius: 12,
                   padding: "12px",
                   marginBottom: 12,
-                  border: "2px solid #f59e0b30"
+                  border: `2px solid ${theme.mainColor}30`,
+                  position: "relative",
+                  overflow: "hidden"
                 }}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4, delay: 0.1 }}
               >
+                {/* Цветная полоска сверху */}
+                <div style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 3,
+                  background: theme.mainColor,
+                  borderRadius: "12px 12px 0 0"
+                }} />
+
                 <div style={{
                   display: "flex",
                   justifyContent: "space-between",
@@ -218,7 +315,11 @@ export default function Astronomy({ weatherData, coords, date = new Date() }) {
                   marginBottom: 8
                 }}>
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 20, marginBottom: 4 }}>🌅</div>
+                    <div style={{ 
+                      fontSize: 24, // Увеличили размер иконок
+                      marginBottom: 4,
+                      filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
+                    }}>🌅</div>
                     <div style={{
                       fontSize: 14,
                       fontWeight: 600,
@@ -237,7 +338,11 @@ export default function Astronomy({ weatherData, coords, date = new Date() }) {
                   </div>
 
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 20, marginBottom: 4 }}>🌇</div>
+                    <div style={{ 
+                      fontSize: 24, // Увеличили размер иконок
+                      marginBottom: 4,
+                      filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
+                    }}>🌇</div>
                     <div style={{
                       fontSize: 14,
                       fontWeight: 600,
@@ -259,32 +364,49 @@ export default function Astronomy({ weatherData, coords, date = new Date() }) {
                 <div style={{
                   textAlign: "center",
                   fontSize: 12,
-                  color: "#6b7280",
-                  fontFamily: "Montserrat, Arial, sans-serif"
+                  color: "#374151",
+                  fontFamily: "Montserrat, Arial, sans-serif",
+                  fontWeight: 500
                 }}>
-                  🌞 Продолжительность дня: <strong>{formatDuration(dayLength)}</strong>
+                  🌞 Продолжительность дня: <strong style={{ color: theme.mainColor }}>{formatDuration(dayLength)}</strong>
                 </div>
               </motion.div>
 
               {/* Фаза луны */}
               <motion.div
                 style={{
-                  background: "linear-gradient(135deg, #6366f120 0%, #8b5cf620 100%)",
+                  background: `linear-gradient(135deg, ${moonPhase.color}15, ${moonPhase.color}08)`,
                   borderRadius: 12,
                   padding: "12px",
                   marginBottom: 12,
-                  border: "2px solid #6366f130"
+                  border: `2px solid ${moonPhase.color}30`,
+                  position: "relative",
+                  overflow: "hidden"
                 }}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4, delay: 0.2 }}
               >
+                {/* Цветная полоска слева */}
+                <div style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: 3,
+                  background: moonPhase.color,
+                  borderRadius: "12px 0 0 12px"
+                }} />
+
                 <div style={{
                   display: "flex",
                   alignItems: "center",
                   gap: 12
                 }}>
-                  <div style={{ fontSize: 32 }}>{moonPhase.icon}</div>
+                  <div style={{ 
+                    fontSize: 32, // Увеличили размер иконки луны
+                    filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
+                  }}>{moonPhase.icon}</div>
                   <div style={{ flex: 1 }}>
                     <div style={{
                       fontSize: 14,
@@ -309,22 +431,38 @@ export default function Astronomy({ weatherData, coords, date = new Date() }) {
               {/* Золотой час */}
               <motion.div
                 style={{
-                  background: "linear-gradient(135deg, #fbbf2420 0%, #f59e0b20 100%)",
+                  background: "linear-gradient(135deg, #fbbf2415, #f59e0b08)",
                   borderRadius: 12,
                   padding: "12px",
-                  border: "2px solid #f59e0b30"
+                  border: "2px solid #f59e0b30",
+                  position: "relative",
+                  overflow: "hidden"
                 }}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4, delay: 0.3 }}
               >
+                {/* Цветная полоска снизу */}
+                <div style={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  height: 2,
+                  background: "#f59e0b",
+                  borderRadius: "0 0 12px 12px"
+                }} />
+
                 <div style={{
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
                   marginBottom: 8
                 }}>
-                  <span style={{ fontSize: 16 }}>📸</span>
+                  <span style={{ 
+                    fontSize: 18, // Увеличили размер иконки
+                    filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))"
+                  }}>📸</span>
                   <div style={{
                     fontSize: 14,
                     fontWeight: 600,
@@ -341,64 +479,25 @@ export default function Astronomy({ weatherData, coords, date = new Date() }) {
                   gap: 8
                 }}>
                   <div style={{
-                    background: "rgba(255, 255, 255, 0.5)",
-                    borderRadius: 8,
-                    padding: "6px 8px",
-                    textAlign: "center"
+                    textAlign: "center",
+                    fontSize: 12,
+                    color: "#374151",
+                    fontFamily: "Montserrat, Arial, sans-serif"
                   }}>
-                    <div style={{
-                      fontSize: 12,
-                      fontWeight: 600,
-                      color: "#374151",
-                      fontFamily: "Montserrat, Arial, sans-serif"
-                    }}>
-                      Утром
-                    </div>
-                    <div style={{
-                      fontSize: 11,
-                      color: "#6b7280",
-                      fontFamily: "Montserrat, Arial, sans-serif"
-                    }}>
-                      {formatTime(goldenHour.morning.start)} - {formatTime(goldenHour.morning.end)}
-                    </div>
+                    🌅 <strong>{formatTime(goldenHour.morning)}</strong><br />
+                    <span style={{ color: "#6b7280" }}>Утром</span>
                   </div>
-
                   <div style={{
-                    background: "rgba(255, 255, 255, 0.5)",
-                    borderRadius: 8,
-                    padding: "6px 8px",
-                    textAlign: "center"
+                    textAlign: "center",
+                    fontSize: 12,
+                    color: "#374151",
+                    fontFamily: "Montserrat, Arial, sans-serif"
                   }}>
-                    <div style={{
-                      fontSize: 12,
-                      fontWeight: 600,
-                      color: "#374151",
-                      fontFamily: "Montserrat, Arial, sans-serif"
-                    }}>
-                      Вечером
-                    </div>
-                    <div style={{
-                      fontSize: 11,
-                      color: "#6b7280",
-                      fontFamily: "Montserrat, Arial, sans-serif"
-                    }}>
-                      {formatTime(goldenHour.evening.start)} - {formatTime(goldenHour.evening.end)}
-                    </div>
+                    🌇 <strong>{formatTime(goldenHour.evening)}</strong><br />
+                    <span style={{ color: "#6b7280" }}>Вечером</span>
                   </div>
-                </div>
-
-                <div style={{
-                  marginTop: 8,
-                  fontSize: 11,
-                  color: "#6b7280",
-                  textAlign: "center",
-                  fontStyle: "italic",
-                  fontFamily: "Montserrat, Arial, sans-serif"
-                }}>
-                  ✨ Идеальное время для фотосъемки
                 </div>
               </motion.div>
-
             </div>
           </motion.div>
         )}
