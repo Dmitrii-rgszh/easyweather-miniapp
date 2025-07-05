@@ -6,8 +6,12 @@ import { motion } from "framer-motion";
 import AdBanner from "./AdBanner";
 import WeatherCard from "./WeatherCard";
 import CityDateInput from "./CityDateInput";
-import { fetchWeather, fetchForecast } from "./weatherApi";
+import ClothingRecommendations from "./ClothingRecommendations";
+import QuickActions from "./QuickActions";
+import { fetchWeather, fetchForecast, fetchUVIndex } from "./weatherApi";
 import { getCityByCoords } from "./geoApi";
+import AirQuality from "./AirQuality";
+import UVIndex from "./UVIndex";
 
 function CloudsEffect() {
   return (
@@ -41,6 +45,7 @@ function CloudsEffect() {
     </>
   );
 }
+
 function RainEffect() {
   return (
     <>
@@ -80,6 +85,7 @@ function RainEffect() {
     </>
   );
 }
+
 function SnowEffect() {
   return (
     <>
@@ -95,25 +101,23 @@ function SnowEffect() {
               width: isLight ? 9 : 13 + Math.random() * 8,
               height: isLight ? 9 : 13 + Math.random() * 8,
               background: isLight
-                ? "rgba(230,240,255,0.09)"
-                : "rgba(210,230,255,0.22)",
+                ? "rgba(255,255,255,0.85)"
+                : "rgba(255,255,255,0.65)",
               borderRadius: "50%",
-              filter: isLight ? "blur(2.3px)" : "blur(1.6px)",
-              opacity: isLight ? 0.16 : 0.27,
+              filter: isLight ? "blur(2px)" : "blur(3px)",
+              opacity: isLight ? 0.7 : 0.5,
               zIndex: 99,
               pointerEvents: "none"
             }}
             animate={{
-              y: ["0%", "160%"],
-              x: [0, 12 - Math.random() * 18, 0],
-              opacity: isLight
-                ? [0.12, 0.15, 0.10]
-                : [0.20, 0.34, 0.13]
+              y: ["0%", "110%"],
+              x: [0, Math.random() * 40 - 20],
+              opacity: [0.7, 0.9, 0]
             }}
             transition={{
-              duration: 7 + Math.random() * 3.9,
+              duration: 4 + Math.random() * 3,
               repeat: Infinity,
-              delay: i * 0.56
+              delay: i * 0.3
             }}
           />
         );
@@ -121,51 +125,22 @@ function SnowEffect() {
     </>
   );
 }
+
 function SunEffect() {
   return (
     <>
       <motion.div
         style={{
           position: "absolute",
-          right: 60,
-          top: 32,
-          width: 160,
-          height: 160,
+          right: "10%",
+          top: "15%",
+          width: 120,
+          height: 120,
           borderRadius: "50%",
-          background: "radial-gradient(circle at 50% 45%, #fffcd988 55%, #fbbf2499 100%)",
-          boxShadow: "0 0 84px 30px #fffec966",
-          zIndex: 0,
-          opacity: 0.79,
-          pointerEvents: "none"
-        }}
-        animate={{
-          scale: [1, 1.06, 0.98, 1],
-          opacity: [0.79, 0.93, 0.68, 0.79],
-          filter: [
-            "blur(2.3px)",
-            "blur(4.3px)",
-            "blur(2.3px)",
-            "blur(1.4px)"
-          ]
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          repeatType: "mirror"
-        }}
-      />
-      <motion.div
-        style={{
-          position: "absolute",
-          right: 112,
-          top: 72,
-          width: 60,
-          height: 60,
-          borderRadius: "50%",
-          background: "radial-gradient(circle, #ffe37d 70%, #fff0 100%)",
-          boxShadow: "0 0 22px 6px #ffef6e88",
-          zIndex: 3,
-          opacity: 0.91,
+          background: "linear-gradient(135deg, #fbbf2488 0%, #f59e0b88 100%)",
+          filter: "blur(30px)",
+          opacity: 0.6,
+          zIndex: 1,
           pointerEvents: "none"
         }}
         animate={{
@@ -181,6 +156,7 @@ function SunEffect() {
     </>
   );
 }
+
 function NightGlow() {
   return (
     <>
@@ -255,28 +231,52 @@ function findNearestForecast(forecastList, targetDate, targetHour) {
   const target = new Date(targetDate);
   target.setHours(targetHour, 0, 0, 0);
 
-  let minDiff = Infinity, nearest = null;
-  for (const item of forecastList) {
+  console.log('Ищем прогноз для:', target.toISOString());
+
+  // Фильтруем только прогнозы для нужной даты
+  const dayForecasts = forecastList.filter(item => {
     const itemDate = new Date(item.dt * 1000);
-    if (
-      itemDate.getDate() === target.getDate() &&
-      itemDate.getMonth() === target.getMonth() &&
-      itemDate.getFullYear() === target.getFullYear()
-    ) {
-      const diff = Math.abs(itemDate - target);
-      if (diff < minDiff) {
-        minDiff = diff;
-        nearest = item;
-      }
+    return itemDate.getDate() === target.getDate() &&
+           itemDate.getMonth() === target.getMonth() &&
+           itemDate.getFullYear() === target.getFullYear();
+  });
+
+  console.log('Прогнозы для этого дня:', dayForecasts.length);
+
+  if (dayForecasts.length === 0) {
+    console.log('Нет прогнозов для этой даты');
+    return null;
+  }
+
+  // Ищем ближайший к нужному времени
+  let minDiff = Infinity;
+  let nearest = null;
+  
+  for (const item of dayForecasts) {
+    const itemDate = new Date(item.dt * 1000);
+    const diff = Math.abs(itemDate.getTime() - target.getTime());
+    
+    console.log(`Прогноз на ${itemDate.toLocaleTimeString()}, разница: ${diff/1000/60} минут`);
+    
+    if (diff < minDiff) {
+      minDiff = diff;
+      nearest = item;
     }
   }
+
+  if (nearest) {
+    console.log('Найден ближайший прогноз:', new Date(nearest.dt * 1000).toLocaleString());
+  }
+
   return nearest;
 }
 
 // --- Цвета фона ---
 function getBackground(desc, isNight) {
-  if (!desc) return "#232942";
-  if (desc.toLowerCase().includes('ясно')) return isNight ? "#22253b" : "linear-gradient(160deg, #7fcfff 0%, #e7e9fd 100%)";
+  if (!desc) return "#c3d3f7";
+  if (desc.toLowerCase().includes('ясно')) return isNight 
+    ? "#22253b" 
+    : "linear-gradient(160deg, #7fcfff 0%, #e7e9fd 100%)";
   if (desc.toLowerCase().match(/облач|пасмур|cloud/)) return "linear-gradient(180deg, #bfc9dc 0%, #dbe5fa 100%)";
   if (desc.toLowerCase().includes('дожд')) return "linear-gradient(180deg, #6c7ba1 0%, #b1bfd8 100%)";
   if (desc.toLowerCase().includes('снег')) return "linear-gradient(180deg, #e0f2fc 0%, #f2fafc 100%)";
@@ -293,8 +293,57 @@ function App() {
   const [logoTop, setLogoTop] = useState(32);
   const [desc, setDesc] = useState("");
   const [isNight, setIsNight] = useState(false);
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      const saved = localStorage.getItem('weatherFavorites');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
-  // --- Центрированный лейбл “Город” ---
+  // --- Функция поделиться погодой ---
+  const handleShareWeather = (weather) => {
+    const shareText = `🌤️ Погода в ${weather.city}: ${weather.temp}°, ${weather.desc.toLowerCase()}`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: 'EasyWeather',
+        text: shareText,
+        url: window.location.href
+      });
+    } else {
+      // Fallback для браузеров без Web Share API
+      navigator.clipboard.writeText(shareText).then(() => {
+        alert('Информация о погоде скопирована в буфер обмена!');
+      }).catch(() => {
+        alert(`${shareText}\n\nСкопируйте эту информацию вручную`);
+      });
+    }
+  };
+
+  // --- Функция добавления в избранное ---
+  const handleSaveToFavorites = (cityName) => {
+    const newFavorites = [...favorites];
+    const index = newFavorites.indexOf(cityName);
+    
+    if (index > -1) {
+      newFavorites.splice(index, 1);
+      alert(`${cityName} удален из избранного`);
+    } else {
+      newFavorites.push(cityName);
+      alert(`${cityName} добавлен в избранное!`);
+    }
+    
+    setFavorites(newFavorites);
+    try {
+      localStorage.setItem('weatherFavorites', JSON.stringify(newFavorites));
+    } catch (e) {
+      console.error('Не удалось сохранить избранное:', e);
+    }
+  };
+
+  // --- Центрированный лейбл "Город" ---
   const renderCityLabel = (
     <div style={{
       textAlign: "center",
@@ -332,81 +381,99 @@ function App() {
     setLoading(true);
     try {
       if (isToday(date)) {
-        // Сегодня — обычная логика!
+        // СЕГОДНЯ - показываем текущую погоду и ближайшие прогнозы
         const data = await fetchWeather(city);
         const details = {
-          feels:    Math.round(data.main.feels_like),
+          feels: Math.round(data.main.feels_like),
           pressure: Math.round(data.main.pressure * 0.750062),
           humidity: data.main.humidity,
-          wind:     `${Math.round(data.wind.speed)} м/с`,
-          sunrise:  "",
-          sunset:   ""
+          wind: `${Math.round(data.wind.speed)} м/с`,
+          sunrise: "",
+          sunset: ""
         };
 
         setWeather({
-          city:  data.name,
-          temp:  Math.round(data.main.temp),
-          desc:  data.weather[0].description[0].toUpperCase() + data.weather[0].description.slice(1),
-          icon:  `https://openweathermap.org/img/wn/${data.weather[0].icon}@4x.png`,
+          city: data.name,
+          temp: Math.round(data.main.temp),
+          desc: data.weather[0].description[0].toUpperCase() + data.weather[0].description.slice(1),
+          icon: `https://openweathermap.org/img/wn/${data.weather[0].icon}@4x.png`,
           details
         });
 
         setDesc(data.weather[0].description);
         setIsNight(data.weather[0].icon.includes("n"));
 
-          const { list: forecastList } = await fetchForecast(city);
-          const now = Date.now();
-          const upcoming = forecastList
-            .map(item => ({ ...item, timeMs: item.dt * 1000 }))
-            .filter(item => item.timeMs > now)
-            .sort((a, b) => a.timeMs - b.timeMs)
-            .slice(0, 3);
-
-          const carusel = upcoming.map(slot => ({
-            time: new Date(slot.timeMs)
-              .toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
-            temp: Math.round(slot.main.temp),
-            icon: `https://openweathermap.org/img/wn/${slot.weather[0].icon}@2x.png`
-          }));
-          setForecast(carusel);
-      } else {
-        // Будущая дата: блок — погода на текущее время, карусель — 08,12,18
+        // Получаем прогноз и формируем карусель для сегодня
         const { list: forecastList } = await fetchForecast(city);
+        const now = Date.now();
+        
+        // Ищем прогнозы на ближайшие часы (через каждые 3-6 часов)
+        const todayForecasts = forecastList
+          .filter(item => {
+            const itemDate = new Date(item.dt * 1000);
+            const today = new Date();
+            return itemDate.getDate() === today.getDate() && 
+                   itemDate.getMonth() === today.getMonth() &&
+                   itemDate.getFullYear() === today.getFullYear() &&
+                   item.dt * 1000 > now; // только будущие прогнозы
+          })
+          .slice(0, 4); // берем первые 4 прогноза
+
+        const carusel = todayForecasts.map(slot => ({
+          time: new Date(slot.dt * 1000).toLocaleTimeString('ru-RU', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          }),
+          temp: Math.round(slot.main.temp),
+          icon: `https://openweathermap.org/img/wn/${slot.weather[0].icon}@2x.png`
+        }));
+        
+        setForecast(carusel);
+
+      } else {
+        // БУДУЩАЯ ДАТА - показываем прогноз на выбранную дату
+        const { list: forecastList } = await fetchForecast(city);
+        
+        // Ищем прогноз на выбранную дату (ближайший к текущему времени)
         const now = new Date();
         const targetHour = now.getHours();
         const mainForecast = findNearestForecast(forecastList, date, targetHour);
-        setWeather(mainForecast
-          ? {
-            city: city,
-            temp: Math.round(mainForecast.main.temp),
-            desc: mainForecast.weather[0].description[0].toUpperCase() + mainForecast.weather[0].description.slice(1),
-            icon: `https://openweathermap.org/img/wn/${mainForecast.weather[0].icon}@4x.png`,
-            details: {
-              feels: Math.round(mainForecast.main.feels_like),
-              pressure: Math.round(mainForecast.main.pressure * 0.750062),
-              humidity: mainForecast.main.humidity,
-              wind: `${Math.round(mainForecast.wind.speed)} м/с`
-            }
+        
+        setWeather(mainForecast ? {
+          city: city,
+          temp: Math.round(mainForecast.main.temp),
+          desc: mainForecast.weather[0].description[0].toUpperCase() + mainForecast.weather[0].description.slice(1),
+          icon: `https://openweathermap.org/img/wn/${mainForecast.weather[0].icon}@4x.png`,
+          details: {
+            feels: Math.round(mainForecast.main.feels_like),
+            pressure: Math.round(mainForecast.main.pressure * 0.750062),
+            humidity: mainForecast.main.humidity,
+            wind: `${Math.round(mainForecast.wind.speed)} м/с`
           }
-          : null
-        );
+        } : null);
+        
         setDesc(mainForecast?.weather?.[0]?.description || "");
         setIsNight(mainForecast?.weather?.[0]?.icon?.includes("n") || false);
 
-        // Карусель: 08:00, 12:00, 18:00
-        const hours = [8, 12, 18];
-        const carusel = hours
-          .map(h => findNearestForecast(forecastList, date, h))
+        // Карусель для будущей даты: утро, день, вечер
+        const targetTimes = [9, 15, 21]; // 09:00, 15:00, 21:00
+        const carusel = targetTimes
+          .map(hour => findNearestForecast(forecastList, date, hour))
           .filter(Boolean)
           .map(slot => ({
-            time: new Date(slot.dt * 1000).toLocaleTimeString('ru-RU', { hour: "2-digit", minute: "2-digit" }),
+            time: new Date(slot.dt * 1000).toLocaleTimeString('ru-RU', { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            }),
             temp: Math.round(slot.main.temp),
             icon: `https://openweathermap.org/img/wn/${slot.weather[0].icon}@2x.png`
           }));
+        
         setForecast(carusel);
       }
     } catch (e) {
-      alert("Ошибка получения данных");
+      console.error('Weather error:', e);
+      alert("Ошибка получения данных: " + e.message);
     }
     setLoading(false);
   };
@@ -433,8 +500,13 @@ function App() {
             sunset: ""
           };
 
+          // Устанавливаем город из геолокации
+          setCity(data.name);
+
           const { list: forecastList } = await fetchForecast({ lat, lon });
+          
           if (isToday(date)) {
+            // СЕГОДНЯ - логика как в handleShowWeather
             setWeather({
               city: data.name,
               temp: Math.round(data.main.temp),
@@ -442,40 +514,81 @@ function App() {
               icon: `https://openweathermap.org/img/wn/${data.weather[0].icon}@4x.png`,
               details
             });
-            setForecast(forecastList);
+
+            setDesc(data.weather[0].description);
+            setIsNight(data.weather[0].icon.includes("n"));
+
+            // Формируем карусель для сегодня
+            const now = Date.now();
+            const todayForecasts = forecastList
+              .filter(item => {
+                const itemDate = new Date(item.dt * 1000);
+                const today = new Date();
+                return itemDate.getDate() === today.getDate() && 
+                       itemDate.getMonth() === today.getMonth() &&
+                       itemDate.getFullYear() === today.getFullYear() &&
+                       item.dt * 1000 > now; // только будущие прогнозы
+              })
+              .slice(0, 4); // берем первые 4 прогноза
+
+            const carusel = todayForecasts.map(slot => ({
+              time: new Date(slot.dt * 1000).toLocaleTimeString('ru-RU', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              }),
+              temp: Math.round(slot.main.temp),
+              icon: `https://openweathermap.org/img/wn/${slot.weather[0].icon}@2x.png`
+            }));
+            
+            setForecast(carusel);
+
           } else {
+            // БУДУЩАЯ ДАТА - логика как в handleShowWeather
             const now = new Date();
             const targetHour = now.getHours();
             const mainForecast = findNearestForecast(forecastList, date, targetHour);
-            setWeather(mainForecast
-              ? {
-                city: data.name,
-                temp: Math.round(mainForecast.main.temp),
-                desc: mainForecast.weather[0].description[0].toUpperCase() + mainForecast.weather[0].description.slice(1),
-                icon: `https://openweathermap.org/img/wn/${mainForecast.weather[0].icon}@4x.png`,
-                details: {
-                  feels: Math.round(mainForecast.main.feels_like),
-                  pressure: Math.round(mainForecast.main.pressure * 0.750062),
-                  humidity: mainForecast.main.humidity,
-                  wind: `${Math.round(mainForecast.wind.speed)} м/с`
-                }
+            
+            setWeather(mainForecast ? {
+              city: data.name,
+              temp: Math.round(mainForecast.main.temp),
+              desc: mainForecast.weather[0].description[0].toUpperCase() + mainForecast.weather[0].description.slice(1),
+              icon: `https://openweathermap.org/img/wn/${mainForecast.weather[0].icon}@4x.png`,
+              details: {
+                feels: Math.round(mainForecast.main.feels_like),
+                pressure: Math.round(mainForecast.main.pressure * 0.750062),
+                humidity: mainForecast.main.humidity,
+                wind: `${Math.round(mainForecast.wind.speed)} м/с`
               }
-              : null
-            );
-            // Карусель: 08:00, 12:00, 18:00
-            const hours = [8, 12, 18];
-            const carusel = hours
-              .map(h => findNearestForecast(forecastList, date, h))
+            } : null);
+            
+            setDesc(mainForecast?.weather?.[0]?.description || "");
+            setIsNight(mainForecast?.weather?.[0]?.icon?.includes("n") || false);
+
+            // Карусель для будущей даты: утро, день, вечер
+            const targetTimes = [9, 15, 21]; // 09:00, 15:00, 21:00
+            const carusel = targetTimes
+              .map(hour => findNearestForecast(forecastList, date, hour))
               .filter(Boolean)
               .map(slot => ({
-                time: new Date(slot.dt * 1000).toLocaleTimeString('ru-RU', { hour: "2-digit", minute: "2-digit" }),
+                time: new Date(slot.dt * 1000).toLocaleTimeString('ru-RU', { 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                }),
                 temp: Math.round(slot.main.temp),
                 icon: `https://openweathermap.org/img/wn/${slot.weather[0].icon}@2x.png`
               }));
+            
             setForecast(carusel);
           }
-        } catch {
-          setWeather({ city: "?", temp: '--', desc: 'Ошибка при получении геолокации', icon: '', details: {} });
+        } catch (error) {
+          console.error('Geo weather error:', error);
+          setWeather({ 
+            city: "?", 
+            temp: '--', 
+            desc: 'Ошибка при получении геолокации', 
+            icon: '', 
+            details: {} 
+          });
           setForecast([]);
           setPhotoUrl(null);
         } finally {
@@ -483,6 +596,7 @@ function App() {
         }
       },
       (error) => {
+        console.error('Geolocation error:', error);
         alert("Не удалось получить геолокацию: " + error.message);
         setLoading(false);
       }
@@ -493,11 +607,11 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <motion.div
-        key={desc + ('night' : 'day')}
+        key={desc + (isNight ? 'night' : 'day')}
         style={{
           minHeight: '100vh',
           paddingTop: "max(36px, env(safe-area-inset-top))",
-          paddingBottom: 80,
+          paddingBottom: 120, // 🆕 Увеличили отступ снизу
           position: "relative",
           overflow: "hidden",
           fontFamily: 'Montserrat, Arial, sans-serif'
@@ -641,12 +755,92 @@ function App() {
           </motion.div>
         </motion.div>
 
+        {/* --- ИЗБРАННЫЕ ГОРОДА --- */}
+        {favorites.length > 0 && !weather && (
+          <motion.div
+            style={{
+              maxWidth: 340,
+              margin: "20px auto 0",
+              padding: "0 16px"
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            <div style={{
+              color: "#fff",
+              fontSize: 14,
+              fontWeight: 500,
+              marginBottom: 8,
+              textAlign: "center",
+              textShadow: "0 2px 8px rgba(0,0,0,0.5)",
+              fontFamily: "Montserrat, Arial, sans-serif"
+            }}>
+              ⭐ Избранные города
+            </div>
+            <div style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 8,
+              justifyContent: "center"
+            }}>
+              {favorites.map((favCity, index) => (
+                <motion.button
+                  key={favCity}
+                  onClick={() => {
+                    setCity(favCity);
+                    setTimeout(handleShowWeather, 100);
+                  }}
+                  style={{
+                    background: "rgba(255,255,255,0.2)",
+                    border: "1px solid rgba(255,255,255,0.3)",
+                    borderRadius: 16,
+                    padding: "6px 12px",
+                    color: "#fff",
+                    fontSize: 12,
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    backdropFilter: "blur(10px)",
+                    fontFamily: "Montserrat, Arial, sans-serif"
+                  }}
+                  whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.3)" }}
+                  whileTap={{ scale: 0.95 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 + 0.6 }}
+                >
+                  {favCity}
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
         <div style={{ height: 24 }} />
 
-        {/* --- КАРТОЧКА ПОГОДЫ --- */}
+        {/* --- КАРТОЧКА ПОГОДЫ И ДОПОЛНЕНИЯ --- */}
         {weather && (
-          <div style={{ marginTop: "-15px" }}>
+          <div style={{ 
+            marginTop: "-15px",
+            paddingBottom: "16px" // 🆕 Отступ снизу для баннера
+          }}>
             <WeatherCard {...weather} isNight={isNight} forecast={forecast} photoUrl={photoUrl} />
+            
+            {/* 🆕 РЕКОМЕНДАЦИИ ОДЕЖДЫ */}
+            <ClothingRecommendations 
+              temp={weather.temp}
+              desc={weather.desc}
+              humidity={weather.details?.humidity}
+              windSpeed={parseFloat(weather.details?.wind?.replace(' м/с', '') || '0')}
+              isNight={isNight}
+            />
+            
+            {/* 🆕 БЫСТРЫЕ ДЕЙСТВИЯ */}
+            <QuickActions 
+              weather={weather}
+              onShareWeather={handleShareWeather}
+              onSaveToFavorites={handleSaveToFavorites}
+            />
           </div>
         )}
 

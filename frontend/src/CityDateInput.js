@@ -3,7 +3,7 @@ import { TextField, Button, Popover } from "@mui/material";
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import ruLocale from 'date-fns/locale/ru';
+import { ru } from 'date-fns/locale';
 
 function formatDate(date) {
   if (!date) return "";
@@ -59,7 +59,7 @@ export default function CityDateInput({ city, setCity, date, setDate, disabled }
           fontWeight: 500,
           background: "rgba(255, 255, 255, 0.16)",
           borderColor: "primary",
-          color: "#fff",
+          color: "primary",
           borderRadius: 3,
           border: "1.5px solidrgb(0, 153, 255)",
           fontFamily: "Montserrat",
@@ -75,7 +75,7 @@ export default function CityDateInput({ city, setCity, date, setDate, disabled }
         onClose={handleClose}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
       >
-        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ruLocale}>
+        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
           <DatePicker
             disablePast={false}
             value={date}

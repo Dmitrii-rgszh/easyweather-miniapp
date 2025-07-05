@@ -109,7 +109,7 @@ function WeatherCard({ city, temp, desc, icon, details, forecast, photoUrl }) {
           <motion.div
             style={{
               display: "flex",
-              gap: 16,
+              gap: 12,
               overflowX: "auto",
               margin: "0 auto 12px",
               justifyContent: "center",
@@ -126,22 +126,32 @@ function WeatherCard({ city, temp, desc, icon, details, forecast, photoUrl }) {
                 style={{
                   background: "#f6faff",
                   borderRadius: 16,
-                  minWidth: 64,
-                  padding: "7px 7px",
+                  minWidth: 70,
+                  maxWidth: 80,
+                  padding: "8px 6px",
                   boxShadow: "0 2px 10px #c7e0f511",
-                  textAlign: "center"
+                  textAlign: "center",
+                  border: "1px solid rgba(56, 189, 248, 0.1)"
                 }}
               >
-                <div style={{ fontWeight: 500, fontSize: 15 }}>{item.time}</div>
-                {/* СЮДА: голубой фон для иконки */}
+                <div style={{ 
+                  fontWeight: 600, 
+                  fontSize: 13, 
+                  color: "#1e40af",
+                  marginBottom: 4
+                }}>
+                  {item.time}
+                </div>
+        
+                {/* Круглый фон для иконки */}
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    margin: "0 auto 4px",
-                    width: 38,
-                    height: 38,
+                    margin: "0 auto 6px",
+                    width: 36,
+                    height: 36,
                     borderRadius: "50%",
                     background: "linear-gradient(135deg, #38bdf8 0%, #bae6fd 100%)"
                   }}
@@ -149,10 +159,21 @@ function WeatherCard({ city, temp, desc, icon, details, forecast, photoUrl }) {
                   <img
                     src={item.icon}
                     alt=""
-                    style={{ width: 42, height: 42, display: "block" }}
+                    style={{ 
+                      width: 32, 
+                      height: 32, 
+                      display: "block"
+                    }}
                   />
                 </div>
-                <div style={{ fontWeight: 600, fontSize: 16 }}>{item.temp}°</div>
+        
+                <div style={{ 
+                  fontWeight: 700, 
+                  fontSize: 16,
+                  color: "#2498dc"
+                }}>
+                  {item.temp}°
+                </div>
               </div>
             ))}
           </motion.div>
