@@ -8,10 +8,10 @@ import WeatherCard from "./WeatherCard";
 import CityDateInput from "./CityDateInput";
 import ClothingRecommendations from "./ClothingRecommendations";
 import QuickActions from "./QuickActions";
-import { fetchWeather, fetchForecast, fetchUVIndex } from "./weatherApi";
-import { getCityByCoords } from "./geoApi";
 import AirQuality from "./AirQuality";
 import UVIndex from "./UVIndex";
+import { fetchWeather, fetchForecast, fetchAirQuality, fetchUVIndex } from "./weatherApi";
+import { getCityByCoords } from "./geoApi";
 
 function CloudsEffect() {
   return (
@@ -301,6 +301,9 @@ function App() {
       return [];
     }
   });
+  
+  const [airQualityData, setAirQualityData] = useState(null);
+  const [uvData, setUvData] = useState(null);
 
   // --- Функция поделиться погодой ---
   const handleShareWeather = (weather) => {
@@ -402,6 +405,22 @@ function App() {
 
         setDesc(data.weather[0].description);
         setIsNight(data.weather[0].icon.includes("n"));
+
+        try {
+          const airData = await fetchAirQuality(city);
+          setAirQualityData(airData);
+        } catch (e) {
+          console.error('Air quality error:', e);
+          setAirQualityData(null);
+        }
+
+        try {
+          const uvIndexData = await fetchUVIndex(city);
+          setUvData(uvIndexData);
+        } catch (e) {
+          console.error('UV index error:', e);
+          setUvData(null);
+        }
 
         // Получаем прогноз и формируем карусель для сегодня
         const { list: forecastList } = await fetchForecast(city);
@@ -517,6 +536,22 @@ function App() {
 
             setDesc(data.weather[0].description);
             setIsNight(data.weather[0].icon.includes("n"));
+
+            try {
+              const airData = await fetchAirQuality({ lat, lon });
+              setAirQualityData(airData);
+            } catch (e) {
+              console.error('Air quality error:', e);
+              setAirQualityData(null);
+            }
+
+            try {
+              const uvIndexData = await fetchUVIndex({ lat, lon });
+              setUvData(uvIndexData);
+            } catch (e) {
+              console.error('UV index error:', e);
+              setUvData(null);
+            }
 
             // Формируем карусель для сегодня
             const now = Date.now();
@@ -834,6 +869,12 @@ function App() {
               windSpeed={parseFloat(weather.details?.wind?.replace(' м/с', '') || '0')}
               isNight={isNight}
             />
+
+            {/* 🆕 КАЧЕСТВО ВОЗДУХА - ВСТАВИТЬ ЗДЕСЬ */}
+            <AirQuality airQualityData={airQualityData} />
+
+            {/* 🆕 UV ИНДЕКС - ВСТАВИТЬ ЗДЕСЬ */}
+            <UVIndex uvData={uvData} isNight={isNight} />
             
             {/* 🆕 БЫСТРЫЕ ДЕЙСТВИЯ */}
             <QuickActions 

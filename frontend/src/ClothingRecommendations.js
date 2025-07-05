@@ -223,7 +223,7 @@ export default function ClothingRecommendations({ temp, desc, humidity, windSpee
             }} />
             
             <div style={{
-              fontSize: 20,
+              fontSize: 18,
               marginBottom: 4
             }}>
               {item.icon}
