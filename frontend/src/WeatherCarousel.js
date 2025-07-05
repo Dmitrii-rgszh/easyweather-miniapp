@@ -143,7 +143,7 @@ export default function WeatherCarousel({
             backgroundImage: `url(${photoUrl})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
-            opacity: 0.5,
+            opacity: 0.45,
             filter: "blur(2px)",
             pointerEvents: "none",
             transition: "opacity 0.3s"
@@ -159,8 +159,9 @@ export default function WeatherCarousel({
           fontSize: 20,
           fontWeight: 600,
           color: "#1e293b",
-          margin: "0 0 16px 0",
-          letterSpacing: 3,
+          margin: "0 0 10px 0",
+          letterSpacing: 1,
+          lineHeight: 1.4,
           fontFamily: "Montserrat, Arial, sans-serif"
         }}>
           {city}
@@ -215,18 +216,160 @@ export default function WeatherCarousel({
                   }}
                   transition={{ duration: 0.3 }}
                 >
-                  {/* Время */}
-                  <div style={{
-                    fontSize: weather.isNow ? 16 : 14,
-                    fontWeight: weather.isNow ? 600 : 500,
-                    color: weather.isNow ? "#3b82f6" : "#64748b",
-                    marginBottom: 12,
-                    fontFamily: "Montserrat, Arial, sans-serif"
-                  }}>
-                    {weather.time}
-                  </div>
+                  {/* Белый контейнер для активного элемента */}
+                  {isActive && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      style={{
+                        background: "rgba(255, 255, 255, 0.95)",
+                        borderRadius: 16,
+                        padding: "12px",
+                        marginBottom: 12,
+                        backdropFilter: "blur(10px)",
+                        boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+                        border: "1px solid rgba(255,255,255,0.3)",
+                        width: 180, // ← ЗАФИКСИРОВАЛИ размер
+                        height: 180, // ← ЗАФИКСИРОВАЛИ размер
+                        minWidth: 180, // ← ДОБАВИЛИ минимальный размер
+                        maxWidth: 180, // ← ДОБАВИЛИ максимальный размер
+                        minHeight: 180, // ← ДОБАВИЛИ минимальную высоту
+                        maxHeight: 180, // ← ДОБАВИЛИ максимальную высоту
+                        display: "flex",
+                        alignItems: "center", // ← ВЕРНУЛИ горизонтальное расположение
+                        gap: 8, // ← ВЕРНУЛИ gap
+                        boxSizing: "border-box", // ← ДОБАВИЛИ для правильного размера
+                        overflow: "hidden"
+                      }}
+                    >
+                      {/* Левая часть - иконка */}
+                      <div style={{
+                        width: 80, // ← ИЗМЕНИТЬ: увеличили с 50 до 60
+                        height: 80, // ← ИЗМЕНИТЬ: увеличили с 50 до 60
+                        borderRadius: "50%",
+                        background: "linear-gradient(135deg, #38bdf8 0%, #bae6fd 100%)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow: "0 4px 12px rgba(56, 189, 248, 0.3)",
+                        flexShrink: 0
+                      }}>
+                        <img
+                          src={weather.icon}
+                          alt={weather.desc}
+                          style={{
+                            width: 70, // ← ИЗМЕНИТЬ: увеличили с 40 до 50
+                            height: 70, // ← ИЗМЕНИТЬ: увеличили с 40 до 50
+                            objectFit: "contain"
+                          }}
+                        />
+                      </div>
 
-                  
+                      {/* Правая часть - температура и описание */}
+                      <div style={{
+                        flex: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-start",
+                        justifyContent: "center"
+                      }}>
+                        {/* Время */}
+                        <div style={{
+                          fontSize: 16,
+                          fontWeight: 500,
+                          color: "#64748b",
+                          marginBottom: 6,
+                          fontFamily: "Montserrat, Arial, sans-serif"
+                        }}>
+                          {weather.time}
+                        </div>
+
+                        {/* Температура */}
+                        <div style={{
+                          fontSize: 32,
+                          fontWeight: 700,
+                          color: "#2563eb",
+                          fontFamily: "Montserrat, Arial, sans-serif",
+                          marginBottom: 4
+                        }}>
+                          {weather.temp}°
+                        </div>
+
+                        {/* Описание с переносом слов */}
+                        <div style={{
+                          fontSize: 12,
+                          color: "#64748b",
+                          fontFamily: "Montserrat, Arial, sans-serif",
+                          lineHeight: 1.3,
+                          wordWrap: "break-word",
+                          hyphens: "auto",
+                          maxWidth: "100%"
+                        }}>
+                          {weather.desc}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Для неактивных элементов - компактный вид */}
+                  {!isActive && (
+                    <div style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      opacity: 0.6,
+                      minHeight: 120,
+                      justifyContent: "center"
+                    }}>
+                      {/* Время */}
+                      <div style={{
+                        fontSize: 10,
+                        fontWeight: 500,
+                        color: "#64748b",
+                        marginBottom: 8,
+                        fontFamily: "Montserrat, Arial, sans-serif"
+                      }}>
+                        {weather.time}
+                      </div>
+
+                      {/* Иконка */}
+                      <div style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: "50%",
+                        background: "linear-gradient(135deg, #38bdf8 0%, #bae6fd 100%)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginBottom: 6
+                      }}>
+                        <img
+                          src={weather.icon}
+                          alt={weather.desc}
+                          style={{
+                            width: 24,
+                            height: 24,
+                            objectFit: "contain"
+                          }}
+                        />
+                      </div>
+
+                      {/* Температура */}
+                      <div style={{
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: "#64748b",
+                        fontFamily: "Montserrat, Arial, sans-serif"
+                      }}>
+                        {weather.temp}°
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        </div>
 
         {/* Детали погоды для активного времени */}
         <AnimatePresence mode="wait">
@@ -320,13 +463,13 @@ export default function WeatherCarousel({
           </motion.div>
         </AnimatePresence>
 
-        {/* Индикаторы с белым фоном */}
+        {/* Индикаторы с белым фоном и отступом */}
         {hourlyData.length > 1 && (
           <div style={{
             background: "rgba(255, 255, 255, 0.9)",
             borderRadius: 12,
             padding: "8px 12px",
-            margin: "12px auto 0",
+            margin: "16px auto 16px",
             backdropFilter: "blur(10px)",
             boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
             border: "1px solid rgba(255,255,255,0.3)",
@@ -347,8 +490,8 @@ export default function WeatherCarousel({
                     borderRadius: 4,
                     border: "none",
                     background: activeIndex === index 
-                       ? "#3b82f6" 
-                       : "#cbd5e1",
+                      ? "#3b82f6" 
+                      : "#cbd5e1",
                     cursor: "pointer",
                     transition: "all 0.3s ease",
                     padding: 0
