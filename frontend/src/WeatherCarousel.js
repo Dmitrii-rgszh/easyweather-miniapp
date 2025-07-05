@@ -1,7 +1,7 @@
-// Новый компонент WeatherCarousel - интерактивная карусель с почасовым прогнозом
+// Исправленный WeatherCarousel.js - убираем зацикливание, правильная навигация
 
 import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 
 // Функция создания почасового прогноза
 function generateHourlyForecast(currentWeather, forecastData) {
@@ -18,19 +18,19 @@ function generateHourlyForecast(currentWeather, forecastData) {
     isNow: true
   });
 
-  // Добавляем почасовой прогноз на следующие 8 часов (только ровные часы)
+  // Добавляем почасовой прогноз на следующие 8 часов
   if (forecastData && forecastData.length > 0) {
     let addedHours = 0;
+    let lastHour = now.getHours();
     
     for (const item of forecastData) {
       if (addedHours >= 8) break;
       
       const itemDate = new Date(item.dt * 1000);
       const itemHour = itemDate.getHours();
-      const itemMinutes = itemDate.getMinutes();
       
-      // Берем только ровные часы (00 минут) и будущие данные
-      if (itemMinutes === 0 && itemDate > now) {
+      // Добавляем только будущие часы и избегаем дублирования
+      if (itemDate > now && itemHour !== lastHour) {
         hourlyData.push({
           time: `${itemHour.toString().padStart(2, '0')}:00`,
           temp: Math.round(item.main.temp),
@@ -44,11 +44,13 @@ function generateHourlyForecast(currentWeather, forecastData) {
           },
           isNow: false
         });
+        lastHour = itemHour;
         addedHours++;
       }
     }
   }
 
+  console.log('Generated hourly data:', hourlyData); // Для отладки
   return hourlyData;
 }
 
@@ -60,7 +62,7 @@ export default function WeatherCarousel({
   details, 
   forecastData, 
   photoUrl,
-  onWeatherChange // Колбек для передачи выбранных данных наверх
+  onWeatherChange
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -76,9 +78,15 @@ export default function WeatherCarousel({
   // Отправляем данные выбранного времени родительскому компоненту
   useEffect(() => {
     if (onWeatherChange && hourlyData[activeIndex]) {
+      console.log('Sending weather data for index:', activeIndex, hourlyData[activeIndex]);
       onWeatherChange(hourlyData[activeIndex]);
     }
-  }, [activeIndex, onWeatherChange]);
+  }, [activeIndex, hourlyData, onWeatherChange]);
+
+  // Сброс к первому элементу при изменении данных
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [city, temp]);
 
   // Обработка свайпа
   const handleDragEnd = (event, info) => {
@@ -86,8 +94,10 @@ export default function WeatherCarousel({
     const threshold = 50;
     
     if (info.offset.x > threshold && activeIndex > 0) {
+      // Свайп вправо - предыдущий элемент
       setActiveIndex(activeIndex - 1);
     } else if (info.offset.x < -threshold && activeIndex < hourlyData.length - 1) {
+      // Свайп влево - следующий элемент
       setActiveIndex(activeIndex + 1);
     }
     
@@ -96,10 +106,16 @@ export default function WeatherCarousel({
 
   // Клик по индикатору
   const handleDotClick = (index) => {
-    setActiveIndex(index);
+    if (index >= 0 && index < hourlyData.length) {
+      setActiveIndex(index);
+    }
   };
 
   const activeWeather = hourlyData[activeIndex] || hourlyData[0];
+
+  if (!activeWeather) {
+    return <div>Загрузка...</div>;
+  }
 
   return (
     <div style={{
@@ -118,43 +134,44 @@ export default function WeatherCarousel({
         <div
           style={{
             position: "absolute",
+            zIndex: 0,
             top: 0,
             left: 0,
             width: "100%",
             height: "100%",
+            borderRadius: 24,
             backgroundImage: `url(${photoUrl})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
-            opacity: 0.15,
+            opacity: 0.45,
             filter: "blur(3px)",
             pointerEvents: "none",
-            borderRadius: 24
+            transition: "opacity 0.3s"
           }}
         />
       )}
 
-      {/* Контент поверх фона */}
+      {/* Весь контент поверх фото */}
       <div style={{ position: "relative", zIndex: 1 }}>
-        
         {/* Название города */}
-        <div style={{
-          fontSize: 24,
-          fontWeight: 600,
+        <h2 style={{
           textAlign: "center",
+          fontSize: 20,
+          fontWeight: 600,
           color: "#1e293b",
-          marginBottom: 20,
-          fontFamily: "Montserrat, Arial, sans-serif",
-          letterSpacing: 1
+          margin: "0 0 16px 0",
+          letterSpacing: 1,
+          fontFamily: "Montserrat, Arial, sans-serif"
         }}>
           {city}
-        </div>
+        </h2>
 
-        {/* Карусель */}
+        {/* Карусель с контентом */}
         <div style={{ 
           position: "relative", 
-          height: 200,
-          marginBottom: 20,
-          overflow: "hidden"
+          overflow: "hidden", 
+          borderRadius: 16,
+          height: 160 
         }}>
           <motion.div
             ref={carouselRef}
@@ -162,117 +179,102 @@ export default function WeatherCarousel({
               display: "flex",
               width: `${hourlyData.length * 100}%`,
               height: "100%",
-              x: useTransform(x, (value) => 
-                value - (activeIndex * (100 / hourlyData.length)) + "%"
-              )
+              x
             }}
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.1}
             onDragStart={() => setIsDragging(true)}
             onDragEnd={handleDragEnd}
-            animate={{
-              x: `${-activeIndex * (100 / hourlyData.length)}%`
+            animate={{ 
+              x: `${-activeIndex * (100 / hourlyData.length)}%` 
             }}
-            transition={{
-              type: "spring",
-              stiffness: 300,
-              damping: 30
+            transition={{ 
+              type: "spring", 
+              stiffness: 300, 
+              damping: 30 
             }}
           >
-            {hourlyData.map((item, index) => {
-              const distance = Math.abs(index - activeIndex);
-              const opacity = distance === 0 ? 1 : Math.max(0.3, 1 - distance * 0.4);
-              const scale = distance === 0 ? 1 : Math.max(0.75, 1 - distance * 0.15);
-
+            {hourlyData.map((weather, index) => {
+              const isActive = index === activeIndex;
+              
               return (
                 <motion.div
-                  key={index}
+                  key={`${weather.time}-${index}`}
                   style={{
                     width: `${100 / hourlyData.length}%`,
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
                     justifyContent: "center",
-                    position: "relative"
+                    padding: "20px",
+                    opacity: isActive ? 1 : 0.6,
+                    pointerEvents: isDragging ? "none" : "auto"
                   }}
                   animate={{
-                    opacity,
-                    scale
+                    scale: isActive ? 1 : 0.9,
                   }}
-                  transition={{
-                    duration: 0.3,
-                    ease: "easeOut"
-                  }}
+                  transition={{ duration: 0.3 }}
                 >
-                  {/* Карточка погоды */}
+                  {/* Время */}
                   <div style={{
-                    background: "rgba(255, 255, 255, 0.8)",
-                    borderRadius: 20,
-                    padding: "16px",
-                    textAlign: "center",
-                    border: "2px solid rgba(56, 189, 248, 0.2)",
-                    boxShadow: distance === 0 
-                      ? "0 8px 24px rgba(56, 189, 248, 0.3)" 
-                      : "0 4px 12px rgba(0, 0, 0, 0.1)",
-                    minWidth: 120,
-                    transform: `translateY(${distance === 0 ? 0 : 10}px)`
+                    fontSize: weather.isNow ? 16 : 14,
+                    fontWeight: weather.isNow ? 600 : 500,
+                    color: weather.isNow ? "#3b82f6" : "#64748b",
+                    marginBottom: 12,
+                    fontFamily: "Montserrat, Arial, sans-serif"
                   }}>
-                    {/* Время */}
-                    <div style={{
-                      fontSize: 14,
-                      fontWeight: 600,
-                      color: item.isNow ? "#ef4444" : "#1e40af",
-                      marginBottom: 8,
-                      fontFamily: "Montserrat, Arial, sans-serif"
-                    }}>
-                      {item.time}
-                    </div>
-
-                    {/* Иконка погоды */}
-                    <div style={{
-                      width: 60,
-                      height: 60,
-                      borderRadius: "50%",
-                      background: "linear-gradient(135deg, #38bdf8 0%, #bae6fd 100%)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      margin: "0 auto 12px",
-                      boxShadow: "0 4px 12px rgba(56, 189, 248, 0.3)"
-                    }}>
-                      <img
-                        src={item.icon}
-                        alt={item.desc}
-                        style={{
-                          width: 56,
-                          height: 56,
-                          display: "block"
-                        }}
-                      />
-                    </div>
-
-                    {/* Температура */}
-                    <div style={{
-                      fontSize: 28,
-                      fontWeight: 700,
-                      color: "#2498dc",
-                      marginBottom: 4,
-                      fontFamily: "Montserrat, Arial, sans-serif"
-                    }}>
-                      {item.temp}°
-                    </div>
-
-                    {/* Описание */}
-                    <div style={{
-                      fontSize: 12,
-                      color: "#64748b",
-                      fontFamily: "Montserrat, Arial, sans-serif",
-                      lineHeight: 1.3
-                    }}>
-                      {item.desc}
-                    </div>
+                    {weather.time}
                   </div>
+
+                  {/* Иконка погоды */}
+                  <div style={{
+                    width: 60,
+                    height: 60,
+                    borderRadius: "50%",
+                    background: "linear-gradient(135deg, #38bdf8 0%, #bae6fd 100%)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 12,
+                    boxShadow: "0 4px 12px rgba(56, 189, 248, 0.3)"
+                  }}>
+                    <img
+                      src={weather.icon}
+                      alt={weather.desc}
+                      style={{
+                        width: 50,
+                        height: 50,
+                        objectFit: "contain"
+                      }}
+                    />
+                  </div>
+
+                  {/* Температура */}
+                  <div style={{
+                    fontSize: 24,
+                    fontWeight: 700,
+                    color: "#2563eb",
+                    fontFamily: "Montserrat, Arial, sans-serif"
+                  }}>
+                    {weather.temp}°
+                  </div>
+
+                  {/* Описание (только для активного) */}
+                  {isActive && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      style={{
+                        fontSize: 12,
+                        color: "#64748b",
+                        textAlign: "center",
+                        marginTop: 8,
+                        fontFamily: "Montserrat, Arial, sans-serif"
+                      }}
+                    >
+                      {weather.desc}
+                    </motion.div>
+                  )}
                 </motion.div>
               );
             })}
@@ -371,32 +373,35 @@ export default function WeatherCarousel({
           </motion.div>
         </AnimatePresence>
 
-        {/* Индикаторы точки */}
-        <div style={{
-          display: "flex",
-          justifyContent: "center",
-          gap: 6
-        }}>
-          {hourlyData.map((_, index) => (
-            <motion.button
-              key={index}
-              onClick={() => handleDotClick(index)}
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: "50%",
-                border: "none",
-                cursor: "pointer",
-                background: index === activeIndex 
-                  ? "#38bdf8" 
-                  : "rgba(56, 189, 248, 0.3)",
-                transition: "all 0.3s ease"
-              }}
-              whileHover={{ scale: 1.2 }}
-              whileTap={{ scale: 0.9 }}
-            />
-          ))}
-        </div>
+        {/* Индикаторы */}
+        {hourlyData.length > 1 && (
+          <div style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 8,
+            marginTop: 8
+          }}>
+            {hourlyData.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => handleDotClick(index)}
+                style={{
+                  width: activeIndex === index ? 20 : 8,
+                  height: 8,
+                  borderRadius: 4,
+                  border: "none",
+                  background: activeIndex === index 
+                    ? "#3b82f6" 
+                    : "#cbd5e1",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                  padding: 0
+                }}
+                aria-label={`Переключиться на ${hourlyData[index].time}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

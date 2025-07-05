@@ -262,14 +262,14 @@ function findNearestForecast(forecastList, targetDate, targetHour) {
 }
 
 function getBgGradient(desc, isNight) {
-  if (!desc) return "#c3d3f7";
+  if (!desc) return "linear-gradient(160deg, #7fcfff 0%, #e7e9fd 100%)";
   if (desc.toLowerCase().includes('ясно')) return isNight 
-    ? "#22253b" 
+    ? "linear-gradient(145deg, #1e293b 0%, #334155 50%, #475569 100%)"
     : "linear-gradient(160deg, #7fcfff 0%, #e7e9fd 100%)";
   if (desc.toLowerCase().match(/облач|пасмур|cloud/)) return "linear-gradient(180deg, #bfc9dc 0%, #dbe5fa 100%)";
   if (desc.toLowerCase().includes('дожд')) return "linear-gradient(180deg, #6c7ba1 0%, #b1bfd8 100%)";
   if (desc.toLowerCase().includes('снег')) return "linear-gradient(180deg, #e0f2fc 0%, #f2fafc 100%)";
-  return "#c3d3f7";
+  return "linear-gradient(160deg, #7fcfff 0%, #e7e9fd 100%)";
 }
 
 function App() {
@@ -294,6 +294,9 @@ function App() {
   const [airQualityData, setAirQualityData] = useState(null);
   const [uvData, setUvData] = useState(null);
   const [coords, setCoords] = useState(null);
+  // ДОБАВИТЬ эти строки после существующих состояний:
+  const [initialDesc, setInitialDesc] = useState(""); // Для фона
+  const [initialIsNight, setInitialIsNight] = useState(false); // Для фона
   
   // 🆕 Состояние для выбранного времени в карусели
   const [selectedWeatherData, setSelectedWeatherData] = useState(null);
@@ -301,9 +304,6 @@ function App() {
   // 🆕 Колбек для получения данных из карусели
   const handleWeatherChange = (weatherData) => {
     setSelectedWeatherData(weatherData);
-    // Обновляем desc и isNight для эффектов фона
-    setDesc(weatherData.desc);
-    setIsNight(weatherData.icon?.includes("n") || false);
   };
 
   // Функции обработки остаются без изменений
@@ -399,8 +399,8 @@ function App() {
 
         setWeather(currentWeather);
         setSelectedWeatherData(currentWeather); // 🆕 Инициализируем выбранные данные
-        setDesc(data.weather[0].description);
-        setIsNight(data.weather[0].icon.includes("n"));
+        setInitialDesc(data.weather[0].description);
+        setInitialIsNight(data.weather[0].icon.includes("n"));
 
         if (data.coord) {
           setCoords({ lat: data.coord.lat, lon: data.coord.lon });
@@ -556,7 +556,7 @@ function App() {
           overflow: "hidden",
           fontFamily: 'Montserrat, Arial, sans-serif'
         }}
-        animate={{ background: getBgGradient(desc, isNight) }}
+        animate={{ background: getBgGradient(initialDesc, initialIsNight) }}
         transition={{ duration: 1.2 }}
       >
         {/* Фоновые эффекты */}
@@ -576,11 +576,11 @@ function App() {
           />
         )}
 
-        {desc && desc.toLowerCase().match(/облач|пасмур|cloud/) && <CloudsEffect />}
-        {desc && desc.toLowerCase().includes('дожд') && <RainEffect />}
-        {desc && desc.toLowerCase().includes('снег') && <SnowEffect />}
-        {desc && desc.toLowerCase().includes('ясно') && !isNight && <SunEffect />}
-        {isNight && <NightGlow />}
+        {initialDesc && initialDesc.toLowerCase().match(/облач|пасмур|cloud/) && <CloudsEffect />}
+        {initialDesc && initialDesc.toLowerCase().includes('дожд') && <RainEffect />}
+        {initialDesc && initialDesc.toLowerCase().includes('снег') && <SnowEffect />}
+        {initialDesc && initialDesc.toLowerCase().includes('ясно') && !initialIsNight && <SunEffect />}
+        {initialIsNight && <NightGlow />}
 
         {/* Логотип */}
         <motion.img
