@@ -370,10 +370,10 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (weather && weather.city) {
+    if (weather?.city) { // ← Добавили проверку
       getCityPhoto(weather.city).then(setPhotoUrl);
     }
-  }, [weather && weather.city]);
+  }, [weather?.city]);
 
   // 🔧 ОБНОВЛЕННАЯ ЛОГИКА ЗАГРУЗКИ ПОГОДЫ
   const handleShowWeather = async () => {

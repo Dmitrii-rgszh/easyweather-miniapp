@@ -198,13 +198,18 @@ const ChevronIcon = ({ isOpen }) => (
 export default function WeatherTrends({ weather }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  if (!weather || !weather.details) {
+  // ИСПРАВЛЕНИЕ: useMemo ПЕРЕД условным return
+  const trends = useMemo(() => {
+    if (!weather || !weather.details) {
+      return [];
+    }
+    return generateTrends(weather);
+  }, [weather]);
+
+  // Теперь условие ПОСЛЕ всех хуков
+  if (!weather || !weather.details || trends.length === 0) {
     return null;
   }
-
-  const trends = useMemo(() => {
-    return generateTrends(weather);
-  }, [weather?.temp, weather?.details?.humidity, weather?.details?.wind, weather?.details?.pressure]);
 
   const significantTrends = trends
     .map(trend => ({
