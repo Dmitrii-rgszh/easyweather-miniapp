@@ -119,15 +119,15 @@ export default function WeatherCarousel({
 
   return (
     <div style={{
-      margin: "0 auto",
+      margin: "0 auto 15px auto",
       maxWidth: 320,
       borderRadius: 24,
       background: "rgba(255,255,255,0.9)",
       backdropFilter: "blur(20px)",
-      boxShadow: "0 8px 32px rgba(56, 189, 248, 0.2)",
+      boxShadow: "0 8px 16px rgba(56, 189, 248, 0.2)",
       position: "relative",
       overflow: "hidden",
-      padding: "20px"
+      padding: "8px 16px"
     }}>
       {/* Фоновое изображение города */}
       {photoUrl && (
@@ -159,7 +159,7 @@ export default function WeatherCarousel({
           fontSize: 20,
           fontWeight: 600,
           color: "#1e293b",
-          margin: "0 0 10px 0",
+          margin: "0 0 0px 0",
           letterSpacing: 1,
           lineHeight: 1.4,
           fontFamily: "Montserrat, Arial, sans-serif"
@@ -172,7 +172,8 @@ export default function WeatherCarousel({
           position: "relative", 
           overflow: "hidden", 
           borderRadius: 16,
-          height: 160 
+          height: 190,
+          marginBottom: 6 
         }}>
           <motion.div
             ref={carouselRef}
@@ -224,89 +225,102 @@ export default function WeatherCarousel({
                       style={{
                         background: "rgba(255, 255, 255, 0.95)",
                         borderRadius: 16,
-                        padding: "12px",
-                        marginBottom: 12,
+                        padding: "8px",
+                        marginBottom: 6,
                         backdropFilter: "blur(10px)",
                         boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
                         border: "1px solid rgba(255,255,255,0.3)",
-                        width: 180, // ← ЗАФИКСИРОВАЛИ размер
-                        height: 180, // ← ЗАФИКСИРОВАЛИ размер
-                        minWidth: 180, // ← ДОБАВИЛИ минимальный размер
-                        maxWidth: 180, // ← ДОБАВИЛИ максимальный размер
-                        minHeight: 180, // ← ДОБАВИЛИ минимальную высоту
-                        maxHeight: 180, // ← ДОБАВИЛИ максимальную высоту
+                        width: 160,
+                        height: 160,
+                        minWidth: 160,
+                        maxWidth: 160,
+                        minHeight: 160,
+                        maxHeight: 160,
                         display: "flex",
-                        alignItems: "center", // ← ВЕРНУЛИ горизонтальное расположение
-                        gap: 8, // ← ВЕРНУЛИ gap
-                        boxSizing: "border-box", // ← ДОБАВИЛИ для правильного размера
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxSizing: "border-box",
                         overflow: "hidden"
                       }}
                     >
-                      {/* Левая часть - иконка */}
+                      {/* Верхняя часть - иконка и текст рядом */}
                       <div style={{
-                        width: 80, // ← ИЗМЕНИТЬ: увеличили с 50 до 60
-                        height: 80, // ← ИЗМЕНИТЬ: увеличили с 50 до 60
-                        borderRadius: "50%",
-                        background: "linear-gradient(135deg, #38bdf8 0%, #bae6fd 100%)",
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "center",
-                        boxShadow: "0 4px 12px rgba(56, 189, 248, 0.3)",
-                        flexShrink: 0
+                        gap: 4,
+                        marginBottom: 6
                       }}>
-                        <img
-                          src={weather.icon}
-                          alt={weather.desc}
-                          style={{
-                            width: 70, // ← ИЗМЕНИТЬ: увеличили с 40 до 50
-                            height: 70, // ← ИЗМЕНИТЬ: увеличили с 40 до 50
-                            objectFit: "contain"
-                          }}
-                        />
+                        {/* Левая часть - иконка */}
+                        <div style={{
+                          width: 70,
+                          height: 70,
+                          borderRadius: "50%",
+                          background: "linear-gradient(135deg, #38bdf8 0%, #bae6fd 100%)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          boxShadow: "0 4px 12px rgba(56, 189, 248, 0.3)",
+                          flexShrink: 0
+                        }}>
+                          <img
+                            src={weather.icon}
+                            alt={weather.desc}
+                            style={{
+                              width: 60,
+                              height: 60,
+                              objectFit: "contain"
+                            }}
+                          />
+                        </div>
+
+                        {/* Правая часть - время и температура */}
+                        <div style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "flex-start",
+                          justifyContent: "center"
+                        }}>
+                          {/* Время */}
+                          <div style={{
+                            fontSize: 16,
+                            fontWeight: 500,
+                            color: "#64748b",
+                            marginBottom: 4,
+                            fontFamily: "Montserrat, Arial, sans-serif"
+                          }}>
+                            {weather.time}
+                          </div>
+
+                          {/* Температура */}
+                          <div style={{
+                            fontSize: 26,
+                            fontWeight: 700,
+                            color: "#2563eb",
+                            fontFamily: "Montserrat, Arial, sans-serif",
+                            lineHeight: 1
+                          }}>
+                            {weather.temp}°
+                          </div>
+                        </div>
                       </div>
 
-                      {/* Правая часть - температура и описание */}
+                      {/* Описание снизу по центру */}
                       <div style={{
-                        flex: 1,
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "flex-start",
-                        justifyContent: "center"
+                        fontSize: 16,
+                        color: "#64748b",
+                        fontFamily: "Montserrat, Arial, sans-serif",
+                        lineHeight: 1.3,
+                        textAlign: "center",
+                        wordWrap: "break-word",
+                        hyphens: "auto",
+                        width: "100%",
+                        overflow: "hidden",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical"
                       }}>
-                        {/* Время */}
-                        <div style={{
-                          fontSize: 16,
-                          fontWeight: 500,
-                          color: "#64748b",
-                          marginBottom: 6,
-                          fontFamily: "Montserrat, Arial, sans-serif"
-                        }}>
-                          {weather.time}
-                        </div>
-
-                        {/* Температура */}
-                        <div style={{
-                          fontSize: 32,
-                          fontWeight: 700,
-                          color: "#2563eb",
-                          fontFamily: "Montserrat, Arial, sans-serif",
-                          marginBottom: 4
-                        }}>
-                          {weather.temp}°
-                        </div>
-
-                        {/* Описание с переносом слов */}
-                        <div style={{
-                          fontSize: 12,
-                          color: "#64748b",
-                          fontFamily: "Montserrat, Arial, sans-serif",
-                          lineHeight: 1.3,
-                          wordWrap: "break-word",
-                          hyphens: "auto",
-                          maxWidth: "100%"
-                        }}>
-                          {weather.desc}
-                        </div>
+                        {weather.desc}
                       </div>
                     </motion.div>
                   )}
@@ -378,8 +392,8 @@ export default function WeatherCarousel({
             style={{
               display: "flex",
               justifyContent: "space-between",
-              marginBottom: 16,
-              padding: "12px",
+              marginBottom: 6,
+              padding: "8px",
               background: "rgba(248, 250, 252, 0.8)",
               borderRadius: 12,
               border: "1px solid rgba(56, 189, 248, 0.1)"
@@ -468,8 +482,8 @@ export default function WeatherCarousel({
           <div style={{
             background: "rgba(255, 255, 255, 0.9)",
             borderRadius: 12,
-            padding: "8px 12px",
-            margin: "16px auto 16px",
+            padding: "4px 8px",
+            margin: "8px auto 4px",
             backdropFilter: "blur(10px)",
             boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
             border: "1px solid rgba(255,255,255,0.3)",
