@@ -565,8 +565,8 @@ function App() {
       return (
         <motion.div
           style={{
-            position: 'fixed',
-            top: '20px',
+            position: 'absolute',
+            top: logoTop + 50, // На том же уровне что и логотип
             right: '20px',
             background: 'linear-gradient(135deg, #ffd700 0%, #ffed4e 100%)',
             color: '#1a1a1a',
@@ -593,8 +593,8 @@ function App() {
     return (
       <motion.div
         style={{
-          position: 'fixed',
-          top: '20px',
+          position: 'absolute',
+          top: logoTop + 15, // На том же уровне что и логотип
           right: '20px',
           background: isLow 
             ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
@@ -602,7 +602,7 @@ function App() {
           color: 'white',
           padding: '8px 16px',
           borderRadius: '20px',
-          fontSize: '12px',
+          fontSize: '14px',
           fontWeight: '600',
           fontFamily: 'Montserrat, Arial, sans-serif',
           zIndex: 100,
@@ -771,66 +771,188 @@ function App() {
           </motion.div>
         </motion.div>
         
-        {/* Избранные города */}
-        {favorites.length > 0 && !weather && (
+        {/* Избранные города - ОБНОВЛЕННАЯ ВЕРСИЯ */}
+{favorites.length > 0 && (
+  <motion.div
+    style={{
+      margin: "20px auto 0",
+      maxWidth: 340,
+      width: "100%"
+    }}
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.6, delay: 0.5 }}
+  >
+    {/* Заголовок избранного */}
+    <div style={{
+      textAlign: "center",
+      marginBottom: 12,
+      color: "#fff",
+      fontWeight: 600,
+      fontSize: 16,
+      letterSpacing: 0.3,
+      textShadow: "0 2px 8px rgba(0,0,0,0.57), 0 0 1px #fff",
+      fontFamily: "Montserrat, Arial, sans-serif",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8
+    }}>
+      <span style={{ fontSize: 18 }}>⭐</span>
+      Избранные города
+      </div>
+
+      {/* Список городов */}
+      <div style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 8
+      }}>
+        {favorites.map((favCity, index) => (
           <motion.div
+            key={favCity}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 + 0.6 }}
             style={{
-              maxWidth: 340,
-              margin: "20px auto 0",
-              padding: "0 16px"
+              background: "rgba(255, 255, 255, 0.9)",
+              borderRadius: 15,
+              padding: "12px 16px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              backdropFilter: "blur(10px)",
+              boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+              border: "1px solid rgba(255,255,255,0.2)"
             }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
           >
-            <div style={{
-              color: "#fff",
-              fontSize: 16,
-              fontWeight: 500,
-              marginBottom: 8,
-              textAlign: "center",
-              textShadow: "0 2px 8px rgba(0,0,0,0.5)",
-              fontFamily: "Montserrat, Arial, sans-serif"
-            }}>
-              ⭐ Избранные города
-            </div>
+            {/* Левая часть - иконка и название города */}
+            <motion.div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                flex: 1,
+                cursor: "pointer"
+              }}
+              onClick={() => {
+                setCity(favCity);
+                handleShowWeather();
+              }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div style={{
+                width: 36,
+                height: 36,
+                borderRadius: 12,
+                background: "linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 18,
+                boxShadow: "0 4px 12px rgba(251, 191, 36, 0.3)"
+              }}>
+                ⭐
+              </div>
+              <div style={{
+                fontFamily: "Montserrat, Arial, sans-serif",
+                fontSize: 16,
+                fontWeight: 600,
+                color: "#374151"
+              }}>
+                {favCity}
+              </div>
+            </motion.div>
+
+            {/* Правая часть - кнопки действий */}
             <div style={{
               display: "flex",
-              flexWrap: "wrap",
               gap: 8,
-              justifyContent: "center"
+              alignItems: "center"
             }}>
-              {favorites.map((favCity, index) => (
-                <motion.button
-                  key={favCity}
-                  onClick={() => {
-                    setCity(favCity);
-                    setTimeout(handleShowWeather, 100);
-                  }}
-                  style={{
-                    background: "rgba(255,255,255,0.2)",
-                    border: "1px solid rgba(255,255,255,0.3)",
-                    borderRadius: 16,
-                    padding: "6px 12px",
-                    color: "#fff",
-                    fontSize: 18,
-                    fontWeight: 500,
-                    cursor: "pointer",
-                    backdropFilter: "blur(10px)",
-                    fontFamily: "Montserrat, Arial, sans-serif"
-                  }}
-                  whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.3)" }}
-                  whileTap={{ scale: 0.95 }}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 + 0.6 }}
-                >
-                  {favCity}
-                </motion.button>
-              ))}
+              {/* Кнопка быстрого просмотра */}
+              <motion.button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCity(favCity);
+                  handleShowWeather();
+                }}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  background: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
+                  border: "none",
+                  color: "white",
+                  fontSize: 14,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 2px 8px rgba(59, 130, 246, 0.3)"
+                }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                title="Показать погоду"
+              >
+                👁️
+              </motion.button>
+
+              {/* Кнопка удаления */}
+              <motion.button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const newFavorites = favorites.filter(city => city !== favCity);
+                  setFavorites(newFavorites);
+                  try {
+                    localStorage.setItem('weatherFavorites', JSON.stringify(newFavorites));
+                  } catch (e) {
+                    console.error('Не удалось сохранить избранное:', e);
+                  }
+                }}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+                  border: "none",
+                  color: "white",
+                  fontSize: 12,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 2px 8px rgba(239, 68, 68, 0.3)"
+                }}
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                whileTap={{ scale: 0.9 }}
+                title="Удалить из избранного"
+              >
+                🗑️
+              </motion.button>
             </div>
           </motion.div>
-        )}
+        ))}
+      </div>
+
+      {/* Подсказка */}
+      <motion.div
+        style={{
+          textAlign: "center",
+          marginTop: 12,
+          fontSize: 12,
+          color: "rgba(255,255,255,0.8)",
+          fontFamily: "Montserrat, Arial, sans-serif"
+        }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1 }}
+      >
+        👁️ Быстрый просмотр • 🗑️ Удалить
+      </motion.div>
+    </motion.div>
+  )}
 
         <div style={{ height: 24 }} />
 

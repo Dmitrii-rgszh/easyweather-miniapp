@@ -3,6 +3,40 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+// Умные предупреждения о погоде на 2 часа вперед
+const analyzeUpcomingWeather = (forecastData) => {
+  if (!forecastData || forecastData.length === 0) return [];
+  
+  const now = new Date();
+  const twoHoursLater = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+  
+  const upcomingForecasts = forecastData.filter(item => {
+    const itemTime = new Date(item.dt * 1000);
+    return itemTime >= now && itemTime <= twoHoursLater;
+  });
+  
+  const alerts = [];
+  
+  upcomingForecasts.forEach(item => {
+    const desc = item.weather[0].description.toLowerCase();
+    const time = new Date(item.dt * 1000);
+    const timeStr = time.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    
+    if (desc.includes('дождь') || desc.includes('ливень')) {
+      alerts.push({
+        type: 'rain',
+        icon: '☔',
+        title: 'Дождь приближается!',
+        message: `В ${timeStr} ожидается дождь`,
+        recommendation: '🌂 Возьмите зонт на всякий случай',
+        color: '#ef4444'
+      });
+    }
+  });
+  
+  return alerts.slice(0, 1); // Только самое важное предупреждение
+};
+
 // Функция определения рекомендаций одежды
 function getClothingRecommendations(temp, desc, humidity, windSpeed, isNight) {
   const recommendations = [];
@@ -221,7 +255,7 @@ const ChevronIcon = ({ isOpen }) => (
   </motion.svg>
 );
 
-export default function ClothingRecommendations({ temp, desc, humidity, windSpeed, isNight }) {
+export default function ClothingRecommendations({ temp, desc, humidity, windSpeed, isNight, forecastData }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const recommendations = getClothingRecommendations(temp, desc, humidity || 50, windSpeed || 0, isNight);
   const theme = getClothingTheme(temp, desc);
@@ -229,6 +263,15 @@ export default function ClothingRecommendations({ temp, desc, humidity, windSpee
   if (recommendations.length === 0) return null;
 
   // Берем первые 2 иконки для превью
+  const previewIcons = recommendations.slice(0, 2).map(item => item.icon);
+  
+export default function ClothingRecommendations({ temp, desc, humidity, windSpeed, isNight, forecastData }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const recommendations = getClothingRecommendations(temp, desc, humidity || 50, windSpeed || 0, isNight);
+  const theme = getClothingTheme(temp, desc);
+
+  if (recommendations.length === 0) return null;
+
   const previewIcons = recommendations.slice(0, 2).map(item => item.icon);
 
   return (
