@@ -697,39 +697,6 @@ function App() {
             </Button>
           </motion.div>
         </motion.div>
-
-        {/* Кнопка админской панели */}
-        <motion.button
-          onClick={() => setShowAdminPanel(true)}
-          disabled={loading}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          style={{
-            background: 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 15,
-            padding: '12px 20px',
-            fontSize: 16,
-            fontWeight: 600,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            boxShadow: '0 8px 32px rgba(220, 53, 69, 0.3)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            fontFamily: 'Montserrat, Arial, sans-serif',
-            letterSpacing: 0.3,
-            marginTop: 12,
-            width: '100%',
-            opacity: loading ? 0.7 : 1
-          }}
-        >
-          <span>🔐</span>
-          Админская панель
-        </motion.button>
         
         {/* Избранные города */}
         {favorites.length > 0 && !weather && (
@@ -844,29 +811,12 @@ function App() {
               weather={activeWeatherData}
               onShareWeather={handleShareWeather}
               onSaveToFavorites={handleSaveToFavorites}
+              onOpenAdminPanel={() => setShowAdminPanel(true)}
             />
           </div>
         )}
 
         <AdBanner />
-        {/* Кнопка админки (временно для тестирования) */}
-        <motion.button
-          onClick={() => setShowAdminPanel(true)}
-          style={{
-            background: 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 15,
-            padding: '12px 20px',
-            fontSize: 16,
-            cursor: 'pointer',
-            margin: '20px auto',
-            display: 'block'
-          }}
-        >
-          🔐 Админская панель
-        </motion.button>
-        
         {/* Панель администратора */}
         <AdminPanel 
           isVisible={showAdminPanel} 

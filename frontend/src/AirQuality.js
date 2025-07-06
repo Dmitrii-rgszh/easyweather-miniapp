@@ -275,7 +275,7 @@ export default function AirQuality({ airQualityData }) {
                         {airInfo.level}
                       </div>
                       <div style={{
-                        fontSize: 11,
+                        fontSize: 14,
                         color: "#6b7280",
                         fontFamily: "Montserrat, Arial, sans-serif"
                       }}>
@@ -307,7 +307,7 @@ export default function AirQuality({ airQualityData }) {
                 </div>
 
                 <div style={{
-                  fontSize: 14,
+                  fontSize: 16,
                   color: "#374151",
                   fontFamily: "Montserrat, Arial, sans-serif",
                   lineHeight: 1.4

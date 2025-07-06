@@ -329,7 +329,7 @@ export default function Astronomy({ weatherData, coords, date = new Date() }) {
                       {formatTime(sunrise)}
                     </div>
                     <div style={{
-                      fontSize: 11,
+                      fontSize: 14,
                       color: "#6b7280",
                       fontFamily: "Montserrat, Arial, sans-serif"
                     }}>
@@ -352,7 +352,7 @@ export default function Astronomy({ weatherData, coords, date = new Date() }) {
                       {formatTime(sunset)}
                     </div>
                     <div style={{
-                      fontSize: 11,
+                      fontSize: 14,
                       color: "#6b7280",
                       fontFamily: "Montserrat, Arial, sans-serif"
                     }}>
@@ -363,7 +363,7 @@ export default function Astronomy({ weatherData, coords, date = new Date() }) {
 
                 <div style={{
                   textAlign: "center",
-                  fontSize: 12,
+                  fontSize: 14,
                   color: "#374151",
                   fontFamily: "Montserrat, Arial, sans-serif",
                   fontWeight: 500
@@ -409,7 +409,7 @@ export default function Astronomy({ weatherData, coords, date = new Date() }) {
                   }}>{moonPhase.icon}</div>
                   <div style={{ flex: 1 }}>
                     <div style={{
-                      fontSize: 14,
+                      fontSize: 16,
                       fontWeight: 600,
                       color: "#374151",
                       fontFamily: "Montserrat, Arial, sans-serif",
@@ -418,7 +418,7 @@ export default function Astronomy({ weatherData, coords, date = new Date() }) {
                       {moonPhase.name}
                     </div>
                     <div style={{
-                      fontSize: 12,
+                      fontSize: 14,
                       color: "#6b7280",
                       fontFamily: "Montserrat, Arial, sans-serif"
                     }}>
@@ -469,7 +469,7 @@ export default function Astronomy({ weatherData, coords, date = new Date() }) {
                     color: "#374151",
                     fontFamily: "Montserrat, Arial, sans-serif"
                   }}>
-                    Золотой час
+                    Золотой час для крутых снимков
                   </div>
                 </div>
 
@@ -480,7 +480,7 @@ export default function Astronomy({ weatherData, coords, date = new Date() }) {
                 }}>
                   <div style={{
                     textAlign: "center",
-                    fontSize: 12,
+                    fontSize: 14,
                     color: "#374151",
                     fontFamily: "Montserrat, Arial, sans-serif"
                   }}>
@@ -489,7 +489,7 @@ export default function Astronomy({ weatherData, coords, date = new Date() }) {
                   </div>
                   <div style={{
                     textAlign: "center",
-                    fontSize: 12,
+                    fontSize: 14,
                     color: "#374151",
                     fontFamily: "Montserrat, Arial, sans-serif"
                   }}>

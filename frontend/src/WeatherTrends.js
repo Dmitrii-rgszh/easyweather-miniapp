@@ -408,7 +408,7 @@ export default function WeatherTrends({ weather }) {
                           </span>
                           <div>
                             <div style={{
-                              fontSize: 14,
+                              fontSize: 16,
                               fontWeight: 600,
                               color: "#374151",
                               fontFamily: "Montserrat, Arial, sans-serif"
@@ -417,7 +417,7 @@ export default function WeatherTrends({ weather }) {
                             </div>
                             {description && (
                               <div style={{
-                                fontSize: 12,
+                                fontSize: 16,
                                 color: "#6b7280",
                                 fontFamily: "Montserrat, Arial, sans-serif"
                               }}>
@@ -488,7 +488,7 @@ export default function WeatherTrends({ weather }) {
                 }} />
                 
                 <div style={{
-                  fontSize: 13,
+                  fontSize: 14,
                   color: "#374151",
                   fontFamily: "Montserrat, Arial, sans-serif",
                   fontWeight: 500,

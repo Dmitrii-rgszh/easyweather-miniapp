@@ -52,7 +52,7 @@ const AdminPanel = ({ isVisible, onClose }) => {
       left: 0,
       width: '100%',
       height: '100%',
-      backgroundColor: 'rgba(0,0,0,0.8)',
+      backgroundColor: 'rgba(0,0,0,0.7)',
       zIndex: 1000,
       display: 'flex',
       justifyContent: 'center',
@@ -64,46 +64,79 @@ const AdminPanel = ({ isVisible, onClose }) => {
         borderRadius: '15px',
         maxWidth: '500px',
         width: '90%',
-        textAlign: 'center'
+        textAlign: 'center',
+        padding: '20px',
+    boxSizing: 'border-box'
       }}>
         <h2>🔐 Админская панель EasyWeather</h2>
         
         {!isAdmin ? (
           <div>
-            <p>Введите ваш Telegram ID для доступа:</p>
+            <p style={{
+              margin: '0 0 20px 0',
+              fontSize: '18px',
+              color: '#6b7280',
+              fontFamily: 'Montserrat, Arial, sans-serif',
+              textAlign: 'center'
+            }}>
+              Введите ваш Telegram ID для доступа:
+            </p>
             <input
               type="number"
               placeholder="Ваш Telegram ID"
               value={telegramId}
               onChange={(e) => setTelegramId(e.target.value)}
               style={{
-                padding: '10px',
-                margin: '10px',
-                borderRadius: '5px',
-                border: '1px solid #ccc',
-                width: '200px',
-                fontSize: '16px'
+                padding: '14px 16px',
+                margin: '0 0 16px 0',
+                borderRadius: '10px',
+                border: '2px solid #e5e7eb',
+                width: '100%',
+                fontSize: '18px',
+                fontFamily: 'Montserrat, Arial, sans-serif',
+                fontWeight: '500',
+                boxSizing: 'border-box',
+                outline: 'none',
+                textAlign: 'center',
+                height: '50px',
+                transition: 'border-color 0.2s'
               }}
+              onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+              onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
             />
+
             <br />
             <button
               onClick={checkAdminStatus}
               disabled={loading || !telegramId}
               style={{
-                padding: '10px 20px',
-                backgroundColor: '#007bff',
+                padding: '14px 24px',
+                backgroundColor: (loading || !telegramId) ? '#9ca3af' : '#3b82f6',
                 color: 'white',
                 border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                margin: '10px',
-                fontSize: '16px'
+                borderRadius: '10px',
+                cursor: (loading || !telegramId) ? 'not-allowed' : 'pointer',
+                ontSize: '10px',
+                fontFamily: 'Montserrat, Arial, sans-serif',
+                fontWeight: '600',
+                fontSize: '18px',
+                width: '100%',
+                height: '50px',
+                marginBottom: '16px',
+                transition: 'all 0.2s',
+                boxSizing: 'border-box'
               }}
             >
               {loading ? 'Проверка...' : 'Войти'}
             </button>
-            <p style={{ fontSize: '12px', color: '#666' }}>
-              💡 Узнать свой ID: @userinfobot в Telegram
+            <p style={{ 
+              fontSize: '15px', 
+              color: '#9ca3af',
+              fontFamily: 'Montserrat, Arial, sans-serif',
+              margin: '0 0 16px 0',
+              textAlign: 'center'
+            }}>
+             💡 Узнать свой ID: @userinfobot в Telegram
             </p>
           </div>
         ) : (
@@ -156,13 +189,20 @@ const AdminPanel = ({ isVisible, onClose }) => {
         <button
           onClick={onClose}
           style={{
-            padding: '10px 20px',
-            backgroundColor: '#dc3545',
+            padding: '14px 24px',
+            backgroundColor: '#ef4444',
             color: 'white',
             border: 'none',
-            borderRadius: '5px',
+            borderRadius: '10px',
             cursor: 'pointer',
-            marginTop: '20px'
+            fontSize: '18px',
+            fontFamily: 'Montserrat, Arial, sans-serif',
+            fontWeight: '600',
+            width: '100%',
+            height: '50px',
+            marginTop: '16px',
+            transition: 'all 0.2s',
+            boxSizing: 'border-box'
           }}
         >
           Закрыть

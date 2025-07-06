@@ -34,7 +34,7 @@ const ChevronIcon = ({ isOpen }) => (
   </motion.svg>
 );
 
-export default function QuickActions({ weather, onShareWeather, onSaveToFavorites }) {
+export default function QuickActions({ weather, onShareWeather, onSaveToFavorites, onOpenAdminPanel }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const theme = getQuickActionsTheme();
 
@@ -101,6 +101,28 @@ export default function QuickActions({ weather, onShareWeather, onSaveToFavorite
       bgColor: "#10b98115",
       iconBgColor: "#10b98110",
       description: "Подробный прогноз"
+    },
+    
+    {
+      icon: "🔐",
+      label: "Админ панель",
+      action: () => {
+        // ЗАМЕНИТЕ ЭТОТ action НА:
+        console.log('🔐 Кнопка админки нажата!');
+        console.log('onOpenAdminPanel функция:', onOpenAdminPanel);
+        alert('Тест: кнопка админки работает!');
+    
+        if (onOpenAdminPanel) {
+          console.log('Вызываем onOpenAdminPanel...');
+          onOpenAdminPanel();
+        } else {
+          alert('❌ onOpenAdminPanel не передан!');
+        }
+      },
+      color: "#dc3545",
+      bgColor: "#dc354515",
+      iconBgColor: "#dc354510",
+      description: "Панель администратора"
     }
   ];
 
@@ -298,7 +320,7 @@ export default function QuickActions({ weather, onShareWeather, onSaveToFavorite
                     
                     {/* Название */}
                     <div style={{
-                      fontSize: 12,
+                      fontSize: 14,
                       color: "#374151",
                       fontFamily: "Montserrat, Arial, sans-serif",
                       fontWeight: 600,
@@ -368,7 +390,7 @@ export default function QuickActions({ weather, onShareWeather, onSaveToFavorite
                     
                     {/* Название */}
                     <div style={{
-                      fontSize: 12,
+                      fontSize: 14,
                       color: "#374151",
                       fontFamily: "Montserrat, Arial, sans-serif",
                       fontWeight: 600,
@@ -407,7 +429,7 @@ export default function QuickActions({ weather, onShareWeather, onSaveToFavorite
                 }} />
                 
                 <div style={{
-                  fontSize: 13,
+                  fontSize: 14,
                   color: "#374151",
                   fontFamily: "Montserrat, Arial, sans-serif",
                   fontWeight: 500,

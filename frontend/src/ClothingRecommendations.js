@@ -412,7 +412,7 @@ export default function ClothingRecommendations({ temp, desc, humidity, windSpee
                     
                     {/* Описание */}
                     <div style={{
-                      fontSize: 10,
+                      fontSize: 16,
                       color: "#374151",
                       fontFamily: "Montserrat, Arial, sans-serif",
                       fontWeight: 500,
@@ -451,7 +451,7 @@ export default function ClothingRecommendations({ temp, desc, humidity, windSpee
                 }} />
                 
                 <div style={{
-                  fontSize: 14,
+                  fontSize: 16,
                   color: "#374151",
                   fontStyle: "italic",
                   fontFamily: "Montserrat, Arial, sans-serif",

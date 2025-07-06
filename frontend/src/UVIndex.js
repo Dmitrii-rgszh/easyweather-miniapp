@@ -307,7 +307,7 @@ export default function UVIndex({ uvData, isNight }) {
                 </div>
 
                 <div style={{
-                  fontSize: 14,
+                  fontSize: 16,
                   color: "#374151",
                   fontFamily: "Montserrat, Arial, sans-serif",
                   lineHeight: 1.4
@@ -348,7 +348,7 @@ export default function UVIndex({ uvData, isNight }) {
                   }} />
                   
                   <div style={{
-                    fontSize: 13,
+                    fontSize: 14,
                     color: "#374151",
                     fontFamily: "Montserrat, Arial, sans-serif",
                     lineHeight: 1.4,
@@ -384,7 +384,7 @@ export default function UVIndex({ uvData, isNight }) {
                   }} />
                   
                   <div style={{
-                    fontSize: 13,
+                    fontSize: 14,
                     color: "#374151",
                     fontFamily: "Montserrat, Arial, sans-serif",
                     lineHeight: 1.4,
@@ -420,7 +420,7 @@ export default function UVIndex({ uvData, isNight }) {
                   }} />
                   
                   <div style={{
-                    fontSize: 13,
+                    fontSize: 14,
                     color: "#374151",
                     fontFamily: "Montserrat, Arial, sans-serif",
                     lineHeight: 1.4,
