@@ -26,34 +26,147 @@ import PremiumModal from './PremiumModal';
 
 // Все эффекты остаются без изменений
 function CloudsEffect() {
+  const getStableRandom = (index, seed = 1) => {
+    return ((index * 9301 + 49297 + seed * 233280) % 233280) / 233280;
+  };
+
   return (
     <>
-      {[...Array(4)].map((_, i) => (
+      {/* СОЛНЦЕ за всем контентом */}
+      <motion.div
+        style={{
+          position: "absolute",
+          right: "18%",
+          top: "20%",
+          width: 120,
+          height: 120,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(255, 223, 0, 0.8) 0%, rgba(255, 193, 7, 0.6) 50%, rgba(255, 235, 59, 0.3) 100%)",
+          filter: "blur(15px)",
+          opacity: 0.9,
+          zIndex: -1, // ← ИСПРАВЛЕНО: позади всего контента
+          pointerEvents: "none",
+          boxShadow: "0 0 40px rgba(255, 223, 0, 0.4)"
+        }}
+        animate={{
+          scale: [1, 1.15, 0.9, 1],
+          opacity: [0.7, 1, 0.6, 0.7]
+        }}
+        transition={{
+          duration: 6,
+          repeat: Infinity,
+          repeatType: "mirror",
+          ease: "easeInOut"
+        }}
+      />
+
+      {/* Солнечные лучи за контентом */}
+      {[...Array(12)].map((_, i) => (
         <motion.div
-          key={i}
+          key={`ray-${i}`}
           style={{
             position: "absolute",
-            left: `${i * 24 + 7}%`,
-            top: `${40 + i * 18}px`,
-            width: 110 + i * 32,
-            height: 42 + i * 19,
-            background: "rgba(255,255,255,0.60)",
-            borderRadius: "50%",
-            filter: "blur(14px)",
-            opacity: 0.58 - i * 0.1,
-            zIndex: 99,
+            right: "23%",
+            top: "25%",
+            width: 2,
+            height: 40 + getStableRandom(i, 10) * 30,
+            background: "linear-gradient(180deg, rgba(255, 223, 0, 0.7) 0%, rgba(255, 235, 59, 0.4) 50%, transparent 100%)",
+            transformOrigin: "bottom center",
+            transform: `rotate(${i * 30}deg)`,
+            filter: "blur(1px)",
+            opacity: 0.8,
+            zIndex: -1, // ← ИСПРАВЛЕНО
             pointerEvents: "none"
           }}
           animate={{
-            x: [0, 28 + i * 11, 0]
+            scaleY: [0.6, 1.2, 0.8, 0.6],
+            opacity: [0.5, 0.9, 0.4, 0.5]
           }}
           transition={{
-            duration: 29 + i * 6,
+            duration: 4 + i * 0.3,
             repeat: Infinity,
+            delay: i * 0.2,
             repeatType: "mirror"
           }}
         />
       ))}
+
+      {/* ОБЛАКА за контентом */}
+      {[...Array(4)].map((_, i) => {
+        const leftOffset = getStableRandom(i, 1) * 25;
+        const topOffset = getStableRandom(i, 2) * 35;
+        const widthOffset = getStableRandom(i, 3) * 60;
+        const heightOffset = getStableRandom(i, 4) * 30;
+        
+        return (
+          <motion.div
+            key={i}
+            style={{
+              position: "absolute",
+              left: `${i * 25 + leftOffset}%`,
+              top: `${35 + i * 18 + topOffset}px`,
+              width: 160 + i * 50 + widthOffset,
+              height: 60 + i * 25 + heightOffset,
+              background: "rgba(255, 255, 255, 0.95)",
+              borderRadius: "50%",
+              filter: "blur(10px)",
+              opacity: 0.9,
+              zIndex: 0, // ← ИСПРАВЛЕНО: между фоном города (-2) и контентом
+              pointerEvents: "none",
+              boxShadow: "inset 0 0 30px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.3)"
+            }}
+            animate={{
+              x: [0, 40 + i * 25, 0],
+              scale: [1, 1.25, 0.85, 1],
+              opacity: [0.7, 1, 0.6, 0.7]
+            }}
+            transition={{
+              duration: 20 + i * 6,
+              repeat: Infinity,
+              repeatType: "mirror",
+              ease: "easeInOut"
+            }}
+          />
+        );
+      })}
+
+      {/* Мелкие облачка */}
+      {[...Array(3)].map((_, i) => {
+        const leftPos = 15 + getStableRandom(i, 6) * 65;
+        const topPos = 10 + getStableRandom(i, 7) * 50;
+        
+        return (
+          <motion.div
+            key={`contrast-${i}`}
+            style={{
+              position: "absolute",
+              left: `${leftPos}%`,
+              top: `${topPos}%`,
+              width: 80 + getStableRandom(i, 8) * 50,
+              height: 35 + getStableRandom(i, 9) * 20,
+              background: "rgba(255, 255, 255, 0.85)",
+              borderRadius: "50%",
+              filter: "blur(6px)",
+              opacity: 0.8,
+              zIndex: -1, // ← ИСПРАВЛЕНО
+              pointerEvents: "none",
+              boxShadow: "0 0 15px rgba(255, 255, 255, 0.4)"
+            }}
+            animate={{
+              x: [0, 25, 0],
+              opacity: [0.6, 0.9, 0.5, 0.6],
+              scale: [1, 1.1, 0.9, 1]
+            }}
+            transition={{
+              duration: 12 + i * 3,
+              repeat: Infinity,
+              repeatType: "mirror",
+              ease: "easeInOut",
+              delay: i * 1.5
+            }}
+          />
+        );
+      })}
     </>
   );
 }
@@ -358,6 +471,7 @@ function App() {
       fontSize: 20,
       letterSpacing: 0.3,
       textShadow: "0 2px 8px rgba(0,0,0,0.57), 0 0 1px #fff",
+      zIndex: 2,
       fontFamily: "Montserrat, Arial, sans-serif"
     }}>
       Город
