@@ -15,12 +15,16 @@ console.log('🗄️ POSTGRES_DB:', process.env.POSTGRES_DB);
 
 const app = express();
 const PORT = process.env.BACKEND_PORT || 3001;
+
+console.log('📡 Порт для запуска:', PORT);
+
+// Подключаем базу данных
 const { checkDatabaseHealth, initializeTables } = require('./database/db');
+
+// Инициализируем таблицы при запуске
 initializeTables().catch(err => {
     console.error('❌ Ошибка инициализации БД:', err);
 });
-
-console.log('📡 Порт для запуска:', PORT);
 
 // Middleware
 app.use(helmet());
@@ -47,6 +51,7 @@ app.get('/health', (req, res) => {
     });
 });
 
+// Database health check
 app.get('/health/database', async (req, res) => {
     try {
         const dbHealth = await checkDatabaseHealth();
@@ -59,6 +64,7 @@ app.get('/health/database', async (req, res) => {
     }
 });
 
+// API информация
 app.get('/', (req, res) => {
     console.log('📝 Главная страница API запрошена');
     res.json({
@@ -66,10 +72,19 @@ app.get('/', (req, res) => {
         version: '1.0.0',
         endpoints: {
             health: '/health',
-            api: '/api'
+            database: '/health/database',
+            weather: '/api/weather',
+            admin: '/api/admin'
         }
     });
 });
+
+// API маршруты
+const weatherRoutes = require('./routes/weather');
+app.use('/api/weather', weatherRoutes);
+
+const adminRoutes = require('./routes/admin');
+app.use('/api/admin', adminRoutes);
 
 console.log('🛣️ Маршруты настроены');
 

@@ -1,76 +1,58 @@
 const express = require('express');
-const db = require('../database/connection');
-const logger = require('../utils/logger');
-
 const router = express.Router();
+const { pool } = require('../database/db');
 
-/**
- * GET /api/admin/dashboard
- * Панель администратора с общей статистикой
- */
-router.get('/dashboard', async (req, res) => {
+// Проверка является ли пользователь админом
+router.post('/check', async (req, res) => {
     try {
-        // Общая статистика
-        const statsQuery = await db.query(`
-            SELECT 
-                (SELECT COUNT(*) FROM weather.weather_requests) as total_requests,
-                (SELECT COUNT(DISTINCT city_name) FROM weather.weather_requests) as unique_cities,
-                (SELECT COUNT(DISTINCT user_ip) FROM weather.weather_requests) as unique_users,
-                (SELECT COUNT(*) FROM auth.admins WHERE is_active = true) as active_admins,
-                (SELECT COUNT(*) FROM auth.admin_sessions WHERE is_active = true AND expires_at > NOW()) as active_sessions
-        `);
+        const { telegram_id } = req.body;
+        
+        if (!telegram_id) {
+            return res.status(400).json({
+                success: false,
+                error: 'Telegram ID обязателен'
+            });
+        }
 
-        // Статистика за последние 24 часа
-        const recentStatsQuery = await db.query(`
-            SELECT 
-                COUNT(*) as requests_24h,
-                COUNT(DISTINCT city_name) as cities_24h,
-                COUNT(DISTINCT user_ip) as users_24h,
-                AVG(response_time_ms) as avg_response_time
-            FROM weather.weather_requests
-            WHERE request_timestamp > NOW() - INTERVAL '24 hours'
-        `);
+        const result = await pool.query(
+            'SELECT * FROM telegram_admins WHERE telegram_id = $1 AND is_active = true',
+            [telegram_id]
+        );
 
-        // Топ городов за неделю
-        const topCitiesQuery = await db.query(`
-            SELECT 
-                city_name,
-                COUNT(*) as request_count,
-                MAX(request_timestamp) as last_request
-            FROM weather.weather_requests
-            WHERE request_timestamp > NOW() - INTERVAL '7 days'
-            GROUP BY city_name
-            ORDER BY request_count DESC
-            LIMIT 10
-        `);
-
-        // Активность по часам за последние 24 часа
-        const hourlyActivityQuery = await db.query(`
-            SELECT 
-                EXTRACT(hour FROM request_timestamp) as hour,
-                COUNT(*) as requests
-            FROM weather.weather_requests
-            WHERE request_timestamp > NOW() - INTERVAL '24 hours'
-            GROUP BY EXTRACT(hour FROM request_timestamp)
-            ORDER BY hour
-        `);
-
+        const isAdmin = result.rows.length > 0;
+        
+        console.log('🔐 Проверка админа:', telegram_id, '→', isAdmin);
+        
         res.json({
             success: true,
-            data: {
-                overview: {
-                    ...statsQuery.rows[0],
-                    ...recentStatsQuery.rows[0]
-                },
-                top_cities: topCitiesQuery.rows,
-                hourly_activity: hourlyActivityQuery.rows
-            }
+            isAdmin: isAdmin,
+            adminData: isAdmin ? result.rows[0] : null
         });
-
     } catch (error) {
-        logger.error('Ошибка получения данных панели администратора:', error);
+        console.error('❌ Ошибка проверки админа:', error);
         res.status(500).json({
-            error: 'Не удалось получить данные панели'
+            success: false,
+            error: 'Ошибка проверки прав доступа'
+        });
+    }
+});
+
+// Получить список всех админов
+router.get('/list', async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT telegram_id, username, first_name, last_name, is_active, created_at FROM telegram_admins ORDER BY created_at'
+        );
+        
+        res.json({
+            success: true,
+            admins: result.rows
+        });
+    } catch (error) {
+        console.error('❌ Ошибка получения списка админов:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Ошибка получения данных'
         });
     }
 });

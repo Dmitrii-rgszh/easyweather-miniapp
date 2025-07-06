@@ -1,5 +1,5 @@
 // Обновленный App.js с WeatherCarousel и системой передачи данных всем блокам
-
+import AdminPanel from './AdminPanel';
 import React, { useState, useEffect } from "react";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -277,6 +277,7 @@ function getBgGradient(desc, isNight) {
 }
 
 function App() {
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [city, setCity] = useState("Москва");
   const [date, setDate] = useState(new Date());
   const [weather, setWeather] = useState(null);
