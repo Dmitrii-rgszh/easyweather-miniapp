@@ -849,6 +849,30 @@ function App() {
         )}
 
         <AdBanner />
+        {/* Кнопка админки (временно для тестирования) */}
+        <motion.button
+          onClick={() => setShowAdminPanel(true)}
+          style={{
+            background: 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 15,
+            padding: '12px 20px',
+            fontSize: 16,
+            cursor: 'pointer',
+            margin: '20px auto',
+            display: 'block'
+          }}
+        >
+          🔐 Админская панель
+        </motion.button>
+        
+        {/* Панель администратора */}
+        <AdminPanel 
+          isVisible={showAdminPanel} 
+          onClose={() => setShowAdminPanel(false)} 
+        />
+        
       </motion.div>
     </ThemeProvider>
   );
