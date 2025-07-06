@@ -1,16 +1,5 @@
-// Обновленная версия компонента QuickActions с увеличенными иконками и цветным фоном
-
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
-// Функция определения основной темы блока
-function getQuickActionsTheme() {
-  return {
-    mainColor: "#6366f1",
-    bgColor: "#6366f115",
-    iconBgColor: "#6366f110"
-  };
-}
 
 // SVG стрелка
 const ChevronIcon = ({ isOpen }) => (
@@ -34,101 +23,60 @@ const ChevronIcon = ({ isOpen }) => (
   </motion.svg>
 );
 
-export default function QuickActions({ weather, onShareWeather, onSaveToFavorites, onOpenAdminPanel }) {
+export default function QuickActions({ 
+  weather, 
+  onShareWeather, 
+  onSaveToFavorites, 
+  onOpenAdminPanel, 
+  onOpenProfile, // Новый пропс для открытия профиля
+  userProfile // Пропс для определения статуса профиля
+}) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const theme = getQuickActionsTheme();
 
   if (!weather) return null;
 
-  const quickActions = [
+  // Определяем статус профиля
+  const isProfileCompleted = userProfile?.setupCompleted || false;
+
+  const actions = [
     {
-      icon: "📱",
-      label: "Поделиться",
-      action: () => onShareWeather(weather),
-      color: "#059669",
-      bgColor: "#05966915",
-      iconBgColor: "#05966910",
-      description: "Отправить данные о погоде"
+      id: 'profile',
+      icon: isProfileCompleted ? '👤' : '👤',
+      text: 'Профиль',
+      color: isProfileCompleted ? '#059669' : '#6b7280',
+      bgColor: isProfileCompleted ? '#059669' : '#6b7280',
+      action: onOpenProfile,
+      badge: isProfileCompleted ? '✅' : '❓',
+      description: isProfileCompleted ? 'Персонализация настроена' : 'Настроить профиль'
     },
     {
-      icon: "⭐",
-      label: "В избранное",
-      action: () => onSaveToFavorites(weather.city),
-      color: "#f59e0b",
-      bgColor: "#f59e0b15",
-      iconBgColor: "#f59e0b10",
-      description: "Добавить/убрать из избранного"
+      id: 'share',
+      icon: '📤',
+      text: 'Поделиться',
+      color: '#3b82f6',
+      bgColor: '#3b82f6',
+      action: () => onShareWeather(weather)
     },
     {
-      icon: "📍",
-      label: "На карте",
-      action: () => window.open(`https://yandex.ru/maps/?text=${encodeURIComponent(weather.city)}`),
-      color: "#3b82f6",
-      bgColor: "#3b82f615",
-      iconBgColor: "#3b82f610",
-      description: "Открыть на Яндекс Картах"
+      id: 'favorites',
+      icon: '⭐',
+      text: 'В избранное',
+      color: '#f59e0b',
+      bgColor: '#f59e0b',
+      action: () => onSaveToFavorites(weather.city)
     },
     {
-      icon: "🔄",
-      label: "Обновить",
-      action: () => window.location.reload(),
-      color: "#8b5cf6",
-      bgColor: "#8b5cf615",
-      iconBgColor: "#8b5cf610",
-      description: "Обновить данные"
-    },
-    {
-      icon: "📋",
-      label: "Копировать",
-      action: () => {
-        const weatherText = `🌤️ Погода в ${weather.city}: ${weather.temp}°, ${weather.desc.toLowerCase()}`;
-        navigator.clipboard.writeText(weatherText).then(() => {
-          alert('Данные о погоде скопированы в буфер обмена!');
-        }).catch(() => {
-          alert('Не удалось скопировать данные');
-        });
-      },
-      color: "#ef4444",
-      bgColor: "#ef444415",
-      iconBgColor: "#ef444410",
-      description: "Скопировать в буфер обмена"
-    },
-    {
-      icon: "🌐",
-      label: "Подробнее",
-      action: () => window.open(`https://yandex.ru/pogoda/search?text=${encodeURIComponent(weather.city)}`),
-      color: "#10b981",
-      bgColor: "#10b98115",
-      iconBgColor: "#10b98110",
-      description: "Подробный прогноз"
-    },
-    
-    {
-      icon: "🔐",
-      label: "Админ панель",
-      action: () => {
-        // ЗАМЕНИТЕ ЭТОТ action НА:
-        console.log('🔐 Кнопка админки нажата!');
-        console.log('onOpenAdminPanel функция:', onOpenAdminPanel);
-        alert('Тест: кнопка админки работает!');
-    
-        if (onOpenAdminPanel) {
-          console.log('Вызываем onOpenAdminPanel...');
-          onOpenAdminPanel();
-        } else {
-          alert('❌ onOpenAdminPanel не передан!');
-        }
-      },
-      color: "#dc3545",
-      bgColor: "#dc354515",
-      iconBgColor: "#dc354510",
-      description: "Панель администратора"
+      id: 'admin',
+      icon: '⚙️',
+      text: 'Админка',
+      color: '#8b5cf6',
+      bgColor: '#8b5cf6',
+      action: onOpenAdminPanel
     }
   ];
 
-  // Первые 4 действия для превью
-  const previewActions = quickActions.slice(0, 4);
-  const additionalActions = quickActions.slice(4);
+  // Для превью берем первые 3 иконки
+  const previewActions = actions.slice(0, 3);
 
   return (
     <motion.div
@@ -146,7 +94,7 @@ export default function QuickActions({ weather, onShareWeather, onSaveToFavorite
       }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.8 }}
+      transition={{ duration: 0.6, delay: 1.0 }}
       onClick={() => setIsExpanded(!isExpanded)}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
@@ -164,14 +112,14 @@ export default function QuickActions({ weather, onShareWeather, onSaveToFavorite
           gap: 12,
           flex: 1
         }}>
-          {/* Контейнер иконки с цветным фоном */}
+          {/* Контейнер иконки */}
           <motion.div
             style={{
-              width: 48, // Увеличили размер контейнера
+              width: 48,
               height: 48,
               borderRadius: 12,
-              background: `linear-gradient(135deg, ${theme.iconBgColor}, ${theme.bgColor})`,
-              border: `1px solid ${theme.mainColor}30`,
+              background: "linear-gradient(135deg, #f59e0b15, #f59e0b10)",
+              border: "1px solid #f59e0b30",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -189,13 +137,13 @@ export default function QuickActions({ weather, onShareWeather, onSaveToFavorite
               left: 0,
               right: 0,
               height: 2,
-              background: theme.mainColor,
+              background: "#f59e0b",
               borderRadius: "12px 12px 0 0"
             }} />
             
-            {/* Крупная иконка */}
+            {/* Иконка */}
             <span style={{ 
-              fontSize: 24, // Увеличили размер иконки
+              fontSize: 24,
               filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))"
             }}>
               ⚡
@@ -216,32 +164,65 @@ export default function QuickActions({ weather, onShareWeather, onSaveToFavorite
             {!isExpanded && (
               <div style={{
                 display: "flex",
-                gap: 4,
+                gap: 6,
                 marginTop: 2,
                 alignItems: "center"
               }}>
-                {previewActions.slice(0, 3).map((action, index) => (
-                  <motion.span 
-                    key={index} 
-                    style={{ 
-                      fontSize: 16, // Увеличили размер превью-иконок
-                      filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.1))"
+                {previewActions.map((action, index) => (
+                  <motion.div
+                    key={action.id}
+                    style={{
+                      position: "relative",
+                      display: "flex",
+                      alignItems: "center"
                     }}
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    transition={{ delay: index * 0.1 + 0.8 }}
+                    transition={{ delay: index * 0.1 + 0.3 }}
                   >
-                    {action.icon}
-                  </motion.span>
+                    <span style={{ 
+                      fontSize: 16,
+                      filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.1))"
+                    }}>
+                      {action.icon}
+                    </span>
+                    {/* Бейдж для профиля */}
+                    {action.id === 'profile' && action.badge && (
+                      <motion.span
+                        style={{
+                          position: "absolute",
+                          top: -4,
+                          right: -4,
+                          fontSize: 10,
+                          background: action.color,
+                          color: 'white',
+                          borderRadius: '50%',
+                          width: 16,
+                          height: 16,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 'bold'
+                        }}
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.5 }}
+                      >
+                        {isProfileCompleted ? '✓' : '?'}
+                      </motion.span>
+                    )}
+                  </motion.div>
                 ))}
-                <span style={{
-                  fontSize: 12,
-                  color: "#6b7280",
-                  fontFamily: "Montserrat, Arial, sans-serif",
-                  marginLeft: 2
-                }}>
-                  +{quickActions.length - 3}
-                </span>
+                {actions.length > 3 && (
+                  <span style={{
+                    fontSize: 12,
+                    color: "#6b7280",
+                    fontFamily: "Montserrat, Arial, sans-serif",
+                    marginLeft: 2
+                  }}>
+                    +{actions.length - 3}
+                  </span>
+                )}
               </div>
             )}
           </div>
@@ -259,37 +240,37 @@ export default function QuickActions({ weather, onShareWeather, onSaveToFavorite
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
             style={{ overflow: "hidden" }}
-            onClick={(e) => e.stopPropagation()} // Предотвращаем сворачивание при клике на кнопки
           >
             <div style={{ marginTop: 16 }}>
-              
-              {/* Основные действия */}
+              {/* Сетка действий */}
               <div style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(2, 1fr)",
-                gap: 8,
+                gap: 12,
                 marginBottom: 12
               }}>
-                {previewActions.map((action, index) => (
+                {actions.map((action, index) => (
                   <motion.button
-                    key={index}
+                    key={action.id}
                     onClick={(e) => {
                       e.stopPropagation();
                       action.action();
                     }}
                     style={{
-                      background: `linear-gradient(135deg, ${action.iconBgColor}, ${action.bgColor})`,
-                      border: `2px solid ${action.color}30`,
+                      background: `linear-gradient(135deg, ${action.bgColor}10, ${action.bgColor}05)`,
                       borderRadius: 12,
-                      padding: "12px 8px",
+                      padding: "16px 12px",
+                      textAlign: "center",
+                      border: `2px solid ${action.bgColor}20`,
+                      position: "relative",
+                      overflow: "hidden",
+                      minHeight: 80,
+                      cursor: "pointer",
                       display: "flex",
                       flexDirection: "column",
                       alignItems: "center",
                       justifyContent: "center",
-                      cursor: "pointer",
-                      position: "relative",
-                      overflow: "hidden",
-                      minHeight: 80
+                      gap: 8
                     }}
                     initial={{ opacity: 0, scale: 0.8, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -304,138 +285,120 @@ export default function QuickActions({ weather, onShareWeather, onSaveToFavorite
                       left: 0,
                       right: 0,
                       height: 3,
-                      background: action.color,
+                      background: action.bgColor,
                       borderRadius: "12px 12px 0 0"
                     }} />
                     
-                    {/* Иконка */}
+                    {/* Контейнер для иконки и бейджа */}
                     <div style={{
-                      fontSize: 28,
-                      lineHeight: 1,
-                      marginBottom: 6,
-                      filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
-                    }}>
-                      {action.icon}
-                    </div>
-                    
-                    {/* Название */}
-                    <div style={{
-                      fontSize: 14,
-                      color: "#374151",
-                      fontFamily: "Montserrat, Arial, sans-serif",
-                      fontWeight: 600,
-                      lineHeight: 1.2,
-                      textAlign: "center"
-                    }}>
-                      {action.label}
-                    </div>
-                  </motion.button>
-                ))}
-              </div>
-
-              {/* Дополнительные действия */}
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(2, 1fr)",
-                gap: 8,
-                marginBottom: 12
-              }}>
-                {additionalActions.map((action, index) => (
-                  <motion.button
-                    key={index + 4}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      action.action();
-                    }}
-                    style={{
-                      background: `linear-gradient(135deg, ${action.iconBgColor}, ${action.bgColor})`,
-                      border: `2px solid ${action.color}30`,
-                      borderRadius: 12,
-                      padding: "12px 8px",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      cursor: "pointer",
                       position: "relative",
-                      overflow: "hidden",
-                      minHeight: 80
-                    }}
-                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: (index + 4) * 0.1 }}
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    {/* Цветной акцент */}
-                    <div style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: 3,
-                      background: action.color,
-                      borderRadius: "12px 12px 0 0"
-                    }} />
-                    
-                    {/* Иконка */}
-                    <div style={{
-                      fontSize: 28,
-                      lineHeight: 1,
-                      marginBottom: 6,
-                      filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center"
                     }}>
-                      {action.icon}
+                      <span style={{
+                        fontSize: 28,
+                        lineHeight: 1,
+                        filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
+                      }}>
+                        {action.icon}
+                      </span>
+                      
+                      {/* Бейдж для статуса профиля */}
+                      {action.id === 'profile' && (
+                        <motion.div
+                          style={{
+                            position: "absolute",
+                            top: -8,
+                            right: -8,
+                            width: 20,
+                            height: 20,
+                            borderRadius: "50%",
+                            background: isProfileCompleted ? '#059669' : '#ef4444',
+                            color: 'white',
+                            fontSize: 12,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 'bold',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                          }}
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: 0.3 }}
+                        >
+                          {isProfileCompleted ? '✓' : '!'}
+                        </motion.div>
+                      )}
                     </div>
                     
-                    {/* Название */}
-                    <div style={{
-                      fontSize: 14,
-                      color: "#374151",
-                      fontFamily: "Montserrat, Arial, sans-serif",
-                      fontWeight: 600,
-                      lineHeight: 1.2,
-                      textAlign: "center"
-                    }}>
-                      {action.label}
+                    {/* Текст */}
+                    <div>
+                      <div style={{
+                        fontSize: 14,
+                        color: "#374151",
+                        fontFamily: "Montserrat, Arial, sans-serif",
+                        fontWeight: 600,
+                        lineHeight: 1.2,
+                        marginBottom: action.description ? 4 : 0
+                      }}>
+                        {action.text}
+                      </div>
+                      
+                      {/* Описание для профиля */}
+                      {action.description && (
+                        <div style={{
+                          fontSize: 11,
+                          color: action.color,
+                          fontFamily: "Montserrat, Arial, sans-serif",
+                          fontWeight: 500,
+                          lineHeight: 1.1
+                        }}>
+                          {action.description}
+                        </div>
+                      )}
                     </div>
                   </motion.button>
                 ))}
               </div>
 
-              {/* Итоговое сообщение */}
+              {/* Мотивирующий текст */}
               <motion.div
                 style={{
-                  background: `linear-gradient(135deg, ${theme.iconBgColor}, ${theme.bgColor})`,
+                  background: "linear-gradient(135deg, #f59e0b15, #f59e0b10)",
                   borderRadius: 8,
                   padding: "10px 12px",
-                  border: `1px solid ${theme.mainColor}20`,
+                  textAlign: "center",
+                  border: "1px solid #f59e0b20",
                   position: "relative",
                   overflow: "hidden"
                 }}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 }}
+                transition={{ delay: 0.5 }}
               >
-                {/* Тонкая цветная полоска снизу */}
+                {/* Тонкая цветная полоска */}
                 <div style={{
                   position: "absolute",
                   bottom: 0,
                   left: 0,
                   right: 0,
                   height: 2,
-                  background: theme.mainColor,
+                  background: "#f59e0b",
                   borderRadius: "0 0 8px 8px"
                 }} />
                 
                 <div style={{
                   fontSize: 14,
                   color: "#374151",
+                  fontStyle: "italic",
                   fontFamily: "Montserrat, Arial, sans-serif",
-                  fontWeight: 500,
-                  textAlign: "center"
+                  fontWeight: 500
                 }}>
-                  ⚡ {quickActions.length} быстрых действий доступно
+                  {isProfileCompleted 
+                    ? "🎯 Персонализация активна! Получайте умные советы" 
+                    : "💡 Настройте профиль для персональных рекомендаций"
+                  }
                 </div>
               </motion.div>
             </div>

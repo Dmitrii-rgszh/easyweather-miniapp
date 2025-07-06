@@ -25,6 +25,7 @@ import { canMakeRequest, recordRequest, getUsageStats, activatePremium } from '.
 import PremiumModal from './PremiumModal';
 import UserProfileModal from "./UserProfileModal";
 import HealthAlerts from "./HealthAlerts";
+import ProfilePage from "./ProfilePage";
 
 // Все эффекты остаются без изменений
 function CloudsEffect() {
@@ -425,7 +426,8 @@ function App() {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [premiumUser, setPremiumUser] = useState(getUsageStats().isPremium);
   const [userProfile, setUserProfile] = useState(null);
-  const [showProfileModal, setShowProfileModal] = useState(false)
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showProfilePage, setShowProfilePage] = useState(false);
 
   // Функции обработки остаются без изменений
   const handleShareWeather = (weather) => {
@@ -1146,6 +1148,8 @@ function App() {
               onShareWeather={handleShareWeather}
               onSaveToFavorites={handleSaveToFavorites}
               onOpenAdminPanel={() => setShowAdminPanel(true)}
+              onOpenProfile={() => setShowProfilePage(true)} // Новый пропс
+              userProfile={userProfile} // Передаем профиль
             />
           </div>
         )}
@@ -1187,7 +1191,11 @@ function App() {
           onComplete={(profile) => {
             setUserProfile(profile);
             setShowProfileModal(false);
-            console.log('Профиль сохранен:', profile); // Для отладки
+            console.log('Профиль сохранен:', profile);
+          }}
+          onClose={() => {
+            setShowProfileModal(false);
+            console.log('Опрос пропущен - пользователь может пройти его позже');
           }}
         />
 
@@ -1197,6 +1205,17 @@ function App() {
           isVisible={showAdminPanel} 
           onClose={() => setShowAdminPanel(false)} 
         />
+        {/* Profile Page */}
+        {showProfilePage && (
+          <ProfilePage 
+            userProfile={userProfile}
+            onStartSurvey={() => {
+              setShowProfilePage(false);
+              setShowProfileModal(true);
+            }}
+            onClose={() => setShowProfilePage(false)}
+          />
+        )}
         
       </motion.div>
     </ThemeProvider>
