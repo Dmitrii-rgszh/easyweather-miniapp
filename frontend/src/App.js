@@ -17,6 +17,10 @@ import { fetchWeather, fetchForecast, fetchAirQuality, fetchUVIndex } from "./we
 import { getCityByCoords } from "./geoApi";
 import Astronomy from "./Astronomy";
 import WeatherTrends from "./WeatherTrends";
+import { 
+  fetchWeatherFromBackend, 
+  checkBackendHealth 
+} from './backendApi';
 
 // Все эффекты остаются без изменений
 function CloudsEffect() {
@@ -381,7 +385,7 @@ function App() {
     try {
       if (isToday(date)) {
         // Получаем текущую погоду
-        const data = await fetchWeather(city);
+        const data = await fetchWeatherFromBackend(city);
         const details = {
           feels: Math.round(data.main.feels_like),
           pressure: Math.round(data.main.pressure * 0.750062),

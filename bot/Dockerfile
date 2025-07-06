@@ -1,17 +1,31 @@
-# Используем официальный минимальный Python-образ
-FROM python:3.10-slim
+# Telegram Bot Dockerfile
 
-# Рабочая директория внутри контейнера
+FROM python:3.11-alpine
+
+# Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Копируем файл зависимостей и устанавливаем их
+# Устанавливаем системные зависимости
+RUN apk add --no-cache gcc musl-dev
+
+# Копируем файл зависимостей
 COPY requirements.txt .
+
+# Устанавливаем зависимости Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем сам файл бота
-COPY bot.py .
+# Создаем пользователя для безопасности
+RUN adduser -D -s /bin/sh botuser
 
-# (Если есть дополнительные файлы, например config.py — добавь строку COPY config.py .)
+# Копируем код бота
+COPY --chown=botuser:botuser . .
 
-# Запуск бота при старте контейнера
+# Переключаемся на непривилегированного пользователя
+USER botuser
+
+# Проверка здоровья
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD python -c "import requests; requests.get('${API_URL}/health', timeout=5)" || exit 1
+
+# Запускаем бота
 CMD ["python", "bot.py"]

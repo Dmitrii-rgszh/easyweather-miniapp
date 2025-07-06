@@ -87,10 +87,10 @@ PGADMIN_EMAIL=admin@easyweather.local
 CORS_ORIGIN=http://localhost:3000
 
 # API ключи - ЗАПОЛНИТЕ СВОИМИ ЗНАЧЕНИЯМИ!
-REACT_APP_WEATHER_API_KEY=your_openweather_api_key_here
-REACT_APP_UNSPLASH_KEY=your_unsplash_api_key_here
+REACT_APP_WEATHER_API_KEY=61e36d8b6d0a171b685c5658b023c23a
+REACT_APP_UNSPLASH_KEY=9ho2EDWMLi9bQOlhqJY0s_NaZNRt_EbVqij0SUhFD7U
 REACT_APP_GEO_API_KEY=your_geo_api_key_here
-TELEGRAM_TOKEN=your_telegram_bot_token_here
+TELEGRAM_TOKEN=8055577633:AAGS26-wGLlMYjGlN5jotzkerULWnwWagoc
 REACT_APP_API_URL=http://localhost:3001
 EOF
 
