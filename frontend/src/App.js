@@ -39,15 +39,15 @@ function CloudsEffect() {
       <motion.div
         style={{
           position: "absolute",
-          right: "18%",
-          top: "20%",
+          right: "10%",
+          top: "10%",
           width: 120,
           height: 120,
           borderRadius: "50%",
           background: "radial-gradient(circle, rgba(255, 223, 0, 0.8) 0%, rgba(255, 193, 7, 0.6) 50%, rgba(255, 235, 59, 0.3) 100%)",
           filter: "blur(15px)",
           opacity: 0.9,
-          zIndex: -1, // ← ИСПРАВЛЕНО: позади всего контента
+          zIndex: 0, // ← ИСПРАВЛЕНО: позади всего контента
           pointerEvents: "none",
           boxShadow: "0 0 40px rgba(255, 223, 0, 0.4)"
         }}
@@ -471,18 +471,206 @@ function App() {
   const renderCityLabel = (
     <div style={{
       textAlign: "center",
-      marginBottom: 8,
+      marginBottom: 10,
       color: "#fff",
       fontWeight: 500,
       fontSize: 20,
       letterSpacing: 0.3,
-      textShadow: "0 2px 8px rgba(0,0,0,0.57), 0 0 1px #fff",
+      textShadow: "0 2px 0px rgba(0,0,0,0.2), -1px -1px 0px rgba(0,0,0,0.4), 1px -1px 0px rgba(0,0,0,0.9), -1px 1px 0px rgba(0,0,0,0.9)",
       zIndex: 50,
-      fontFamily: "Montserrat, Arial, sans-serif"
+      fontFamily: "Montserrat, Arial, sans-serif",
+      filter: "drop-shadow(0 0 8px rgba(255,255,255,0.5))"
     }}>
       Город
     </div>
   );
+  
+  // ИСПРАВЛЕННЫЙ DEV хоткей для App.js
+
+useEffect(() => {
+    // Исправленный хоткей для полного сброса в dev режиме
+    const handleDevReset = (e) => {
+      // Ctrl + Shift + R = Full Reset (опрос + премиум + избранное)
+      if (e.ctrlKey && e.shiftKey && e.key === 'R') {
+        e.preventDefault();
+      
+        if (window.confirm('🔄 DEV RESET: Сбросить ВСЕ данные? (опрос + премиум + избранное)')) {
+          try {
+            console.log('🛠️ DEV: Начинаю полный сброс...');
+          
+            // 1. Сброс профиля пользователя
+            localStorage.removeItem('userProfile');
+            setUserProfile(null);
+            console.log('✅ Профиль пользователя сброшен');
+          
+            // 2. ПРАВИЛЬНЫЙ сброс премиума - используем ключи из usageLimit.js
+            localStorage.removeItem('weatherUsage'); // Основной ключ лимитов
+            localStorage.removeItem('weatherPremiumUser'); // Старый ключ (на всякий случай)
+            localStorage.removeItem('weatherRequestCount'); // Старый ключ
+            localStorage.removeItem('weatherLastRequestDate'); // Старый ключ
+          
+            setPremiumUser(false);
+            setUsageStats(getUsageStats()); // Обновляем статистику
+            console.log('✅ Премиум статус сброшен (weatherUsage удален)');
+          
+            // 3. Сброс избранного
+            localStorage.removeItem('weatherFavorites');
+            setFavorites([]);
+            console.log('✅ Избранные города сброшены');
+          
+            // 4. Сброс погодных данных
+            setWeather(null);
+            setSelectedWeatherData(null);
+            setForecastData([]);
+            setAirQualityData(null);
+            setUvData(null);
+            console.log('✅ Погодные данные очищены');
+          
+            // 5. Показываем опрос
+            setShowProfileModal(true);
+          
+            console.log('🎉 DEV: Полный сброс завершен!');
+            alert('🎉 DEV: Полный сброс завершен!\n\n✅ Опрос сброшен\n✅ Премиум отключен (5/5 запросов)\n✅ Избранное очищено\n✅ Данные сброшены');
+          
+          } catch (error) {
+            console.error('❌ DEV: Ошибка при сбросе:', error);
+            alert('❌ Ошибка при сбросе данных');
+          }
+        }
+      }
+    
+      // Ctrl + Shift + P = Reset только Premium
+      if (e.ctrlKey && e.shiftKey && e.key === 'P') {
+        e.preventDefault();
+      
+        if (window.confirm('💎 DEV: Сбросить только премиум статус?')) {
+          try {
+            // ПРАВИЛЬНЫЙ сброс - удаляем ключ weatherUsage
+            localStorage.removeItem('weatherUsage');
+            localStorage.removeItem('weatherPremiumUser');
+            localStorage.removeItem('weatherRequestCount');
+            localStorage.removeItem('weatherLastRequestDate');
+          
+            setPremiumUser(false);
+            setUsageStats(getUsageStats());
+          
+            console.log('💎 DEV: Премиум статус сброшен (weatherUsage очищен)');
+            alert('💎 Премиум статус сброшен! Теперь 5/5 запросов.');
+          } catch (error) {
+            console.error('❌ DEV: Ошибка сброса премиума:', error);
+          }
+        }
+      }
+    
+      // Ctrl + Shift + U = Reset только опрос пользователя
+      if (e.ctrlKey && e.shiftKey && e.key === 'U') {
+        e.preventDefault();
+      
+        if (window.confirm('👤 DEV: Сбросить только опрос пользователя?')) {
+          try {
+            localStorage.removeItem('userProfile');
+            setUserProfile(null);
+            setShowProfileModal(true);
+          
+            console.log('👤 DEV: Опрос пользователя сброшен');
+            alert('👤 Опрос пользователя сброшен!');
+          } catch (error) {
+            console.error('❌ DEV: Ошибка сброса опроса:', error);
+          }
+        }
+      }
+    
+      // Ctrl + Shift + L = Показать все ключи localStorage (debug)
+      if (e.ctrlKey && e.shiftKey && e.key === 'L') {
+        e.preventDefault();
+      
+        console.log('🔍 DEV: Все ключи localStorage:');
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          const value = localStorage.getItem(key);
+          console.log(`${key}:`, value);
+        }
+      
+        const usage = getUsageStats();
+        console.log('📊 Текущие лимиты:', usage);
+      }
+    };
+
+    // Добавляем хоткеи только в dev режиме
+    if (process.env.NODE_ENV === 'development') {
+      window.addEventListener('keydown', handleDevReset);
+    
+      // Консольные команды для удобства
+      window.devReset = {
+        all: () => {
+          localStorage.clear();
+          window.location.reload();
+          console.log('🔥 DEV: ПОЛНАЯ ОЧИСТКА + перезагрузка');
+        },
+      
+        user: () => {
+          localStorage.removeItem('userProfile');
+          setUserProfile(null);
+          setShowProfileModal(true);
+          console.log('👤 DEV: Опрос сброшен');
+        },
+      
+        premium: () => {
+          localStorage.removeItem('weatherUsage'); // ГЛАВНЫЙ ключ!
+          localStorage.removeItem('weatherPremiumUser');
+          localStorage.removeItem('weatherRequestCount');
+          localStorage.removeItem('weatherLastRequestDate');
+          setPremiumUser(false);
+          setUsageStats(getUsageStats());
+          console.log('💎 DEV: Премиум сброшен (лимит 5/5)');
+        },
+      
+        favorites: () => {
+          localStorage.removeItem('weatherFavorites');
+          setFavorites([]);
+          console.log('⭐ DEV: Избранное сброшено');
+        },
+      
+        // Новая команда для отладки
+        debug: () => {
+          console.log('🔍 DEV DEBUG:');
+          console.log('localStorage keys:', Object.keys(localStorage));
+          console.log('usageStats:', getUsageStats());
+          console.log('weatherUsage:', localStorage.getItem('weatherUsage'));
+          console.log('premiumUser state:', premiumUser);
+        }
+      };
+    
+      // Красивая инструкция в консоли
+      console.log(`
+  🛠️ DEV MODE АКТИВИРОВАН! 
+    
+  📋 ХОТКЕИ:
+  • Ctrl+Shift+R = 🔄 ПОЛНЫЙ СБРОС (опрос + премиум + избранное)
+  • Ctrl+Shift+P = 💎 Сброс только премиума  
+  • Ctrl+Shift+U = 👤 Сброс только опроса
+  • Ctrl+Shift+L = 🔍 Показать все ключи localStorage
+
+  💻 КОНСОЛЬНЫЕ КОМАНДЫ:
+  • devReset.all()       - Полная очистка + перезагрузка
+  • devReset.user()      - Сброс опроса
+  • devReset.premium()   - Сброс премиума (правильно!)
+  • devReset.favorites() - Сброс избранного
+  • devReset.debug()     - Отладочная информация
+
+  🐛 ИСПРАВЛЕНО: Теперь правильно сбрасывается ключ 'weatherUsage'
+      `);
+    
+      return () => window.removeEventListener('keydown', handleDevReset);
+    }
+  }, [setUserProfile, setShowProfileModal, setPremiumUser, setUsageStats, setFavorites, setWeather, setSelectedWeatherData, setForecastData, setAirQualityData, setUvData, premiumUser]);
+
+  // Дополнительно - показываем DEV статус в заголовке (опционально)
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      document.title = '🛠️ DEV | EasyWeather';
+    }
+  }, []);
 
   useEffect(() => {
     function handleResize() {
