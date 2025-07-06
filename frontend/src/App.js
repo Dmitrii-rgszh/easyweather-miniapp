@@ -21,6 +21,8 @@ import {
   fetchWeatherFromBackend, 
   checkBackendHealth 
 } from './backendApi';
+import { canMakeRequest, recordRequest, getUsageStats, activatePremium } from './usageLimit';
+import PremiumModal from './PremiumModal';
 
 // Все эффекты остаются без изменений
 function CloudsEffect() {
@@ -295,21 +297,18 @@ function App() {
       return [];
     }
   });
-  
   const [airQualityData, setAirQualityData] = useState(null);
   const [uvData, setUvData] = useState(null);
   const [coords, setCoords] = useState(null);
-  // ДОБАВИТЬ эти строки после существующих состояний:
   const [initialDesc, setInitialDesc] = useState(""); // Для фона
   const [initialIsNight, setInitialIsNight] = useState(false); // Для фона
-  
-  // 🆕 Состояние для выбранного времени в карусели
   const [selectedWeatherData, setSelectedWeatherData] = useState(null);
-
-  // 🆕 Колбек для получения данных из карусели
   const handleWeatherChange = (weatherData) => {
     setSelectedWeatherData(weatherData);
   };
+  const [usageStats, setUsageStats] = useState(getUsageStats());
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [premiumUser, setPremiumUser] = useState(getUsageStats().isPremium);
 
   // Функции обработки остаются без изменений
   const handleShareWeather = (weather) => {
@@ -382,7 +381,19 @@ function App() {
 
   // 🔧 ОБНОВЛЕННАЯ ЛОГИКА ЗАГРУЗКИ ПОГОДЫ
   const handleShowWeather = async () => {
+    // Проверяем лимиты ПЕРЕД запросом
+    const requestCheck = canMakeRequest();
+  
+    if (!requestCheck.canMake) {
+      // Показываем Premium modal если лимит исчерпан
+      setShowPremiumModal(true);
+      return;
+    }
+
     setLoading(true);
+    recordRequest();
+    setUsageStats(getUsageStats());
+
     try {
       if (isToday(date)) {
         // Получаем текущую погоду
@@ -548,6 +559,68 @@ function App() {
 
   // 🆕 Используем выбранные данные для всех блоков
   const activeWeatherData = selectedWeatherData || weather;
+  // Компонент показа статистики использования
+  const renderUsageIndicator = () => {
+    if (premiumUser) {
+      return (
+        <motion.div
+          style={{
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            background: 'linear-gradient(135deg, #ffd700 0%, #ffed4e 100%)',
+            color: '#1a1a1a',
+            padding: '8px 16px',
+            borderRadius: '20px',
+            fontSize: '12px',
+            fontWeight: '600',
+            fontFamily: 'Montserrat, Arial, sans-serif',
+            zIndex: 100,
+            boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
+          }}
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 1 }}
+        >
+          💎 Premium
+        </motion.div>
+      );
+    }
+
+    const percentage = usageStats.percentage;
+    const isLow = usageStats.remaining <= 1;
+  
+    return (
+      <motion.div
+        style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          background: isLow 
+            ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+            : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+          color: 'white',
+          padding: '8px 16px',
+          borderRadius: '20px',
+          fontSize: '12px',
+          fontWeight: '600',
+          fontFamily: 'Montserrat, Arial, sans-serif',
+          zIndex: 100,
+          boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)',
+          cursor: isLow ? 'pointer' : 'default'
+        }}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 1 }}
+        onClick={isLow ? () => setShowPremiumModal(true) : undefined}
+        whileHover={isLow ? { scale: 1.05 } : {}}
+      >
+        {isLow && '🔥 '}
+        {usageStats.remaining}/{usageStats.limit} запросов
+        {isLow && ' ⬆️'}
+      </motion.div>
+    );
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -815,6 +888,23 @@ function App() {
             />
           </div>
         )}
+
+        {/* Индикатор использования */}
+        {renderUsageIndicator()}
+
+        {/* Premium Modal */}
+        <PremiumModal 
+          isVisible={showPremiumModal}
+          onClose={() => setShowPremiumModal(false)}
+          onUpgrade={() => {
+            activatePremium();
+            setPremiumUser(true);
+            setUsageStats(getUsageStats());
+            setShowPremiumModal(false);
+            alert('🎉 Premium активирован! Добро пожаловать в мир безлимитной погоды!');
+          }}
+          usageStats={usageStats}
+        />
 
         <AdBanner />
         {/* Панель администратора */}
