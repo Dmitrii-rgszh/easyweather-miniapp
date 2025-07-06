@@ -459,7 +459,7 @@ export default function WeatherAlerts({ weather, airQuality, uvData, forecast })
                           {alert.title}
                         </div>
                         <div style={{
-                          fontSize: 13,
+                          fontSize: 14,
                           color: "#374151",
                           fontFamily: "Montserrat, Arial, sans-serif",
                           lineHeight: 1.4,
@@ -478,7 +478,7 @@ export default function WeatherAlerts({ weather, airQuality, uvData, forecast })
                             <div
                               key={actionIndex}
                               style={{
-                                fontSize: 11,
+                                fontSize: 14,
                                 color: "#6b7280",
                                 fontFamily: "Montserrat, Arial, sans-serif",
                                 display: "flex",
@@ -530,7 +530,7 @@ export default function WeatherAlerts({ weather, airQuality, uvData, forecast })
                 }} />
                 
                 <div style={{
-                  fontSize: 13,
+                  fontSize: 16,
                   color: "#374151",
                   fontFamily: "Montserrat, Arial, sans-serif",
                   fontWeight: 500,

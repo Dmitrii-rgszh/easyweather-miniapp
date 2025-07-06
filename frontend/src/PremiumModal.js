@@ -273,7 +273,7 @@ const PremiumModal = ({ isVisible, onClose, onUpgrade, usageStats }) => {
             <div style={{
               textAlign: 'center',
               marginTop: '16px',
-              fontSize: '12px',
+              fontSize: '14px',
               opacity: 0.8
             }}>
               ⭐ 2,847 пользователей уже выбрали Premium

@@ -481,11 +481,23 @@ function App() {
 
   // Геолокация остается без изменений (аналогично handleShowWeather)
   const handleGeoWeather = () => {
+    // Проверяем лимиты ПЕРЕД запросом
+    const requestCheck = canMakeRequest();
+
+    if (!requestCheck.canMake) {
+      // Показываем Premium modal если лимит исчерпан
+      setShowPremiumModal(true);
+      return;
+    }
+
     if (!navigator.geolocation) {
       alert("Геолокация не поддерживается браузером");
       return;
     }
-    setLoading(true);
+  
+  setLoading(true);
+  recordRequest();
+  setUsageStats(getUsageStats());
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const lat = position.coords.latitude;
@@ -594,7 +606,7 @@ function App() {
       <motion.div
         style={{
           position: 'absolute',
-          top: logoTop + 15, // На том же уровне что и логотип
+          top: logoTop + 50, // На том же уровне что и логотип
           right: '20px',
           background: isLow 
             ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
@@ -602,7 +614,7 @@ function App() {
           color: 'white',
           padding: '8px 16px',
           borderRadius: '20px',
-          fontSize: '14px',
+          fontSize: '12px',
           fontWeight: '600',
           fontFamily: 'Montserrat, Arial, sans-serif',
           zIndex: 100,
@@ -617,7 +629,6 @@ function App() {
       >
         {isLow && '🔥 '}
         {usageStats.remaining}/{usageStats.limit} запросов
-        {isLow && ' ⬆️'}
       </motion.div>
     );
   };
@@ -988,6 +999,7 @@ function App() {
               humidity={activeWeatherData?.details?.humidity}
               windSpeed={parseFloat(activeWeatherData?.details?.wind?.replace(' м/с', '') || '0')}
               isNight={isNight}
+              forecastData={forecastData}
             />
 
             <AirQuality airQualityData={airQualityData} />
@@ -1028,7 +1040,7 @@ function App() {
           usageStats={usageStats}
         />
 
-        <AdBanner />
+        <AdBanner isPremium={premiumUser} />
         {/* Панель администратора */}
         <AdminPanel 
           isVisible={showAdminPanel} 

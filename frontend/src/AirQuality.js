@@ -331,7 +331,7 @@ export default function AirQuality({ airQualityData }) {
                   transition={{ duration: 0.4, delay: 0.4 }}
                 >
                   <div style={{
-                    fontSize: 13,
+                    fontSize: 14,
                     color: "#374151",
                     fontFamily: "Montserrat, Arial, sans-serif",
                     lineHeight: 1.4

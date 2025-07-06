@@ -1,4 +1,9 @@
-export default function AdBanner() {
+export default function AdBanner({ isPremium = false }) {
+  // Скрываем рекламу для Premium пользователей
+  if (isPremium) {
+    return null;
+  }
+  
   return (
     <div style={{
       position: "fixed", 

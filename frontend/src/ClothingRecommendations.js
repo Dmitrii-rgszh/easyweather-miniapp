@@ -255,262 +255,319 @@ const ChevronIcon = ({ isOpen }) => (
   </motion.svg>
 );
 
+
 export default function ClothingRecommendations({ temp, desc, humidity, windSpeed, isNight, forecastData }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const recommendations = getClothingRecommendations(temp, desc, humidity || 50, windSpeed || 0, isNight);
   const theme = getClothingTheme(temp, desc);
-
-  if (recommendations.length === 0) return null;
-
-  // Берем первые 2 иконки для превью
-  const previewIcons = recommendations.slice(0, 2).map(item => item.icon);
-  
-export default function ClothingRecommendations({ temp, desc, humidity, windSpeed, isNight, forecastData }) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const recommendations = getClothingRecommendations(temp, desc, humidity || 50, windSpeed || 0, isNight);
-  const theme = getClothingTheme(temp, desc);
+  const upcomingAlerts = analyzeUpcomingWeather(forecastData?.list || []);
 
   if (recommendations.length === 0) return null;
 
   const previewIcons = recommendations.slice(0, 2).map(item => item.icon);
 
   return (
-    <motion.div
-      style={{
-        background: "rgba(255, 255, 255, 0.9)",
-        borderRadius: 16,
-        padding: "10px",
-        margin: "16px auto 0",
-        maxWidth: 340,
-        width: "100%",
-        boxSizing: "border-box",
-        backdropFilter: "blur(10px)",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-        cursor: "pointer"
-      }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.3 }}
-      onClick={() => setIsExpanded(!isExpanded)}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-    >
-      {/* Заголовок с превью */}
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between"
-      }}>
-        {/* Левая часть с иконкой и текстом */}
+    <>
+      {/* НОВЫЙ БЛОК ПРЕДУПРЕЖДЕНИЙ */}
+      {upcomingAlerts.length > 0 && (
+        <motion.div
+          style={{
+            background: "rgba(255, 69, 69, 0.1)",
+            border: "2px solid #ef4444", 
+            borderRadius: 16,
+            padding: 12,
+            margin: "16px auto 0",
+            maxWidth: 340,
+            width: "100%",
+            position: "relative",
+            boxSizing: "border-box",
+            backdropFilter: "blur(10px)",
+            boxShadow: "0 4px 20px rgba(239,68,68,0.2)"
+          }}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <div style={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            fontSize: 20
+          }}>
+            ⚠️
+          </div>
+          
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ fontSize: 24 }}>☔</div>
+            <div>
+              <div style={{
+                fontSize: 14,
+                fontWeight: 600,
+                color: "#ef4444",
+                marginBottom: 4,
+                fontFamily: "Montserrat, Arial, sans-serif"
+              }}>
+                {upcomingAlerts[0].title}
+              </div>
+              <div style={{
+                fontSize: 12,
+                color: "#374151",
+                marginBottom: 4,
+                fontFamily: "Montserrat, Arial, sans-serif"
+              }}>
+                {upcomingAlerts[0].message}
+              </div>
+              <div style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: "#1f2937",
+                fontFamily: "Montserrat, Arial, sans-serif"
+              }}>
+                {upcomingAlerts[0].recommendation}
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* СУЩЕСТВУЮЩИЙ БЛОК РЕКОМЕНДАЦИЙ */}
+      <motion.div
+        style={{
+          background: "rgba(255, 255, 255, 0.9)",
+          borderRadius: 16,
+          padding: "10px",
+          margin: "16px auto 0",
+          maxWidth: 340,
+          width: "100%",
+          boxSizing: "border-box",
+          backdropFilter: "blur(10px)",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+          cursor: "pointer"
+        }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.3 }}
+        onClick={() => setIsExpanded(!isExpanded)}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        {/* Заголовок с превью */}
         <div style={{
           display: "flex",
           alignItems: "center",
-          gap: 12,
-          flex: 1
+          justifyContent: "space-between"
         }}>
-          {/* Контейнер иконки с цветным фоном */}
-          <motion.div
-            style={{
-              width: 48, // Увеличили размер контейнера
-              height: 48,
-              borderRadius: 12,
-              background: `linear-gradient(135deg, ${theme.iconBgColor}, ${theme.bgColor})`,
-              border: `1px solid ${theme.mainColor}30`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-              position: "relative",
-              overflow: "hidden"
-            }}
-            whileHover={{ scale: 1.05 }}
-            transition={{ duration: 0.2 }}
-          >
-            {/* Декоративная полоска */}
-            <div style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 2,
-              background: theme.mainColor,
-              borderRadius: "12px 12px 0 0"
-            }} />
-            
-            {/* Крупная иконка */}
-            <span style={{ 
-              fontSize: 24, // Увеличили размер иконки
-              filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))"
-            }}>
-              👔
-            </span>
-          </motion.div>
-
-          {/* Текстовая информация */}
-          <div style={{ flex: 1 }}>
-            <div style={{
-              fontSize: 16,
-              fontWeight: 600,
-              color: "#374151",
-              fontFamily: "Montserrat, Arial, sans-serif",
-              marginBottom: 2
-            }}>
-              Рекомендации одежды
-            </div>
-            {!isExpanded && (
-              <div style={{
+          {/* Левая часть с иконкой и текстом */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            flex: 1
+          }}>
+            {/* Контейнер иконки с цветным фоном */}
+            <motion.div
+              style={{
+                width: 48, // Увеличили размер контейнера
+                height: 48,
+                borderRadius: 12,
+                background: `linear-gradient(135deg, ${theme.iconBgColor}, ${theme.bgColor})`,
+                border: `1px solid ${theme.mainColor}30`,
                 display: "flex",
-                gap: 6,
-                marginTop: 2,
-                alignItems: "center"
-              }}>
-                {previewIcons.map((icon, index) => (
-                  <motion.span 
-                    key={index} 
-                    style={{ 
-                      fontSize: 16, // Увеличили размер превью-иконок
-                      filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.1))"
-                    }}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: index * 0.1 + 0.3 }}
-                  >
-                    {icon}
-                  </motion.span>
-                ))}
-                {recommendations.length > 2 && (
-                  <span style={{
-                    fontSize: 12,
-                    color: "#6b7280",
-                    fontFamily: "Montserrat, Arial, sans-serif",
-                    marginLeft: 2
-                  }}>
-                    +{recommendations.length - 2}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-        
-        <ChevronIcon isOpen={isExpanded} />
-      </div>
-
-      {/* Развернутый контент */}
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            style={{ overflow: "hidden" }}
-          >
-            <div style={{ marginTop: 16 }}>
-              {/* Сетка рекомендаций */}
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                position: "relative",
+                overflow: "hidden"
+              }}
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2 }}
+            >
+              {/* Декоративная полоска */}
               <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(70px, 1fr))",
-                gap: 8,
-                marginBottom: 12
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 2,
+                background: theme.mainColor,
+                borderRadius: "12px 12px 0 0"
+              }} />
+              
+              {/* Крупная иконка */}
+              <span style={{ 
+                fontSize: 24, // Увеличили размер иконки
+                filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))"
               }}>
-                {recommendations.map((item, index) => (
-                  <motion.div
-                    key={index}
-                    style={{
-                      background: `linear-gradient(135deg, ${item.color}10, ${item.color}05)`,
-                      borderRadius: 12,
-                      padding: "12px 8px",
-                      textAlign: "center",
-                      border: `2px solid ${item.color}20`,
-                      position: "relative",
-                      overflow: "hidden",
-                      minHeight: 80
-                    }}
-                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: index * 0.1 }}
-                    whileHover={{ scale: 1.05, y: -2 }}
-                  >
-                    {/* Цветной акцент */}
-                    <div style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: 3,
-                      background: item.color,
-                      borderRadius: "12px 12px 0 0"
-                    }} />
-                    
-                    {/* Иконка */}
-                    <div style={{
-                      fontSize: 28,
-                      lineHeight: 1,
-                      marginBottom: 6,
-                      filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
-                    }}>
-                      {item.icon}
-                    </div>
-                    
-                    {/* Описание */}
-                    <div style={{
-                      fontSize: 16,
-                      color: "#374151",
-                      fontFamily: "Montserrat, Arial, sans-serif",
-                      fontWeight: 500,
-                      lineHeight: 1.2
-                    }}>
-                      {item.text}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+                👔
+              </span>
+            </motion.div>
 
-              {/* Мотивирующий текст с цветным фоном */}
-              <motion.div
-                style={{
-                  background: `linear-gradient(135deg, ${theme.iconBgColor}, ${theme.bgColor})`,
-                  borderRadius: 8,
-                  padding: "10px 12px",
-                  textAlign: "center",
-                  border: `1px solid ${theme.mainColor}20`,
-                  position: "relative",
-                  overflow: "hidden"
-                }}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                {/* Тонкая цветная полоска */}
+            {/* Текстовая информация */}
+            <div style={{ flex: 1 }}>
+              <div style={{
+                fontSize: 16,
+                fontWeight: 600,
+                color: "#374151",
+                fontFamily: "Montserrat, Arial, sans-serif",
+                marginBottom: 2
+              }}>
+                Рекомендации одежды
+              </div>
+              {!isExpanded && (
                 <div style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: 2,
-                  background: theme.mainColor,
-                  borderRadius: "0 0 8px 8px"
-                }} />
-                
-                <div style={{
-                  fontSize: 16,
-                  color: "#374151",
-                  fontStyle: "italic",
-                  fontFamily: "Montserrat, Arial, sans-serif",
-                  fontWeight: 500
+                  display: "flex",
+                  gap: 6,
+                  marginTop: 2,
+                  alignItems: "center"
                 }}>
-                  {temp < -5 ? "🥶 Береги себя в мороз!" : 
-                   temp < 5 ? "❄️ Тепло одевайся!" :
-                   temp < 15 ? "🧥 Не забудь куртку!" :
-                   temp > 25 ? "☀️ Отличная погода!" : 
-                   "🌤️ Одевайся комфортно!"}
+                  {previewIcons.map((icon, index) => (
+                    <motion.span 
+                      key={index} 
+                      style={{ 
+                        fontSize: 16, // Увеличили размер превью-иконок
+                        filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.1))"
+                      }}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: index * 0.1 + 0.3 }}
+                    >
+                      {icon}
+                    </motion.span>
+                  ))}
+                  {recommendations.length > 2 && (
+                    <span style={{
+                      fontSize: 12,
+                      color: "#6b7280",
+                      fontFamily: "Montserrat, Arial, sans-serif",
+                      marginLeft: 2
+                    }}>
+                      +{recommendations.length - 2}
+                    </span>
+                  )}
                 </div>
-              </motion.div>
+              )}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+          </div>
+          
+          <ChevronIcon isOpen={isExpanded} />
+        </div>
+
+        {/* Развернутый контент */}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              style={{ overflow: "hidden" }}
+            >
+              <div style={{ marginTop: 16 }}>
+                {/* Сетка рекомендаций */}
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(2, 1fr)",
+                  gap: 8,
+                  marginBottom: 12
+                }}>
+                  {recommendations.map((item, index) => (
+                    <motion.div
+                      key={index}
+                      style={{
+                        background: `linear-gradient(135deg, ${item.color}10, ${item.color}05)`,
+                        borderRadius: 12,
+                        padding: "12px 8px",
+                        textAlign: "center",
+                        border: `2px solid ${item.color}20`,
+                        position: "relative",
+                        overflow: "hidden",
+                        minHeight: 80
+                      }}
+                      initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: index * 0.1 }}
+                      whileHover={{ scale: 1.05, y: -2 }}
+                    >
+                      {/* Цветной акцент */}
+                      <div style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: 3,
+                        background: item.color,
+                        borderRadius: "12px 12px 0 0"
+                      }} />
+                      
+                      {/* Иконка */}
+                      <div style={{
+                        fontSize: 28,
+                        lineHeight: 1,
+                        marginBottom: 6,
+                        filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
+                      }}>
+                        {item.icon}
+                      </div>
+                      
+                      {/* Описание */}
+                      <div style={{
+                        fontSize: 16,
+                        color: "#374151",
+                        fontFamily: "Montserrat, Arial, sans-serif",
+                        fontWeight: 500,
+                        lineHeight: 1.2
+                      }}>
+                        {item.text}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Мотивирующий текст с цветным фоном */}
+                <motion.div
+                  style={{
+                    background: `linear-gradient(135deg, ${theme.iconBgColor}, ${theme.bgColor})`,
+                    borderRadius: 8,
+                    padding: "10px 12px",
+                    textAlign: "center",
+                    border: `1px solid ${theme.mainColor}20`,
+                    position: "relative",
+                    overflow: "hidden"
+                  }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  {/* Тонкая цветная полоска */}
+                  <div style={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: 2,
+                    background: theme.mainColor,
+                    borderRadius: "0 0 8px 8px"
+                  }} />
+                  
+                  <div style={{
+                    fontSize: 16,
+                    color: "#374151",
+                    fontStyle: "italic",
+                    fontFamily: "Montserrat, Arial, sans-serif",
+                    fontWeight: 500
+                  }}>
+                    {temp < -5 ? "🥶 Береги себя в мороз!" : 
+                     temp < 5 ? "❄️ Тепло одевайся!" :
+                     temp < 15 ? "🧥 Не забудь куртку!" :
+                     temp > 25 ? "☀️ Отличная погода!" : 
+                     "🌤️ Одевайся комфортно!"}
+                  </div>
+                </motion.div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </>
   );
 }
