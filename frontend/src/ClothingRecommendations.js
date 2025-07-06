@@ -511,7 +511,7 @@ export default function ClothingRecommendations({ temp, desc, humidity, windSpee
                       
                       {/* Описание */}
                       <div style={{
-                        fontSize: 16,
+                        fontSize: 15,
                         color: "#374151",
                         fontFamily: "Montserrat, Arial, sans-serif",
                         fontWeight: 500,

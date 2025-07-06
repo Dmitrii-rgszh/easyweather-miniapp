@@ -97,8 +97,12 @@ const ChevronIcon = ({ isOpen }) => (
 export default function UVIndex({ uvData, isNight }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  if (!uvData || isNight) {
-    return null; // Не показываем UV индекс ночью
+  // Проверяем время: только с 9:00 до 18:00
+  const currentHour = new Date().getHours();
+  const isDaytimeUV = currentHour >= 9 && currentHour < 18;
+
+  if (!uvData || isNight || !isDaytimeUV) {
+    return null; // Не показываем UV индекс ночью или вне дневного времени
   }
 
   const uvIndex = Math.round(uvData.value || 0);

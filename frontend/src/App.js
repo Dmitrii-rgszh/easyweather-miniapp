@@ -23,6 +23,8 @@ import {
 } from './backendApi';
 import { canMakeRequest, recordRequest, getUsageStats, activatePremium } from './usageLimit';
 import PremiumModal from './PremiumModal';
+import UserProfileModal from "./UserProfileModal";
+import HealthAlerts from "./HealthAlerts";
 
 // Все эффекты остаются без изменений
 function CloudsEffect() {
@@ -422,6 +424,8 @@ function App() {
   const [usageStats, setUsageStats] = useState(getUsageStats());
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [premiumUser, setPremiumUser] = useState(getUsageStats().isPremium);
+  const [userProfile, setUserProfile] = useState(null);
+  const [showProfileModal, setShowProfileModal] = useState(false)
 
   // Функции обработки остаются без изменений
   const handleShareWeather = (weather) => {
@@ -471,7 +475,7 @@ function App() {
       fontSize: 20,
       letterSpacing: 0.3,
       textShadow: "0 2px 8px rgba(0,0,0,0.57), 0 0 1px #fff",
-      zIndex: 2,
+      zIndex: 50,
       fontFamily: "Montserrat, Arial, sans-serif"
     }}>
       Город
@@ -492,6 +496,15 @@ function App() {
       getCityPhoto(weather.city).then(setPhotoUrl);
     }
   }, [weather?.city]);
+
+  useEffect(() => {
+    const savedProfile = localStorage.getItem('userProfile');
+    if (savedProfile) {
+      setUserProfile(JSON.parse(savedProfile));
+    } else {
+      setShowProfileModal(true); // Показать опрос
+    }
+  }, []);
 
   // 🔧 ОБНОВЛЕННАЯ ЛОГИКА ЗАГРУЗКИ ПОГОДЫ
   const handleShowWeather = async () => {
@@ -1152,6 +1165,30 @@ function App() {
             alert('🎉 Premium активирован! Добро пожаловать в мир безлимитной погоды!');
           }}
           usageStats={usageStats}
+        />
+
+        {/* Premium Modal */}
+        <PremiumModal 
+          isVisible={showPremiumModal}
+          onClose={() => setShowPremiumModal(false)}
+          onUpgrade={() => {
+            activatePremium();
+            setPremiumUser(true);
+            setUsageStats(getUsageStats());
+            setShowPremiumModal(false);
+            alert('🎉 Premium активирован! Добро пожаловать в мир безлимитной погоды!');
+          }}
+          usageStats={usageStats}
+        />
+
+        {/* 🆕 ДОБАВЬТЕ ЭТОТ БЛОК: */}
+        <UserProfileModal 
+          isVisible={showProfileModal}
+          onComplete={(profile) => {
+            setUserProfile(profile);
+            setShowProfileModal(false);
+            console.log('Профиль сохранен:', profile); // Для отладки
+          }}
         />
 
         <AdBanner isPremium={premiumUser} />
