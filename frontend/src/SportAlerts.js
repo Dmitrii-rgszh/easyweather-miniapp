@@ -4,14 +4,19 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Функция анализа спортивных условий
-function analyzeSportConditions(weather, userProfile, forecastData = []) {
+function analyzeSportConditions(weather, userProfile, forecastData = [], uvData = null) {
   if (!weather || !userProfile) return [];
   
   const alerts = [];
-  const { temp, humidity } = weather.details;
+  
+  // 🔧 ИСПРАВЛЕННАЯ СТРУКТУРА ДАННЫХ
+  const temp = weather.temp; // Температура напрямую из weather.temp
+  const humidity = weather.details?.humidity || 0;
   const windSpeed = parseFloat(weather.details?.wind?.replace(' м/с', '') || '0');
-  const desc = weather.desc.toLowerCase();
+  const desc = weather.desc?.toLowerCase() || '';
   const activity = userProfile.activity || [];
+  
+  console.log('🔍 SportAlerts DEBUG:', { temp, humidity, windSpeed, desc, activity }); // Для отладки
   
   // 🏃 БЕГ/ВЕЛОСИПЕД
   if (activity.includes('running')) {
@@ -97,9 +102,9 @@ function analyzeSportConditions(weather, userProfile, forecastData = []) {
     }
   }
   
-  // 👶 С ДЕТЬМИ
+  // 👶 С ДЕТЬМИ (с учетом UV)
   if (activity.includes('children')) {
-    const childrenScore = calculateChildrenScore(temp, humidity, windSpeed, desc);
+    const childrenScore = calculateChildrenScore(temp, humidity, windSpeed, desc, uvData);
     
     if (childrenScore >= 80) {
       alerts.push({
@@ -116,7 +121,30 @@ function analyzeSportConditions(weather, userProfile, forecastData = []) {
           'Детская площадка зовет!',
           'Не забудьте панамку',
           'Возьмите воду и перекус',
-          'Солнцезащитный крем'
+          uvData && uvData.value >= 3 ? 'Солнцезащитный крем обязательно!' : 'Солнцезащитный крем'
+        ]
+      });
+    } else if (childrenScore >= 60) {
+      // Новый промежуточный уровень для UV предупреждений
+      const uvWarning = uvData && uvData.value >= 6;
+      alerts.push({
+        id: 'good_children_uv',
+        type: 'warning',
+        icon: '👶',
+        title: uvWarning ? 'Осторожно с детьми - высокий UV!' : 'Хорошо для детей',
+        message: uvWarning 
+          ? `${temp}°C подходит, но UV индекс ${uvData.value} - опасно для детской кожи`
+          : `${temp}°C - неплохие условия для прогулки`,
+        color: uvWarning ? '#f59e0b' : '#06b6d4',
+        bgColor: uvWarning ? '#f59e0b15' : '#06b6d415',
+        priority: uvWarning ? 1 : 2,
+        score: childrenScore,
+        advice: [
+          uvWarning ? 'Ограничьте время на солнце до 30 минут' : 'Контролируйте время прогулки',
+          'SPF 50+ крем обязательно!',
+          'Панамка и светлая одежда',
+          uvWarning ? 'Избегайте 11:00-16:00' : 'Возьмите воду',
+          'Ищите тенистые места'
         ]
       });
     } else if (childrenScore < 50) {
@@ -125,7 +153,7 @@ function analyzeSportConditions(weather, userProfile, forecastData = []) {
         type: 'warning',
         icon: '👶',
         title: 'Осторожно с детьми',
-        message: getChildrenWarning(temp, humidity, windSpeed, desc),
+        message: getChildrenWarning(temp, humidity, windSpeed, desc, uvData),
         color: '#f59e0b',
         bgColor: '#f59e0b15',
         priority: 2,
@@ -196,8 +224,8 @@ function calculateFitnessScore(temp, humidity, windSpeed, desc) {
   return Math.max(0, score);
 }
 
-// Расчет оценки для детей
-function calculateChildrenScore(temp, humidity, windSpeed, desc) {
+// Расчет оценки для детей (с учетом UV)
+function calculateChildrenScore(temp, humidity, windSpeed, desc, uvData) {
   let score = 100;
   
   // Дети более чувствительны к температуре
@@ -214,6 +242,14 @@ function calculateChildrenScore(temp, humidity, windSpeed, desc) {
   if (desc.includes('дождь')) score -= 50;
   if (desc.includes('снег')) score -= 30;
   
+  // 🆕 UV ИНДЕКС - критично для детей!
+  if (uvData && uvData.value) {
+    if (uvData.value >= 8) score -= 50; // Очень высокий UV
+    else if (uvData.value >= 6) score -= 30; // Высокий UV  
+    else if (uvData.value >= 4) score -= 15; // Умеренный UV
+    // UV 0-3 безопасен для детей
+  }
+  
   return Math.max(0, score);
 }
 
@@ -227,8 +263,10 @@ function getRunningWarning(temp, humidity, windSpeed, desc) {
   return 'Неидеальные условия для бега';
 }
 
-// Предупреждения для детей
-function getChildrenWarning(temp, humidity, windSpeed, desc) {
+// Предупреждения для детей (с учетом UV)
+function getChildrenWarning(temp, humidity, windSpeed, desc, uvData) {
+  if (uvData && uvData.value >= 8) return `Очень высокий UV ${uvData.value} - опасно для детей!`;
+  if (uvData && uvData.value >= 6) return `Высокий UV ${uvData.value} - ограничьте время на солнце`;
   if (desc.includes('дождь')) return 'Дождь - лучше остаться дома';
   if (temp < 10) return 'Слишком холодно для малышей';
   if (temp > 28) return 'Жарко - риск перегрева у детей';
@@ -240,6 +278,7 @@ function getChildrenWarning(temp, humidity, windSpeed, desc) {
 function findBestSportTime(forecastData, activity) {
   if (!forecastData || forecastData.length < 4) return null;
   
+  const now = new Date();
   const next12Hours = forecastData.slice(1, 5); // Следующие 4 периода (12 часов)
   let bestPeriod = null;
   let bestScore = 0;
@@ -249,6 +288,7 @@ function findBestSportTime(forecastData, activity) {
     const humidity = item.main.humidity;
     const windSpeed = item.wind?.speed || 0;
     const desc = item.weather[0].description.toLowerCase();
+    const itemTime = new Date(item.dt * 1000);
     
     let score = 0;
     if (activity.includes('running')) {
@@ -260,24 +300,38 @@ function findBestSportTime(forecastData, activity) {
     
     if (score > bestScore && score >= 70) {
       bestScore = score;
+      
+      // Рассчитываем реальную разность во времени
+      const timeDiffMs = itemTime - now;
+      const hoursDiff = Math.round(timeDiffMs / (1000 * 60 * 60));
+      
       bestPeriod = {
         index: index + 1,
         temp,
         humidity,
         windSpeed,
-        time: new Date(item.dt * 1000).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+        time: itemTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+        hoursDiff: hoursDiff,
+        itemTime: itemTime
       };
     }
   });
   
   if (bestPeriod) {
-    const hours = bestPeriod.index * 3;
+    // Формируем правильное сообщение
+    let timeMessage;
+    if (bestPeriod.hoursDiff <= 1) {
+      timeMessage = `в ${bestPeriod.time}`;
+    } else {
+      timeMessage = `через ${bestPeriod.hoursDiff}ч в ${bestPeriod.time}`;
+    }
+    
     return {
       id: 'best_time_prediction',
       type: 'prediction',
       icon: '⏰',
-      title: `Лучшее время через ${hours}ч`,
-      message: `В ${bestPeriod.time} будет ${bestPeriod.temp}°C - отлично для спорта!`,
+      title: `Лучшее время ${timeMessage}`,
+      message: `Будет ${bestPeriod.temp}°C - отлично для спорта!`,
       color: '#8b5cf6',
       bgColor: '#8b5cf615',
       priority: 4,
@@ -341,10 +395,10 @@ const ChevronIcon = ({ isOpen }) => (
   </motion.svg>
 );
 
-export default function SportAlerts({ weather, userProfile, forecastData }) {
+export default function SportAlerts({ weather, userProfile, forecastData, uvData }) {
   const [isExpanded, setIsExpanded] = useState(false);
   
-  const alerts = analyzeSportConditions(weather, userProfile, forecastData);
+  const alerts = analyzeSportConditions(weather, userProfile, forecastData, uvData);
   const theme = getSportTheme(alerts);
   
   // Если нет алертов или профиля, не показываем блок

@@ -1316,9 +1316,10 @@ useEffect(() => {
                 weather={activeWeatherData}
                 userProfile={userProfile}
                 forecastData={forecastData}
+                uvData={uvData}
               />
             )}
-            
+
             {/* 🆕 ВСЕ БЛОКИ ПОЛУЧАЮТ ДАННЫЕ ИЗ ВЫБРАННОГО ВРЕМЕНИ */}
             <WeatherAlerts 
               weather={activeWeatherData}
