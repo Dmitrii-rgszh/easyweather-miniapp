@@ -27,6 +27,7 @@ import UserProfileModal from "./UserProfileModal";
 import HealthAlerts from "./HealthAlerts";
 import ProfilePage from "./ProfilePage";
 import SportAlerts from "./SportAlerts";
+import MoodTracker from "./MoodTracker";
 
 // Все эффекты остаются без изменений
 function CloudsEffect() {
@@ -429,6 +430,7 @@ function App() {
   const [userProfile, setUserProfile] = useState(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showProfilePage, setShowProfilePage] = useState(false);
+  const [showMoodTracker, setShowMoodTracker] = useState(false);
 
   // Функции обработки остаются без изменений
   const handleShareWeather = (weather) => {
@@ -1319,6 +1321,27 @@ useEffect(() => {
                 uvData={uvData}
               />
             )}
+
+            {activeWeatherData && (
+              <MoodTracker
+                weather={activeWeatherData}
+                city={weather?.city || city}
+                isVisible={showMoodTracker && !!weather}
+              />
+            )}
+
+            // Показывать трекер через 2 секунды после загрузки погоды:
+            useEffect(() => {
+              if (weather) {
+                const timer = setTimeout(() => {
+                  setShowMoodTracker(true);
+                }, 2000);
+    
+                return () => clearTimeout(timer);
+              } else {
+                setShowMoodTracker(false);
+              }
+            }, [weather]);
 
             {/* 🆕 ВСЕ БЛОКИ ПОЛУЧАЮТ ДАННЫЕ ИЗ ВЫБРАННОГО ВРЕМЕНИ */}
             <WeatherAlerts 
