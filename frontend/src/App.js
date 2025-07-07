@@ -440,17 +440,6 @@ function App() {
   const [showMoodTracker, setShowMoodTracker] = useState(false);
   // 🆕 Состояния для системы достижений
   const [gameStats, setGameStats] = useState(getGameStats());
-  const [achievementNotification, setAchievementNotification] = useState(null);
-
-  // 🆕 Функция для обработки новых достижений
-  const handleAchievementUnlocked = (achievementId) => {
-    setAchievementNotification(achievementId);
-    
-    // Диспатчим событие для других компонентов
-    window.dispatchEvent(new CustomEvent('newAchievement', {
-      detail: { achievement: achievementId }
-    }));
-  };
 
   // Функции обработки остаются без изменений
   const handleShareWeather = (weather) => {
@@ -792,9 +781,12 @@ const handleShowWeather = async () => {
       const achievementResult = recordWeatherCheck(data.name, currentWeather, premiumUser);
       setGameStats(achievementResult.stats);
 
+      // Диспатчим события для AchievementsSystem
       achievementResult.newAchievements.forEach((achievementId, index) => {
         setTimeout(() => {
-          handleAchievementUnlocked(achievementId);
+          window.dispatchEvent(new CustomEvent('newAchievement', {
+            detail: { achievement: achievementId }
+          }));
         }, index * 1000);
       });
 
@@ -963,121 +955,6 @@ const handleGeoWeather = () => {
     }
   );
 };
-
-  // Геолокация остается без изменений (аналогично handleShowWeather)
-  const handleGeoWeather = () => {
-    // Проверяем лимиты ПЕРЕД запросом
-    const requestCheck = canMakeRequest();
-
-    if (!requestCheck.canMake) {
-      // Показываем Premium modal если лимит исчерпан
-      setShowPremiumModal(true);
-      return;
-    }
-
-    if (!navigator.geolocation) {
-      alert("Геолокация не поддерживается браузером");
-      return;
-    }
-  
-  setLoading(true);
-  recordRequest();
-  setUsageStats(getUsageStats());
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-        try {
-          const data = await fetchWeather({ lat, lon });
-          const details = {
-            feels: Math.round(data.main.feels_like),
-            pressure: Math.round(data.main.pressure * 0.750062),
-            humidity: data.main.humidity,
-            wind: `${Math.round(data.wind.speed)} м/с`
-          };
-
-          setCity(data.name);
-
-          const currentWeather = {
-            city: data.name,
-            temp: Math.round(data.main.temp),
-            desc: data.weather[0].description[0].toUpperCase() + data.weather[0].description.slice(1),
-            icon: `https://openweathermap.org/img/wn/${data.weather[0].icon}@4x.png`,
-            details
-          };
-
-          setWeather(currentWeather);
-          setSelectedWeatherData(currentWeather);
-          setDesc(data.weather[0].description);
-          setIsNight(data.weather[0].icon.includes("n"));
-          setCoords({ lat, lon });
-
-          const { list: forecastList } = await fetchForecast({ lat, lon });
-          setForecastData(forecastList);
-
-          try {
-            const airData = await fetchAirQuality({ lat, lon });
-            setAirQualityData(airData);
-          } catch (e) {
-            console.error('Air quality error:', e);
-            setAirQualityData(null);
-          }
-
-          try {
-            const uvIndexData = await fetchUVIndex({ lat, lon });
-            setUvData(uvIndexData);
-          } catch (e) {
-            console.error('UV index error:', e);
-            setUvData(null);
-          }
-
-          // 🆕 ЗАПИСЫВАЕМ ДОСТИЖЕНИЯ ДЛЯ ГЕОЛОКАЦИИ
-          const achievementResult = recordWeatherCheck(data.name, currentWeather, premiumUser);
-          setGameStats(achievementResult.stats);
-
-          achievementResult.newAchievements.forEach((achievementId, index) => {
-            setTimeout(() => {
-              handleAchievementUnlocked(achievementId);
-            }, index * 1000);
-          });
-
-          // Показываем уведомления о новых достижениях
-          achievementResult.newAchievements.forEach((achievementId, index) => {
-            setTimeout(() => {
-              handleAchievementUnlocked(achievementId);
-            }, index * 1000);
-          });
-
-          setGameStats(achievementResult.stats);
-
-          achievementResult.newAchievements.forEach((achievementId, index) => {
-            setTimeout(() => {
-              handleAchievementUnlocked(achievementId);
-            }, index * 1000);
-          });
-
-        } catch (error) {
-          console.error('Geo weather error:', error);
-          setWeather({ 
-            city: "?", 
-            temp: '--', 
-            desc: 'Ошибка при получении геолокации', 
-            icon: '', 
-            details: {} 
-          });
-          setForecastData([]);
-          setPhotoUrl(null);
-        } finally {
-          setLoading(false);
-        }
-      },
-      (error) => {
-        console.error('Geolocation error:', error);
-        alert("Не удалось получить геолокацию: " + error.message);
-        setLoading(false);
-      }
-    );
-  };
 
   // 🆕 Используем выбранные данные для всех блоков
   const activeWeatherData = selectedWeatherData || weather;
@@ -1640,15 +1517,8 @@ const handleGeoWeather = () => {
         
       </motion.div>
 
-      {/* 🆕 Уведомления о достижениях */}
-        <AnimatePresence>
-          {achievementNotification && (
-            <AchievementNotification
-              achievement={achievementNotification}
-              onClose={() => setAchievementNotification(null)}
-            />
-          )}
-        </AnimatePresence>
+        {/* 🆕 Уведомления о достижениях */}
+        <AchievementsSystem />
     </ThemeProvider>
   );
 }
