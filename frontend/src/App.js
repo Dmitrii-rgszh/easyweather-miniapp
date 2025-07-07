@@ -842,7 +842,9 @@ const handleShowWeather = async () => {
 
         achievementResult.newAchievements.forEach((achievementId, index) => {
           setTimeout(() => {
-            handleAchievementUnlocked(achievementId);
+            window.dispatchEvent(new CustomEvent('newAchievement', {
+              detail: { achievement: achievementId }
+            }));
           }, index * 1000);
         });
       }
@@ -929,7 +931,9 @@ const handleGeoWeather = () => {
 
         achievementResult.newAchievements.forEach((achievementId, index) => {
           setTimeout(() => {
-            handleAchievementUnlocked(achievementId);
+            window.dispatchEvent(new CustomEvent('newAchievement', {
+              detail: { achievement: achievementId }
+            }));
           }, index * 1000);
         });
 
@@ -1455,12 +1459,14 @@ const handleGeoWeather = () => {
             setUsageStats(getUsageStats());
             setShowPremiumModal(false);
             // Записываем достижение Premium
-            const achievementResult = recordWeatherCheck(weather?.city || city, weather, true);
+            const achievementResult = recordWeatherCheck(data.name, currentWeather, premiumUser);
             setGameStats(achievementResult.stats);
-  
+
             achievementResult.newAchievements.forEach((achievementId, index) => {
               setTimeout(() => {
-                handleAchievementUnlocked(achievementId);
+                window.dispatchEvent(new CustomEvent('newAchievement', {
+                  detail: { achievement: achievementId }
+                }));
               }, index * 1000);
             });
   
@@ -1478,6 +1484,14 @@ const handleGeoWeather = () => {
             setPremiumUser(true);
             setUsageStats(getUsageStats());
             setShowPremiumModal(false);
+            const achievementResult = recordWeatherCheck(weather?.city || city, weather, true);
+            setGameStats(achievementResult.stats);
+
+            achievementResult.newAchievements.forEach((achievementId, index) => {
+              setTimeout(() => {
+                handleAchievementUnlocked(achievementId); // ❌ ВОТ ОШИБКА!
+              }, index * 1000);
+            });
             alert('🎉 Premium активирован! Добро пожаловать в мир безлимитной погоды!');
           }}
           usageStats={usageStats}
