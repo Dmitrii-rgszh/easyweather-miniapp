@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import AdBanner from "./AdBanner";
 import WeatherCarousel from "./WeatherCarousel"; // 🆕 НОВЫЙ КОМПОНЕНТ
 import CityDateInput from "./CityDateInput";
@@ -28,6 +28,13 @@ import HealthAlerts from "./HealthAlerts";
 import ProfilePage from "./ProfilePage";
 import SportAlerts from "./SportAlerts";
 import MoodTracker from "./MoodTracker";
+
+import AchievementsSystem, { 
+  recordWeatherCheck, 
+  getGameStats, 
+  AchievementNotification,
+  ACHIEVEMENTS 
+} from "./Achievements";
 
 // Все эффекты остаются без изменений
 function CloudsEffect() {
@@ -431,6 +438,19 @@ function App() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showProfilePage, setShowProfilePage] = useState(false);
   const [showMoodTracker, setShowMoodTracker] = useState(false);
+  // 🆕 Состояния для системы достижений
+  const [gameStats, setGameStats] = useState(getGameStats());
+  const [achievementNotification, setAchievementNotification] = useState(null);
+
+  // 🆕 Функция для обработки новых достижений
+  const handleAchievementUnlocked = (achievementId) => {
+    setAchievementNotification(achievementId);
+    
+    // Диспатчим событие для других компонентов
+    window.dispatchEvent(new CustomEvent('newAchievement', {
+      detail: { achievement: achievementId }
+    }));
+  };
 
   // Функции обработки остаются без изменений
   const handleShareWeather = (weather) => {
@@ -503,28 +523,35 @@ useEffect(() => {
             localStorage.removeItem('userProfile');
             setUserProfile(null);
             console.log('✅ Профиль пользователя сброшен');
-          
+
             // 2. ПРАВИЛЬНЫЙ сброс премиума - используем ключи из usageLimit.js
             localStorage.removeItem('weatherUsage'); // Основной ключ лимитов
             localStorage.removeItem('weatherPremiumUser'); // Старый ключ (на всякий случай)
             localStorage.removeItem('weatherRequestCount'); // Старый ключ
             localStorage.removeItem('weatherLastRequestDate'); // Старый ключ
-          
+
+            // 🆕 ДОБАВИТЬ ЭТУ СТРОКУ:
+            localStorage.removeItem('gameStats'); // Сброс достижений
+
             setPremiumUser(false);
             setUsageStats(getUsageStats()); // Обновляем статистику
             console.log('✅ Премиум статус сброшен (weatherUsage удален)');
-          
+
             // 3. Сброс избранного
             localStorage.removeItem('weatherFavorites');
             setFavorites([]);
             console.log('✅ Избранные города сброшены');
-          
+
             // 4. Сброс погодных данных
             setWeather(null);
             setSelectedWeatherData(null);
             setForecastData([]);
             setAirQualityData(null);
             setUvData(null);
+
+            // 🆕 ДОБАВИТЬ ЭТУ СТРОКУ:
+            setGameStats(getGameStats()); // Сброс достижений
+
             console.log('✅ Погодные данные очищены');
           
             // 5. Показываем опрос
@@ -638,6 +665,11 @@ useEffect(() => {
           console.log('localStorage keys:', Object.keys(localStorage));
           console.log('usageStats:', getUsageStats());
           console.log('weatherUsage:', localStorage.getItem('weatherUsage'));
+  
+          // 🆕 ДОБАВИТЬ ЭТИ СТРОКИ:
+          console.log('gameStats:', localStorage.getItem('gameStats'));
+          console.log('gameStats state:', gameStats);
+  
           console.log('premiumUser state:', premiumUser);
         }
       };
@@ -729,6 +761,14 @@ useEffect(() => {
     recordRequest();
     setUsageStats(getUsageStats());
 
+    // Показываем уведомления о новых достижениях
+    achievementResult.newAchievements.forEach((achievementId, index) => {
+      setTimeout(() => {
+        handleAchievementUnlocked(achievementId);
+      }, index * 1000);
+    });
+
+
     try {
       if (isToday(date)) {
         // Получаем текущую погоду
@@ -802,6 +842,16 @@ useEffect(() => {
           setWeather(forecastWeather);
           setSelectedWeatherData(forecastWeather);
           setForecastData(forecastList);
+          
+          // Записываем достижения даже для прогнозов
+          const achievementResult = recordWeatherCheck(city, forecastWeather, premiumUser);
+          setGameStats(achievementResult.stats);
+
+          achievementResult.newAchievements.forEach((achievementId, index) => {
+            setTimeout(() => {
+              handleAchievementUnlocked(achievementId);
+            }, index * 1000);
+          });
         }
         
         setDesc(mainForecast?.weather?.[0]?.description || "");
@@ -881,6 +931,31 @@ useEffect(() => {
             setUvData(null);
           }
 
+          // 🆕 ЗАПИСЫВАЕМ ДОСТИЖЕНИЯ ДЛЯ ГЕОЛОКАЦИИ
+          const achievementResult = recordWeatherCheck(data.name, currentWeather, premiumUser);
+          setGameStats(achievementResult.stats);
+
+          achievementResult.newAchievements.forEach((achievementId, index) => {
+            setTimeout(() => {
+              handleAchievementUnlocked(achievementId);
+            }, index * 1000);
+          });
+
+          // Показываем уведомления о новых достижениях
+          achievementResult.newAchievements.forEach((achievementId, index) => {
+            setTimeout(() => {
+              handleAchievementUnlocked(achievementId);
+            }, index * 1000);
+          });
+
+          setGameStats(achievementResult.stats);
+
+          achievementResult.newAchievements.forEach((achievementId, index) => {
+            setTimeout(() => {
+              handleAchievementUnlocked(achievementId);
+            }, index * 1000);
+          });
+
         } catch (error) {
           console.error('Geo weather error:', error);
           setWeather({ 
@@ -929,7 +1004,7 @@ useEffect(() => {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 1 }}
         >
-          💎 Premium
+          💎 Premium | 🏆 {gameStats.totalPoints}
         </motion.div>
       );
     }
@@ -963,7 +1038,7 @@ useEffect(() => {
         whileHover={isLow ? { scale: 1.05 } : {}}
       >
         {isLow && '🔥 '}
-        {usageStats.remaining}/{usageStats.limit} запросов
+        {usageStats.remaining}/{usageStats.limit} | 🏆 {gameStats.totalPoints}
       </motion.div>
     );
   };
@@ -1347,6 +1422,8 @@ useEffect(() => {
               />
             )}
 
+            <AchievementsSystem />
+
             {/* 🆕 ВСЕ БЛОКИ ПОЛУЧАЮТ ДАННЫЕ ИЗ ВЫБРАННОГО ВРЕМЕНИ */}
             <WeatherAlerts 
               weather={activeWeatherData}
@@ -1400,6 +1477,16 @@ useEffect(() => {
             setPremiumUser(true);
             setUsageStats(getUsageStats());
             setShowPremiumModal(false);
+            // Записываем достижение Premium
+            const achievementResult = recordWeatherCheck(weather?.city || city, weather, true);
+            setGameStats(achievementResult.stats);
+  
+            achievementResult.newAchievements.forEach((achievementId, index) => {
+              setTimeout(() => {
+                handleAchievementUnlocked(achievementId);
+              }, index * 1000);
+            });
+  
             alert('🎉 Premium активирован! Добро пожаловать в мир безлимитной погоды!');
           }}
           usageStats={usageStats}
@@ -1452,6 +1539,16 @@ useEffect(() => {
         )}
         
       </motion.div>
+
+      {/* 🆕 Уведомления о достижениях */}
+        <AnimatePresence>
+          {achievementNotification && (
+            <AchievementNotification
+              achievement={achievementNotification}
+              onClose={() => setAchievementNotification(null)}
+            />
+          )}
+        </AnimatePresence>
     </ThemeProvider>
   );
 }
