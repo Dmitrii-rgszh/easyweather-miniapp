@@ -26,6 +26,7 @@ import PremiumModal from './PremiumModal';
 import UserProfileModal from "./UserProfileModal";
 import HealthAlerts from "./HealthAlerts";
 import ProfilePage from "./ProfilePage";
+import SportAlerts from "./SportAlerts";
 
 // Все эффекты остаются без изменений
 function CloudsEffect() {
@@ -1303,6 +1304,15 @@ useEffect(() => {
             {/* Медицинские алерты */}
             {activeWeatherData && (
               <HealthAlerts 
+                weather={activeWeatherData}
+                userProfile={userProfile}
+                forecastData={forecastData}
+              />
+            )}
+            
+            {/* Спортивные алерты */}
+            {activeWeatherData && userProfile && (
+              <SportAlerts 
                 weather={activeWeatherData}
                 userProfile={userProfile}
                 forecastData={forecastData}

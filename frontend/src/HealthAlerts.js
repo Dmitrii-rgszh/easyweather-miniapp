@@ -11,13 +11,13 @@ function analyzeHealthRisks(weather, userProfile, forecastData = []) {
   const { pressure, humidity, temp } = weather.details;
   const health = userProfile.health || [];
   
-  // 🩺 ГИПЕРТОНИКИ - высокое давление
-  if (health.includes('pressure') && pressure > 760) {
+  // 🩺 ГИПЕРТОНИКИ - высокое давление (исправленный порог)
+  if (health.includes('pressure') && pressure >= 758) { // Изменено с >760 на >=758
     alerts.push({
       id: 'high_pressure_hypertension',
       type: 'warning',
       icon: '🩺',
-      title: 'Высокое давление',
+      title: 'Повышенное давление',
       message: `Атмосферное давление ${pressure} мм рт.ст. может влиять на ваше самочувствие`,
       color: '#f59e0b',
       bgColor: '#f59e0b15',
@@ -31,13 +31,13 @@ function analyzeHealthRisks(weather, userProfile, forecastData = []) {
     });
   }
   
-  // 💊 ГИПОТОНИКИ - низкое давление
-  if (health.includes('pressure') && pressure < 740) {
+  // 💊 ГИПОТОНИКИ - низкое давление (исправленный порог)
+  if (health.includes('pressure') && pressure <= 742) { // Изменено с <740 на <=742
     alerts.push({
       id: 'low_pressure_hypotension',
       type: 'info',
       icon: '💊',
-      title: 'Низкое давление',
+      title: 'Пониженное давление',
       message: `Пониженное давление ${pressure} мм рт.ст. может вызвать слабость`,
       color: '#8b5cf6',
       bgColor: '#8b5cf615',
@@ -232,7 +232,7 @@ export default function HealthAlerts({ weather, userProfile, forecastData }) {
       style={{
         background: "rgba(255, 255, 255, 0.9)",
         borderRadius: 16,
-        padding: "16px",
+        padding: "10px", // Уменьшили с 16px до 10px как у других блоков
         margin: "16px auto 0",
         maxWidth: 340,
         width: "100%",
@@ -274,7 +274,7 @@ export default function HealthAlerts({ weather, userProfile, forecastData }) {
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
-              fontSize: 20
+              fontSize: 18 // Уменьшили размер иконки с 20 до 18
             }}
             animate={warningCount > 0 ? {
               scale: [1, 1.1, 1],
@@ -301,7 +301,7 @@ export default function HealthAlerts({ weather, userProfile, forecastData }) {
               🩺 Здоровье {warningCount > 0 && <span style={{ color: theme.mainColor }}>⚠️</span>}
             </div>
             <div style={{
-              fontSize: 14,
+              fontSize: 13, // Уменьшили с 14 до 13
               color: "#6b7280",
               fontFamily: "Montserrat, Arial, sans-serif"
             }}>
