@@ -472,14 +472,12 @@ function App() {
     <div style={{
       textAlign: "center",
       marginBottom: 10,
-      color: "#fff",
-      fontWeight: 500,
-      fontSize: 20,
-      letterSpacing: 0.3,
-      textShadow: "0 2px 0px rgba(0,0,0,0.2), -1px -1px 0px rgba(0,0,0,0.4), 1px -1px 0px rgba(0,0,0,0.9), -1px 1px 0px rgba(0,0,0,0.9)",
+      color: "#1976d2", // Material-UI primary blue
+      fontWeight: 600,
+      fontSize: 18,
+      letterSpacing: 0.5,
       zIndex: 50,
       fontFamily: "Montserrat, Arial, sans-serif",
-      filter: "drop-shadow(0 0 8px rgba(255,255,255,0.5))"
     }}>
       Город
     </div>
@@ -1301,6 +1299,15 @@ useEffect(() => {
               photoUrl={photoUrl}
               onWeatherChange={handleWeatherChange}
             />
+
+            {/* Медицинские алерты */}
+            {activeWeatherData && (
+              <HealthAlerts 
+                weather={activeWeatherData}
+                userProfile={userProfile}
+                forecastData={forecastData}
+              />
+            )}
             
             {/* 🆕 ВСЕ БЛОКИ ПОЛУЧАЮТ ДАННЫЕ ИЗ ВЫБРАННОГО ВРЕМЕНИ */}
             <WeatherAlerts 
