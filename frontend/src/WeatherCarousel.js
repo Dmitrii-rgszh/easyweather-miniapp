@@ -1,7 +1,102 @@
-// Исправленный WeatherCarousel.js - убираем зацикливание, правильная навигация
-
+// Обновленный WeatherCarousel.js с анимированными стрелочками навигации
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
+
+// Анимированные стрелочки навигации
+const NavigationArrow = ({ direction, onClick, isVisible, animationKey }) => {
+  const isLeft = direction === 'left';
+  
+  if (!isVisible) return null;
+  
+  return (
+    <motion.div
+      key={`arrow-${direction}-${animationKey}`} // Используем ключ для синхронизации
+      style={{
+        position: "absolute",
+        top: "50%",
+        [isLeft ? 'left' : 'right']: 8,
+        transform: "translateY(-50%)",
+        width: 40,
+        height: 40,
+        background: "rgba(255, 255, 255, 0.95)",
+        borderRadius: 8,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 10,
+        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+        border: "1px solid rgba(59, 130, 246, 0.2)"
+      }}
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ 
+        opacity: 1, 
+        scale: 1
+      }}
+      exit={{ opacity: 0, scale: 0.8 }}
+      transition={{
+        scale: { duration: 0.1 },
+        opacity: { duration: 0.2 }
+      }}
+    >
+      <motion.button
+        onClick={onClick}
+        style={{
+          width: "100%",
+          height: "100%",
+          background: "transparent",
+          border: "none",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: 8
+        }}
+        animate={{ 
+          x: isLeft ? [-2, 2, -2] : [2, -2, 2] // Синхронное движение
+        }}
+        whileHover={{ 
+          scale: 1.05,
+          x: isLeft ? -4 : 4
+        }}
+        whileTap={{ scale: 0.95 }}
+        transition={{
+          x: {
+            duration: 2,
+            repeat: Infinity,
+            repeatType: "reverse",
+            ease: "easeInOut"
+          },
+          scale: { duration: 0.1 }
+        }}
+      >
+        <motion.svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          animate={{
+            x: isLeft ? [-1, 1, -1] : [1, -1, 1]
+          }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            repeatType: "reverse",
+            ease: "easeInOut"
+          }}
+        >
+          <path
+            d={isLeft ? "M15 18L9 12L15 6" : "M9 6L15 12L9 18"}
+            stroke="#3b82f6"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </motion.svg>
+      </motion.button>
+    </motion.div>
+  );
+};
 
 // Функция создания почасового прогноза
 function generateHourlyForecast(currentWeather, forecastData) {
@@ -50,7 +145,7 @@ function generateHourlyForecast(currentWeather, forecastData) {
     }
   }
 
-  console.log('Generated hourly data:', hourlyData); // Для отладки
+  console.log('Generated hourly data:', hourlyData);
   return hourlyData;
 }
 
@@ -66,6 +161,7 @@ export default function WeatherCarousel({
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [animationKey, setAnimationKey] = useState(0); // Ключ для синхронизации анимации
   const carouselRef = useRef(null);
   const x = useMotionValue(0);
   
@@ -86,6 +182,7 @@ export default function WeatherCarousel({
   // Сброс к первому элементу при изменении данных
   useEffect(() => {
     setActiveIndex(0);
+    setAnimationKey(prev => prev + 1); // Сбрасываем анимацию при изменении данных
   }, [city, temp]);
 
   // Обработка свайпа
@@ -94,14 +191,25 @@ export default function WeatherCarousel({
     const threshold = 50;
     
     if (info.offset.x > threshold && activeIndex > 0) {
-      // Свайп вправо - предыдущий элемент
       setActiveIndex(activeIndex - 1);
     } else if (info.offset.x < -threshold && activeIndex < hourlyData.length - 1) {
-      // Свайп влево - следующий элемент
       setActiveIndex(activeIndex + 1);
     }
     
     x.set(0);
+  };
+
+  // Функции навигации стрелочками
+  const goToPrevious = () => {
+    if (activeIndex > 0) {
+      setActiveIndex(activeIndex - 1);
+    }
+  };
+
+  const goToNext = () => {
+    if (activeIndex < hourlyData.length - 1) {
+      setActiveIndex(activeIndex + 1);
+    }
   };
 
   // Клик по индикатору
@@ -116,6 +224,10 @@ export default function WeatherCarousel({
   if (!activeWeather) {
     return <div>Загрузка...</div>;
   }
+
+  // Определяем видимость стрелочек
+  const showLeftArrow = activeIndex > 0;
+  const showRightArrow = activeIndex < hourlyData.length - 1;
 
   return (
     <div style={{
@@ -159,7 +271,7 @@ export default function WeatherCarousel({
           fontSize: 20,
           fontWeight: 600,
           color: "#1e293b",
-          margin: "0 0 0px 0",
+          margin: "0 0 10px 0",
           letterSpacing: 1,
           lineHeight: 1.4,
           fontFamily: "Montserrat, Arial, sans-serif"
@@ -172,7 +284,7 @@ export default function WeatherCarousel({
           position: "relative", 
           overflow: "hidden", 
           borderRadius: 16,
-          height: 190,
+          height: 240, // Увеличил высоту под квадрат
           marginBottom: 6 
         }}>
           <motion.div
@@ -214,118 +326,190 @@ export default function WeatherCarousel({
                   }}
                   animate={{
                     scale: isActive ? 1 : 0.9,
+                    opacity: isActive ? 1 : 0.6
                   }}
                   transition={{ duration: 0.3 }}
                 >
-                  {/* Белый контейнер для активного элемента */}
+                  {/* Активный элемент - полная информация */}
                   {isActive && (
                     <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4 }}
                       style={{
-                        background: "rgba(255, 255, 255, 0.95)",
-                        borderRadius: 16,
-                        padding: "8px",
-                        marginBottom: 6,
-                        backdropFilter: "blur(10px)",
-                        boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-                        border: "1px solid rgba(255,255,255,0.3)",
-                        width: 160,
-                        height: 160,
-                        minWidth: 160,
-                        maxWidth: 160,
-                        minHeight: 160,
-                        maxHeight: 160,
                         display: "flex",
                         flexDirection: "column",
                         alignItems: "center",
+                        width: "200px", // КВАДРАТ
+                        height: "200px", // КВАДРАТ
+                        background: "rgba(255, 255, 255, 0.95)",
+                        backdropFilter: "blur(10px)",
+                        borderRadius: 16,
+                        padding: "16px",
+                        boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+                        border: "1px solid rgba(255,255,255,0.3)",
                         justifyContent: "center",
-                        boxSizing: "border-box",
-                        overflow: "hidden"
+                        position: "relative" // Для позиционирования стрелок внутри
                       }}
                     >
-                      {/* Верхняя часть - иконка и текст рядом */}
+                      {/* Левая стрелочка - увеличенная, без рамки и тени */}
+                      {showLeftArrow && (
+                        <motion.div
+                          style={{
+                            position: "absolute",
+                            left: "12px",
+                            top: "calc(50% - 10px)",
+                            transform: "translateY(-50%)",
+                            width: 36, // Увеличил размер
+                            height: 36,
+                            background: "rgba(255, 255, 255, 0.9)", // Убрал тень и рамку
+                            borderRadius: "50%", // Круглая форма
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            zIndex: 10,
+                            cursor: "pointer"
+                          }}
+                          animate={{ x: [-2, 2, -2] }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            repeatType: "reverse",
+                            ease: "easeInOut"
+                          }}
+                          onClick={goToPrevious}
+                          whileHover={{ scale: 1.15 }}
+                          whileTap={{ scale: 0.85 }}
+                        >
+                          <svg
+                            width="20" // Увеличил размер иконки
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M15 18L9 12L15 6"
+                              stroke="#3b82f6"
+                              strokeWidth="2.5" // Толще линия
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </motion.div>
+                      )}
+
+                      {/* Правая стрелочка - увеличенная, без рамки и тени */}
+                      {showRightArrow && (
+                        <motion.div
+                          style={{
+                            position: "absolute",
+                            right: "12px",
+                            top: "calc(50% - 10px)",
+                            transform: "translateY(-50%)",
+                            width: 36, // Увеличил размер
+                            height: 36,
+                            background: "rgba(255, 255, 255, 0.9)", // Убрал тень и рамку
+                            borderRadius: "50%", // Круглая форма
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            zIndex: 10,
+                            cursor: "pointer"
+                          }}
+                          animate={{ x: [2, -2, 2] }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            repeatType: "reverse",
+                            ease: "easeInOut"
+                          }}
+                          onClick={goToNext}
+                          whileHover={{ scale: 1.15 }}
+                          whileTap={{ scale: 0.85 }}
+                        >
+                          <svg
+                            width="20" // Увеличил размер иконки
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M9 6L15 12L9 18"
+                              stroke="#3b82f6"
+                              strokeWidth="2.5" // Толще линия
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </motion.div>
+                      )}
+
+                      {/* Время - увеличенный размер */}
                       <div style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 4,
-                        marginBottom: 6
+                        fontSize: 18, // Увеличил с 14 до 18
+                        fontWeight: 600,
+                        color: "#3b82f6",
+                        marginBottom: 12,
+                        fontFamily: "Montserrat, Arial, sans-serif"
                       }}>
-                        {/* Левая часть - иконка */}
-                        <div style={{
-                          width: 70,
-                          height: 70,
-                          borderRadius: "50%",
-                          background: "linear-gradient(135deg, #38bdf8 0%, #bae6fd 100%)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          boxShadow: "0 4px 12px rgba(56, 189, 248, 0.3)",
-                          flexShrink: 0
-                        }}>
-                          <img
-                            src={weather.icon}
-                            alt={weather.desc}
-                            style={{
-                              width: 60,
-                              height: 60,
-                              objectFit: "contain"
-                            }}
-                          />
-                        </div>
-
-                        {/* Правая часть - время и температура */}
-                        <div style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "flex-start",
-                          justifyContent: "center"
-                        }}>
-                          {/* Время */}
-                          <div style={{
-                            fontSize: 16,
-                            fontWeight: 500,
-                            color: "#64748b",
-                            marginBottom: 4,
-                            fontFamily: "Montserrat, Arial, sans-serif"
-                          }}>
-                            {weather.time}
-                          </div>
-
-                          {/* Температура */}
-                          <div style={{
-                            fontSize: 26,
-                            fontWeight: 700,
-                            color: "#2563eb",
-                            fontFamily: "Montserrat, Arial, sans-serif",
-                            lineHeight: 1
-                          }}>
-                            {weather.temp}°
-                          </div>
-                        </div>
+                        {weather.time}
                       </div>
 
-                      {/* Описание снизу по центру */}
+                      {/* Иконка погоды */}
                       <div style={{
-                        fontSize: 16,
+                        width: 60,
+                        height: 60,
+                        borderRadius: "50%",
+                        background: "linear-gradient(135deg, #38bdf8 0%, #bae6fd 100%)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginBottom: 12,
+                        boxShadow: "0 4px 12px rgba(56, 189, 248, 0.3)"
+                      }}>
+                        <img
+                          src={weather.icon}
+                          alt={weather.desc}
+                          style={{
+                            width: 48,
+                            height: 48,
+                            objectFit: "contain"
+                          }}
+                        />
+                      </div>
+
+                      {/* Температура - увеличенный размер */}
+                      <div style={{
+                        fontSize: 32, // Увеличил с 24 до 32
+                        fontWeight: 700,
+                        color: "#1e293b",
+                        marginBottom: 8,
+                        fontFamily: "Montserrat, Arial, sans-serif"
+                      }}>
+                        {weather.temp}°
+                      </div>
+
+                      {/* Описание - увеличенный размер */}
+                      <div style={{
+                        fontSize: 14, // Увеличил с 12 до 14
                         color: "#64748b",
-                        fontFamily: "Montserrat, Arial, sans-serif",
-                        lineHeight: 1.3,
                         textAlign: "center",
-                        wordWrap: "break-word",
-                        hyphens: "auto",
+                        fontFamily: "Montserrat, Arial, sans-serif",
                         width: "100%",
                         overflow: "hidden",
                         display: "-webkit-box",
                         WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical"
+                        WebkitBoxOrient: "vertical",
+                        paddingX: "40px" // Увеличил отступы для больших стрелок
                       }}>
                         {weather.desc}
                       </div>
                     </motion.div>
                   )}
 
-                  {/* Для неактивных элементов - компактный вид */}
+                  {/* Неактивные элементы - компактный вид */}
                   {!isActive && (
                     <div style={{
                       display: "flex",
@@ -370,9 +554,9 @@ export default function WeatherCarousel({
 
                       {/* Температура */}
                       <div style={{
-                        fontSize: 14,
+                        fontSize: 12,
                         fontWeight: 600,
-                        color: "#64748b",
+                        color: "#1e293b",
                         fontFamily: "Montserrat, Arial, sans-serif"
                       }}>
                         {weather.temp}°
@@ -385,137 +569,94 @@ export default function WeatherCarousel({
           </motion.div>
         </div>
 
-        {/* Детали погоды для активного времени */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeIndex}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginBottom: 6,
-              padding: "8px",
-              background: "rgba(248, 250, 252, 0.8)",
-              borderRadius: 12,
-              border: "1px solid rgba(56, 189, 248, 0.1)"
-            }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div style={{ textAlign: "center" }}>
-              <div style={{ 
-                fontSize: 11, 
-                color: "#64748b", 
-                fontFamily: "Montserrat, Arial, sans-serif" 
-              }}>
-                Ощущается
-              </div>
-              <div style={{ 
-                fontSize: 16, 
-                fontWeight: 600, 
-                color: "#1e293b",
-                fontFamily: "Montserrat, Arial, sans-serif" 
-              }}>
-                {activeWeather.details?.feels}°
-              </div>
-            </div>
-            
-            <div style={{ textAlign: "center" }}>
-              <div style={{ 
-                fontSize: 11, 
-                color: "#64748b", 
-                fontFamily: "Montserrat, Arial, sans-serif" 
-              }}>
-                Давление
-              </div>
-              <div style={{ 
-                fontSize: 16, 
-                fontWeight: 600, 
-                color: "#1e293b",
-                fontFamily: "Montserrat, Arial, sans-serif" 
-              }}>
-                {activeWeather.details?.pressure} мм
-              </div>
-            </div>
-            
-            <div style={{ textAlign: "center" }}>
-              <div style={{ 
-                fontSize: 11, 
-                color: "#64748b", 
-                fontFamily: "Montserrat, Arial, sans-serif" 
-              }}>
-                Влажность
-              </div>
-              <div style={{ 
-                fontSize: 16, 
-                fontWeight: 600, 
-                color: "#1e293b",
-                fontFamily: "Montserrat, Arial, sans-serif" 
-              }}>
-                {activeWeather.details?.humidity}%
-              </div>
-            </div>
-            
-            <div style={{ textAlign: "center" }}>
-              <div style={{ 
-                fontSize: 11, 
-                color: "#64748b", 
-                fontFamily: "Montserrat, Arial, sans-serif" 
-              }}>
-                Ветер
-              </div>
-              <div style={{ 
-                fontSize: 16, 
-                fontWeight: 600, 
-                color: "#1e293b",
-                fontFamily: "Montserrat, Arial, sans-serif" 
-              }}>
-                {activeWeather.details?.wind}
-              </div>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Индикаторы с белым фоном и отступом */}
-        {hourlyData.length > 1 && (
-          <div style={{
-            background: "rgba(255, 255, 255, 0.9)",
-            borderRadius: 12,
-            padding: "4px 8px",
-            margin: "8px auto 4px",
+        {/* Детали погоды активного элемента */}
+        <motion.div
+          key={`details-${activeIndex}`}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: 8,
+            padding: "8px 12px",
+            background: "rgba(255, 255, 255, 0.95)", // Более белый фон
             backdropFilter: "blur(10px)",
+            borderRadius: 12,
+            marginBottom: 8,
             boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-            border: "1px solid rgba(255,255,255,0.3)",
-            width: "fit-content"
-          }}>
-            <div style={{
-              display: "flex",
-              justifyContent: "center",
-              gap: 8
-            }}>
-              {hourlyData.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleDotClick(index)}
-                  style={{
-                    width: activeIndex === index ? 20 : 8,
-                    height: 8,
-                    borderRadius: 4,
-                    border: "none",
-                    background: activeIndex === index 
-                      ? "#3b82f6" 
-                      : "#cbd5e1",
-                    cursor: "pointer",
-                    transition: "all 0.3s ease",
-                    padding: 0
-                  }}
-                  aria-label={`Переключиться на ${hourlyData[index].time}`}
-                />
-              ))}
+            border: "1px solid rgba(255,255,255,0.3)"
+          }}
+        >
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 10, color: "#64748b", fontFamily: "Montserrat" }}>
+              Ощущается
+            </div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#1e293b", fontFamily: "Montserrat" }}>
+              {activeWeather.details?.feels || '--'}°
             </div>
           </div>
-        )}
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 10, color: "#64748b", fontFamily: "Montserrat" }}>
+              Давление
+            </div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#1e293b", fontFamily: "Montserrat" }}>
+              {activeWeather.details?.pressure || '--'} мм
+            </div>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 10, color: "#64748b", fontFamily: "Montserrat" }}>
+              Влажность
+            </div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#1e293b", fontFamily: "Montserrat" }}>
+              {activeWeather.details?.humidity || '--'}%
+            </div>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 10, color: "#64748b", fontFamily: "Montserrat" }}>
+              Ветер
+            </div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#1e293b", fontFamily: "Montserrat" }}>
+              {activeWeather.details?.wind || '--'}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Индикаторы точек */}
+        <div style={{
+          display: "flex",
+          justifyContent: "center",
+          gap: 4,
+          margin: "8px 0 4px 0"
+        }}>
+          <div style={{
+            display: "flex",
+            gap: 4,
+            padding: "4px 8px",
+            background: "rgba(255, 255, 255, 0.95)", // Более белый фон
+            backdropFilter: "blur(8px)",
+            borderRadius: 12,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)"
+          }}>
+          {hourlyData.map((_, index) => (
+            <motion.button
+              key={index}
+              onClick={() => handleDotClick(index)}
+              style={{
+                width: index === activeIndex ? 20 : 6,
+                height: 6,
+                borderRadius: 3,
+                border: "none",
+                background: index === activeIndex ? "#3b82f6" : "rgba(59, 130, 246, 0.3)",
+                cursor: "pointer",
+                transition: "all 0.3s ease"
+              }}
+              whileHover={{ scale: 1.2 }}
+              whileTap={{ scale: 0.9 }}
+            />
+          ))}
+        </div>
+        </div>
       </div>
     </div>
   );

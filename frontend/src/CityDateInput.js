@@ -1,3 +1,4 @@
+// Обновленный CityDateInput.js с исправленными углами
 import React, { useState } from "react";
 import { TextField, Button, Popover } from "@mui/material";
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
@@ -26,10 +27,16 @@ export default function CityDateInput({ city, setCity, date, setDate, disabled }
         fullWidth
         sx={{
           background: "#fff",
-          borderRadius: 3,
+          borderRadius: '12px !important', // Усиливаем border-radius
           height: 46,
           fontFamily: "Montserrat",
-          '& .MuiInputBase-root': { height: 52 },
+          // Убираем странные углы и тени
+          '& .MuiInputBase-root': { 
+            height: 52,
+            borderRadius: '12px !important', // Применяем ко всему полю
+            boxShadow: 'none !important', // Убираем лишние тени
+            overflow: 'hidden' // Обрезаем все что выходит за границы
+          },
           '& .MuiInputBase-input': {
             textAlign: "center",
             fontWeight: 500,
@@ -37,15 +44,38 @@ export default function CityDateInput({ city, setCity, date, setDate, disabled }
             color: "#232942",
             height: "46px !important",
             padding: "0 10px",
-            fontFamily: "Montserrat"
+            fontFamily: "Montserrat",
+            borderRadius: '12px !important' // Применяем к самому input
           },
           '& .MuiOutlinedInput-notchedOutline': {
             borderColor: "white",
-            borderRadius: 3
+            borderRadius: '12px !important', // Применяем к рамке
+            boxShadow: 'none !important' // Убираем тени от рамки
+          },
+          // Убираем углы во всех состояниях
+          '& .MuiOutlinedInput-root': {
+            borderRadius: '12px !important',
+            '& fieldset': {
+              borderRadius: '12px !important',
+              boxShadow: 'none !important'
+            },
+            '&:hover fieldset': {
+              borderRadius: '12px !important',
+              boxShadow: 'none !important'
+            },
+            '&.Mui-focused fieldset': {
+              borderRadius: '12px !important',
+              boxShadow: 'none !important'
+            }
           }
         }}
         InputProps={{
-          style: { textAlign: "center", fontFamily: "Montserrat" }
+          style: { 
+            textAlign: "center", 
+            fontFamily: "Montserrat",
+            borderRadius: '12px', // Дополнительное усиление
+            boxShadow: 'none' // Убираем тени
+          }
         }}
         disabled={disabled}
       />
@@ -60,10 +90,24 @@ export default function CityDateInput({ city, setCity, date, setDate, disabled }
           background: "rgba(255, 255, 255, 0.16)",
           borderColor: "primary",
           color: "primary",
-          borderRadius: 3,
-          border: "1.5px solidrgb(0, 153, 255)",
+          borderRadius: '12px !important', // Исправляем углы кнопки
+          border: "1.5px solid rgb(0, 153, 255)",
           fontFamily: "Montserrat",
-          zIndex: 99
+          zIndex: 99,
+          boxShadow: 'none !important', // Убираем тени кнопки
+          // Убираем углы во всех состояниях кнопки
+          '&:hover': {
+            borderRadius: '12px !important',
+            boxShadow: 'none !important'
+          },
+          '&:focus': {
+            borderRadius: '12px !important',
+            boxShadow: 'none !important'
+          },
+          '&:active': {
+            borderRadius: '12px !important',
+            boxShadow: 'none !important'
+          }
         }}
         disabled={disabled}
       >

@@ -15,3 +15,110 @@ code {
 body, #root, html {
   font-family: 'Montserrat', Arial, sans-serif !important;
 }
+
+/* =================================== */
+/* ИСПРАВЛЕНИЯ ДЛЯ УСТРАНЕНИЯ УГЛОВ */
+/* =================================== */
+
+/* Убираем все лишние box-shadow и стили браузера по умолчанию */
+* {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+}
+
+/* Принудительно убираем углы у всех Material-UI полей ввода */
+.MuiTextField-root,
+.MuiTextField-root *,
+.MuiOutlinedInput-root,
+.MuiOutlinedInput-root *,
+.MuiInputBase-root,
+.MuiInputBase-root * {
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+}
+
+/* Убираем лишние тени и углы у всех input элементов */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+  border-radius: 12px !important;
+  -webkit-border-radius: 12px !important;
+  -moz-border-radius: 12px !important;
+}
+
+/* Убираем автозаполнение стили Chrome */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  border-radius: 12px !important;
+  -webkit-border-radius: 12px !important;
+}
+
+/* Принудительное исправление углов для Material-UI TextField */
+.MuiOutlinedInput-notchedOutline {
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+/* Убираем странные углы у всех кнопок */
+.MuiButton-root {
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+}
+
+.MuiButton-outlined {
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+}
+
+/* Дополнительная очистка для всех элементов с border-radius */
+.MuiInputBase-input {
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+/* Убираем outline у элементов в фокусе (если он создает углы) */
+*:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Дополнительная защита от странных углов в разных браузерах */
+.MuiInputBase-formControl {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+.MuiOutlinedInput-input {
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+/* Убираем любые остаточные эффекты на полях ввода */
+.MuiTextField-root .MuiInputBase-root::before,
+.MuiTextField-root .MuiInputBase-root::after {
+  display: none !important;
+}
