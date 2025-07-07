@@ -689,6 +689,23 @@ useEffect(() => {
   }, [weather?.city]);
 
   useEffect(() => {
+    if (weather) {
+      const timer = setTimeout(() => {
+        setShowMoodTracker(true);
+      }, 2000);
+    
+      return () => clearTimeout(timer);
+    }
+  }, [weather]);
+
+// Остальные useEffect остаются без изменений...
+useEffect(() => {
+  if (process.env.NODE_ENV === 'development') {
+    document.title = '🛠️ DEV | EasyWeather';
+  }
+}, []);
+
+  useEffect(() => {
     const savedProfile = localStorage.getItem('userProfile');
     if (savedProfile) {
       setUserProfile(JSON.parse(savedProfile));
@@ -1329,19 +1346,6 @@ useEffect(() => {
                 isVisible={showMoodTracker && !!weather}
               />
             )}
-
-            // Показывать трекер через 2 секунды после загрузки погоды:
-            useEffect(() => {
-              if (weather) {
-                const timer = setTimeout(() => {
-                  setShowMoodTracker(true);
-                }, 2000);
-    
-                return () => clearTimeout(timer);
-              } else {
-                setShowMoodTracker(false);
-              }
-            }, [weather]);
 
             {/* 🆕 ВСЕ БЛОКИ ПОЛУЧАЮТ ДАННЫЕ ИЗ ВЫБРАННОГО ВРЕМЕНИ */}
             <WeatherAlerts 
