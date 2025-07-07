@@ -1335,6 +1335,7 @@ useEffect(() => {
               windSpeed={parseFloat(activeWeatherData?.details?.wind?.replace(' м/с', '') || '0')}
               isNight={isNight}
               forecastData={forecastData}
+              userProfile={userProfile} // ← ДОБАВИТЬ ЭТУ СТРОКУ
             />
 
             <AirQuality airQualityData={airQualityData} />

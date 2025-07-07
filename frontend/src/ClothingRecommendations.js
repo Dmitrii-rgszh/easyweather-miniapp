@@ -1,5 +1,4 @@
-// Обновленная версия компонента ClothingRecommendations с увеличенными иконками и цветным фоном
-
+// Обновленный ClothingRecommendations.js с интегрированными детскими рекомендациями
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -34,202 +33,200 @@ const analyzeUpcomingWeather = (forecastData) => {
     }
   });
   
-  return alerts.slice(0, 1); // Только самое важное предупреждение
+  return alerts.slice(0, 1);
 };
 
-// Функция определения рекомендаций одежды
+// Функция определения рекомендаций одежды для взрослых
 function getClothingRecommendations(temp, desc, humidity, windSpeed, isNight) {
   const recommendations = [];
   
-  // Базовая одежда по температуре
   if (temp < -10) {
     recommendations.push({
-      icon: "🧥",
-      text: "Теплая зимняя куртка",
-      color: "#1e40af",
-      priority: 1
+      icon: "🧥", text: "Теплая зимняя куртка", color: "#1e40af", priority: 1
     });
     recommendations.push({
-      icon: "🧤",
-      text: "Перчатки и шапка",
-      color: "#7c3aed",
-      priority: 1
+      icon: "🧤", text: "Перчатки и шапка", color: "#7c3aed", priority: 1
     });
     recommendations.push({
-      icon: "👢",
-      text: "Теплая обувь",
-      color: "#059669",
-      priority: 1
+      icon: "👢", text: "Теплая обувь", color: "#059669", priority: 1
     });
   } else if (temp < 0) {
     recommendations.push({
-      icon: "🧥",
-      text: "Зимняя куртка",
-      color: "#1e40af",
-      priority: 1
+      icon: "🧥", text: "Зимняя куртка", color: "#1e40af", priority: 1
     });
     recommendations.push({
-      icon: "🧣",
-      text: "Шарф и шапка",
-      color: "#7c3aed",
-      priority: 2
+      icon: "🧣", text: "Шарф и шапка", color: "#7c3aed", priority: 2
     });
   } else if (temp < 10) {
     recommendations.push({
-      icon: "🧥",
-      text: "Теплая куртка",
-      color: "#2563eb",
-      priority: 1
+      icon: "🧥", text: "Теплая куртка", color: "#2563eb", priority: 1
     });
     recommendations.push({
-      icon: "👖",
-      text: "Длинные брюки",
-      color: "#059669",
-      priority: 2
+      icon: "👖", text: "Длинные брюки", color: "#059669", priority: 2
     });
   } else if (temp < 20) {
     recommendations.push({
-      icon: "🧥",
-      text: "Легкая куртка",
-      color: "#0891b2",
-      priority: 2
+      icon: "🧥", text: "Легкая куртка", color: "#0891b2", priority: 2
     });
     recommendations.push({
-      icon: "👕",
-      text: "Свитер или кофта",
-      color: "#7c3aed",
-      priority: 2
+      icon: "👕", text: "Свитер или кофта", color: "#7c3aed", priority: 2
     });
   } else if (temp < 25) {
     recommendations.push({
-      icon: "👕",
-      text: "Легкая одежда",
-      color: "#059669",
-      priority: 2
+      icon: "👕", text: "Легкая одежда", color: "#059669", priority: 2
     });
     recommendations.push({
-      icon: "👟",
-      text: "Удобная обувь",
-      color: "#0891b2",
-      priority: 3
+      icon: "👟", text: "Удобная обувь", color: "#0891b2", priority: 3
     });
   } else {
     recommendations.push({
-      icon: "👕",
-      text: "Легкая футболка",
-      color: "#059669",
-      priority: 2
+      icon: "👕", text: "Легкая футболка", color: "#059669", priority: 2
     });
     recommendations.push({
-      icon: "🩳",
-      text: "Шорты",
-      color: "#0891b2",
-      priority: 2
+      icon: "🩳", text: "Шорты", color: "#0891b2", priority: 2
     });
     recommendations.push({
-      icon: "🕶️",
-      text: "Солнцезащитные очки",
-      color: "#f59e0b",
-      priority: 3
+      icon: "🕶️", text: "Солнцезащитные очки", color: "#f59e0b", priority: 3
     });
   }
 
   // Дополнительные рекомендации по погодным условиям
   if (desc.toLowerCase().includes('дожд') || desc.toLowerCase().includes('rain')) {
     recommendations.push({
-      icon: "🌂",
-      text: "Зонт обязательно!",
-      color: "#dc2626",
-      priority: 1
+      icon: "🌂", text: "Зонт обязательно!", color: "#dc2626", priority: 1
     });
     recommendations.push({
-      icon: "🥾",
-      text: "Водонепроницаемая обувь",
-      color: "#7c3aed",
-      priority: 2
+      icon: "🥾", text: "Водонепроницаемая обувь", color: "#7c3aed", priority: 2
     });
   }
 
   if (desc.toLowerCase().includes('снег') || desc.toLowerCase().includes('snow')) {
     recommendations.push({
-      icon: "❄️",
-      text: "Защита от снега",
-      color: "#0891b2",
-      priority: 1
+      icon: "❄️", text: "Защита от снега", color: "#0891b2", priority: 1
     });
   }
 
   if (windSpeed > 10) {
     recommendations.push({
-      icon: "🌬️",
-      text: "Ветрозащитная одежда",
-      color: "#6366f1",
-      priority: 2
+      icon: "🌬️", text: "Ветрозащитная одежда", color: "#6366f1", priority: 2
     });
   }
 
   if (humidity > 80) {
     recommendations.push({
-      icon: "💧",
-      text: "Дышащие материалы",
-      color: "#0891b2",
-      priority: 3
+      icon: "💧", text: "Дышащие материалы", color: "#0891b2", priority: 3
     });
   }
 
   if (isNight) {
     recommendations.push({
-      icon: "🌙",
-      text: "Светоотражающие элементы",
-      color: "#7c3aed",
-      priority: 3
+      icon: "🌙", text: "Светоотражающие элементы", color: "#7c3aed", priority: 3
     });
   }
 
-  // Сортируем по приоритету и берем топ-4
-  return recommendations
-    .sort((a, b) => a.priority - b.priority)
-    .slice(0, 4);
+  return recommendations.sort((a, b) => a.priority - b.priority).slice(0, 4);
+}
+
+// Функция детских рекомендаций одежды (упрощенная версия)
+function getChildrenClothingRecommendations(temp, desc, humidity, windSpeed) {
+  const recommendations = [];
+  const childTemp = temp - 3; // Температурная коррекция для детей
+  
+  // Базовая одежда по температуре
+  if (childTemp < -15) {
+    recommendations.push({
+      icon: "🧥", text: "Теплый пуховик + утепленные штаны", color: "#1e40af", priority: 1
+    });
+    recommendations.push({
+      icon: "🧤", text: "Варежки + шапка + шарф обязательно", color: "#1e40af", priority: 1
+    });
+  } else if (childTemp < -5) {
+    recommendations.push({
+      icon: "🧥", text: "Зимняя куртка + теплые штаны", color: "#2563eb", priority: 1
+    });
+    recommendations.push({
+      icon: "🧤", text: "Шапка + варежки + шарф", color: "#2563eb", priority: 1
+    });
+  } else if (childTemp < 5) {
+    recommendations.push({
+      icon: "🧥", text: "Демисезонная куртка + кофта", color: "#0891b2", priority: 1
+    });
+    recommendations.push({
+      icon: "🧢", text: "Шапка + легкие перчатки", color: "#0891b2", priority: 2
+    });
+  } else if (childTemp < 15) {
+    recommendations.push({
+      icon: "👕", text: "Кофта + ветровка", color: "#059669", priority: 1
+    });
+  } else if (childTemp < 25) {
+    recommendations.push({
+      icon: "👕", text: "Футболка + легкая кофта", color: "#7c3aed", priority: 1
+    });
+  } else {
+    recommendations.push({
+      icon: "👕", text: "Легкая футболка + шорты", color: "#f59e0b", priority: 1
+    });
+    recommendations.push({
+      icon: "🧢", text: "Панама от солнца обязательно", color: "#f59e0b", priority: 1
+    });
+  }
+
+  // Усиленная защита от ветра для детей
+  if (windSpeed > 8) {
+    recommendations.push({
+      icon: "🌬️", text: "Ветрозащитная куртка обязательна", color: "#6366f1", priority: 1
+    });
+  }
+
+  // Солнцезащита для детей
+  if (temp > 20 && !desc.toLowerCase().includes('облач')) {
+    recommendations.push({
+      icon: "🕶️", text: "Солнцезащитные очки + крем SPF 30+", color: "#f59e0b", priority: 1
+    });
+  }
+
+  // Дождевая защита
+  if (desc.toLowerCase().includes('дождь')) {
+    recommendations.push({
+      icon: "☔", text: "Непромокаемый плащ + резиновые сапоги", color: "#0891b2", priority: 1
+    });
+    recommendations.push({
+      icon: "🎒", text: "Запасная одежда в рюкзаке", color: "#0891b2", priority: 2
+    });
+  }
+
+  return recommendations.sort((a, b) => a.priority - b.priority).slice(0, 5);
+}
+
+// Функция получения совета для родителей
+function getParentTip(temp, windSpeed, desc) {
+  if (temp < 0) {
+    return "Проверяйте, не вспотел ли ребенок. Лучше несколько тонких слоев, чем один толстый.";
+  } else if (windSpeed > 10) {
+    return "При сильном ветре закрывайте коляску и следите, чтобы ребенок не переохладился.";
+  } else if (desc.toLowerCase().includes('дождь')) {
+    return "Возьмите запасную одежду и позаботьтесь о сухой обуви после прогулки.";
+  } else if (temp > 25) {
+    return "В жару чаще предлагайте воду и ищите тенистые места для игр.";
+  } else {
+    return "Одевайте ребенка так, чтобы легко можно было снять или добавить слой одежды.";
+  }
 }
 
 // Функция определения основной цветовой темы блока
 function getClothingTheme(temp, desc) {
   if (temp < -10) {
-    return {
-      mainColor: "#1e40af",
-      bgColor: "#1e40af15",
-      iconBgColor: "#1e40af10"
-    };
+    return { mainColor: "#1e40af", bgColor: "#1e40af15", iconBgColor: "#1e40af10" };
   } else if (temp < 0) {
-    return {
-      mainColor: "#2563eb",
-      bgColor: "#2563eb15",
-      iconBgColor: "#2563eb10"
-    };
+    return { mainColor: "#2563eb", bgColor: "#2563eb15", iconBgColor: "#2563eb10" };
   } else if (temp < 10) {
-    return {
-      mainColor: "#0891b2",
-      bgColor: "#0891b215",
-      iconBgColor: "#0891b210"
-    };
+    return { mainColor: "#0891b2", bgColor: "#0891b215", iconBgColor: "#0891b210" };
   } else if (temp < 20) {
-    return {
-      mainColor: "#059669",
-      bgColor: "#05966915",
-      iconBgColor: "#05966910"
-    };
+    return { mainColor: "#059669", bgColor: "#05966915", iconBgColor: "#05966910" };
   } else if (temp < 25) {
-    return {
-      mainColor: "#7c3aed",
-      bgColor: "#7c3aed15",
-      iconBgColor: "#7c3aed10"
-    };
+    return { mainColor: "#7c3aed", bgColor: "#7c3aed15", iconBgColor: "#7c3aed10" };
   } else {
-    return {
-      mainColor: "#f59e0b",
-      bgColor: "#f59e0b15",
-      iconBgColor: "#f59e0b10"
-    };
+    return { mainColor: "#f59e0b", bgColor: "#f59e0b15", iconBgColor: "#f59e0b10" };
   }
 }
 
@@ -255,20 +252,26 @@ const ChevronIcon = ({ isOpen }) => (
   </motion.svg>
 );
 
-
-export default function ClothingRecommendations({ temp, desc, humidity, windSpeed, isNight, forecastData }) {
+export default function ClothingRecommendations({ temp, desc, humidity, windSpeed, isNight, forecastData, userProfile }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const recommendations = getClothingRecommendations(temp, desc, humidity || 50, windSpeed || 0, isNight);
+  
+  const adultRecommendations = getClothingRecommendations(temp, desc, humidity || 50, windSpeed || 0, isNight);
   const theme = getClothingTheme(temp, desc);
   const upcomingAlerts = analyzeUpcomingWeather(forecastData?.list || []);
+  
+  // Детские рекомендации только если в профиле выбрано "children"
+  const showChildrenRecommendations = userProfile?.activity?.includes('children');
+  const childrenRecommendations = showChildrenRecommendations 
+    ? getChildrenClothingRecommendations(temp, desc, humidity || 50, windSpeed || 0)
+    : [];
 
-  if (recommendations.length === 0) return null;
+  if (adultRecommendations.length === 0) return null;
 
-  const previewIcons = recommendations.slice(0, 2).map(item => item.icon);
+  const previewIcons = adultRecommendations.slice(0, 2).map(item => item.icon);
 
   return (
     <>
-      {/* НОВЫЙ БЛОК ПРЕДУПРЕЖДЕНИЙ */}
+      {/* Блок предупреждений */}
       {upcomingAlerts.length > 0 && (
         <motion.div
           style={{
@@ -330,7 +333,7 @@ export default function ClothingRecommendations({ temp, desc, humidity, windSpee
         </motion.div>
       )}
 
-      {/* СУЩЕСТВУЮЩИЙ БЛОК РЕКОМЕНДАЦИЙ */}
+      {/* Основной блок рекомендаций */}
       <motion.div
         style={{
           background: "rgba(255, 255, 255, 0.9)",
@@ -357,17 +360,15 @@ export default function ClothingRecommendations({ temp, desc, humidity, windSpee
           alignItems: "center",
           justifyContent: "space-between"
         }}>
-          {/* Левая часть с иконкой и текстом */}
           <div style={{
             display: "flex",
             alignItems: "center",
             gap: 12,
             flex: 1
           }}>
-            {/* Контейнер иконки с цветным фоном */}
             <motion.div
               style={{
-                width: 48, // Увеличили размер контейнера
+                width: 48,
                 height: 48,
                 borderRadius: 12,
                 background: `linear-gradient(135deg, ${theme.iconBgColor}, ${theme.bgColor})`,
@@ -382,7 +383,6 @@ export default function ClothingRecommendations({ temp, desc, humidity, windSpee
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.2 }}
             >
-              {/* Декоративная полоска */}
               <div style={{
                 position: "absolute",
                 top: 0,
@@ -393,16 +393,14 @@ export default function ClothingRecommendations({ temp, desc, humidity, windSpee
                 borderRadius: "12px 12px 0 0"
               }} />
               
-              {/* Крупная иконка */}
               <span style={{ 
-                fontSize: 24, // Увеличили размер иконки
+                fontSize: 24,
                 filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))"
               }}>
-                👔
+                👕
               </span>
             </motion.div>
 
-            {/* Текстовая информация */}
             <div style={{ flex: 1 }}>
               <div style={{
                 fontSize: 16,
@@ -416,157 +414,257 @@ export default function ClothingRecommendations({ temp, desc, humidity, windSpee
               {!isExpanded && (
                 <div style={{
                   display: "flex",
+                  alignItems: "center",
                   gap: 6,
-                  marginTop: 2,
-                  alignItems: "center"
+                  marginTop: 2
                 }}>
                   {previewIcons.map((icon, index) => (
-                    <motion.span 
-                      key={index} 
-                      style={{ 
-                        fontSize: 16, // Увеличили размер превью-иконок
-                        filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.1))"
-                      }}
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: index * 0.1 + 0.3 }}
-                    >
-                      {icon}
-                    </motion.span>
-                  ))}
-                  {recommendations.length > 2 && (
-                    <span style={{
-                      fontSize: 12,
-                      color: "#6b7280",
-                      fontFamily: "Montserrat, Arial, sans-serif",
-                      marginLeft: 2
+                    <span key={index} style={{ 
+                      fontSize: 16,
+                      filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.1))"
                     }}>
-                      +{recommendations.length - 2}
+                      {icon}
                     </span>
-                  )}
+                  ))}
+                  <span style={{ 
+                    fontSize: 12, 
+                    color: "#6b7280",
+                    fontFamily: "Montserrat, Arial, sans-serif"
+                  }}>
+                    Одевайся комфортно!
+                  </span>
                 </div>
               )}
             </div>
           </div>
-          
-          <ChevronIcon isOpen={isExpanded} />
+
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 24,
+            height: 24,
+            flexShrink: 0
+          }}>
+            <ChevronIcon isOpen={isExpanded} />
+          </div>
         </div>
 
         {/* Развернутый контент */}
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              style={{ overflow: "hidden" }}
-            >
-              <div style={{ marginTop: 16 }}>
-                {/* Сетка рекомендаций */}
+        {isExpanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              marginTop: 12,
+              paddingTop: 12,
+              borderTop: "1px solid rgba(107, 114, 128, 0.2)"
+            }}
+          >
+            {/* Рекомендации для взрослых */}
+            <div style={{
+              marginBottom: showChildrenRecommendations ? 16 : 0
+            }}>
+              <div style={{
+                fontSize: 14,
+                fontWeight: 600,
+                color: "#374151",
+                fontFamily: "Montserrat, Arial, sans-serif",
+                marginBottom: 8,
+                display: "flex",
+                alignItems: "center",
+                gap: 6
+              }}>
+                <span>👨‍👩‍👧‍👦</span>
+                Для взрослых
+              </div>
+              
+              <div style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 8
+              }}>
+                {adultRecommendations.map((rec, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 + 0.1 }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "8px 12px",
+                      borderRadius: 12,
+                      background: `${rec.color}15`,
+                      border: `1px solid ${rec.color}30`,
+                      position: "relative",
+                      overflow: "hidden"
+                    }}
+                  >
+                    <div style={{
+                      position: "absolute",
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      width: 3,
+                      background: rec.color,
+                      borderRadius: "12px 0 0 12px"
+                    }} />
+
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      flex: 1
+                    }}>
+                      <span style={{ 
+                        fontSize: 20,
+                        filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))"
+                      }}>
+                        {rec.icon}
+                      </span>
+                      <div style={{
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: "#374151",
+                        fontFamily: "Montserrat, Arial, sans-serif"
+                      }}>
+                        {rec.text}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* Рекомендации для детей */}
+            {showChildrenRecommendations && childrenRecommendations.length > 0 && (
+              <div>
                 <div style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(2, 1fr)",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "#374151",
+                  fontFamily: "Montserrat, Arial, sans-serif",
+                  marginBottom: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6
+                }}>
+                  <span>👶</span>
+                  Для ребенка
+                </div>
+
+                {/* Температурное предупреждение */}
+                <div style={{
+                  background: "rgba(251, 191, 36, 0.1)",
+                  borderRadius: 8,
+                  padding: "6px 10px",
+                  marginBottom: 12,
+                  border: "1px solid rgba(251, 191, 36, 0.3)"
+                }}>
+                  <div style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: "#92400e",
+                    fontFamily: "Montserrat, Arial, sans-serif"
+                  }}>
+                    ❄️ Дети мерзнут быстрее взрослых (-3°C к ощущениям)
+                  </div>
+                </div>
+                
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
                   gap: 8,
                   marginBottom: 12
                 }}>
-                  {recommendations.map((item, index) => (
+                  {childrenRecommendations.map((rec, index) => (
                     <motion.div
                       key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 + 0.3 }}
                       style={{
-                        background: `linear-gradient(135deg, ${item.color}10, ${item.color}05)`,
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "8px 12px",
                         borderRadius: 12,
-                        padding: "12px 8px",
-                        textAlign: "center",
-                        border: `2px solid ${item.color}20`,
+                        background: `${rec.color}15`,
+                        border: `1px solid ${rec.color}30`,
                         position: "relative",
-                        overflow: "hidden",
-                        minHeight: 80
+                        overflow: "hidden"
                       }}
-                      initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: index * 0.1 }}
-                      whileHover={{ scale: 1.05, y: -2 }}
                     >
-                      {/* Цветной акцент */}
                       <div style={{
                         position: "absolute",
-                        top: 0,
                         left: 0,
-                        right: 0,
-                        height: 3,
-                        background: item.color,
-                        borderRadius: "12px 12px 0 0"
+                        top: 0,
+                        bottom: 0,
+                        width: 3,
+                        background: rec.color,
+                        borderRadius: "12px 0 0 12px"
                       }} />
-                      
-                      {/* Иконка */}
+
                       <div style={{
-                        fontSize: 28,
-                        lineHeight: 1,
-                        marginBottom: 6,
-                        filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        flex: 1
                       }}>
-                        {item.icon}
-                      </div>
-                      
-                      {/* Описание */}
-                      <div style={{
-                        fontSize: 15,
-                        color: "#374151",
-                        fontFamily: "Montserrat, Arial, sans-serif",
-                        fontWeight: 500,
-                        lineHeight: 1.2
-                      }}>
-                        {item.text}
+                        <span style={{ 
+                          fontSize: 18,
+                          filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))"
+                        }}>
+                          {rec.icon}
+                        </span>
+                        <div style={{
+                          fontSize: 13,
+                          fontWeight: 600,
+                          color: "#374151",
+                          fontFamily: "Montserrat, Arial, sans-serif"
+                        }}>
+                          {rec.text}
+                        </div>
                       </div>
                     </motion.div>
                   ))}
                 </div>
 
-                {/* Мотивирующий текст с цветным фоном */}
+                {/* Совет для родителей */}
                 <motion.div
-                  style={{
-                    background: `linear-gradient(135deg, ${theme.iconBgColor}, ${theme.bgColor})`,
-                    borderRadius: 8,
-                    padding: "10px 12px",
-                    textAlign: "center",
-                    border: `1px solid ${theme.mainColor}20`,
-                    position: "relative",
-                    overflow: "hidden"
-                  }}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 }}
+                  style={{
+                    padding: "8px 10px",
+                    background: "rgba(139, 92, 246, 0.1)",
+                    borderRadius: 8,
+                    border: "1px solid rgba(139, 92, 246, 0.2)"
+                  }}
                 >
-                  {/* Тонкая цветная полоска */}
                   <div style={{
-                    position: "absolute",
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: 2,
-                    background: theme.mainColor,
-                    borderRadius: "0 0 8px 8px"
-                  }} />
-                  
-                  <div style={{
-                    fontSize: 16,
-                    color: "#374151",
-                    fontStyle: "italic",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: "#6b46c1",
                     fontFamily: "Montserrat, Arial, sans-serif",
-                    fontWeight: 500
+                    marginBottom: 3
                   }}>
-                    {temp < -5 ? "🥶 Береги себя в мороз!" : 
-                     temp < 5 ? "❄️ Тепло одевайся!" :
-                     temp < 15 ? "🧥 Не забудь куртку!" :
-                     temp > 25 ? "☀️ Отличная погода!" : 
-                     "🌤️ Одевайся комфортно!"}
+                    💡 Совет для родителей
+                  </div>
+                  <div style={{
+                    fontSize: 10,
+                    color: "#7c3aed",
+                    fontFamily: "Montserrat, Arial, sans-serif"
+                  }}>
+                    {getParentTip(temp, windSpeed, desc)}
                   </div>
                 </motion.div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            )}
+          </motion.div>
+        )}
       </motion.div>
     </>
   );
