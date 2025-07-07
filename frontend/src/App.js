@@ -32,7 +32,6 @@ import MoodTracker from "./MoodTracker";
 import AchievementsSystem, { 
   recordWeatherCheck, 
   getGameStats, 
-  AchievementNotification,
   ACHIEVEMENTS 
 } from "./Achievements";
 
@@ -1459,7 +1458,7 @@ const handleGeoWeather = () => {
             setUsageStats(getUsageStats());
             setShowPremiumModal(false);
             // Записываем достижение Premium
-            const achievementResult = recordWeatherCheck(data.name, currentWeather, premiumUser);
+            const achievementResult = recordWeatherCheck(weather?.city || city, weather, true);
             setGameStats(achievementResult.stats);
 
             achievementResult.newAchievements.forEach((achievementId, index) => {
@@ -1534,9 +1533,6 @@ const handleGeoWeather = () => {
         )}
         
       </motion.div>
-
-        {/* 🆕 Уведомления о достижениях */}
-        <AchievementsSystem />
     </ThemeProvider>
   );
 }
