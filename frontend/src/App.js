@@ -747,38 +747,156 @@ useEffect(() => {
   }, []);
 
   // 🔧 ОБНОВЛЕННАЯ ЛОГИКА ЗАГРУЗКИ ПОГОДЫ
-  const handleShowWeather = async () => {
-    // Проверяем лимиты ПЕРЕД запросом
-    const requestCheck = canMakeRequest();
-  
-    if (!requestCheck.canMake) {
-      // Показываем Premium modal если лимит исчерпан
-      setShowPremiumModal(true);
-      return;
+  // 🔧 ИСПРАВЛЕННАЯ функция handleShowWeather
+const handleShowWeather = async () => {
+  const requestCheck = canMakeRequest();
+
+  if (!requestCheck.canMake) {
+    setShowPremiumModal(true);
+    return;
+  }
+
+  setLoading(true);
+  recordRequest();
+  setUsageStats(getUsageStats());
+
+  try {
+    if (isToday(date)) {
+      // Получаем текущую погоду
+      const data = await fetchWeatherFromBackend(city);
+      const details = {
+        feels: Math.round(data.main.feels_like),
+        pressure: Math.round(data.main.pressure * 0.750062),
+        humidity: data.main.humidity,
+        wind: `${Math.round(data.wind.speed)} м/с`
+      };
+
+      const currentWeather = {
+        city: data.name,
+        temp: Math.round(data.main.temp),
+        desc: data.weather[0].description[0].toUpperCase() + data.weather[0].description.slice(1),
+        icon: `https://openweathermap.org/img/wn/${data.weather[0].icon}@4x.png`,
+        details
+      };
+
+      setWeather(currentWeather);
+      setSelectedWeatherData(currentWeather);
+      setInitialDesc(data.weather[0].description);
+      setInitialIsNight(data.weather[0].icon.includes("n"));
+
+      if (data.coord) {
+        setCoords({ lat: data.coord.lat, lon: data.coord.lon });
+      }
+
+      // 🆕 ЗАПИСЫВАЕМ ДОСТИЖЕНИЯ (ИСПРАВЛЕНО)
+      const achievementResult = recordWeatherCheck(data.name, currentWeather, premiumUser);
+      setGameStats(achievementResult.stats);
+
+      achievementResult.newAchievements.forEach((achievementId, index) => {
+        setTimeout(() => {
+          handleAchievementUnlocked(achievementId);
+        }, index * 1000);
+      });
+
+      // Получаем почасовой прогноз
+      const { list: forecastList } = await fetchForecast(city);
+      setForecastData(forecastList);
+
+      // Получаем дополнительные данные
+      try {
+        const airData = await fetchAirQuality(city);
+        setAirQualityData(airData);
+      } catch (e) {
+        console.error('Air quality error:', e);
+        setAirQualityData(null);
+      }
+
+      try {
+        const uvIndexData = await fetchUVIndex(city);
+        setUvData(uvIndexData);
+      } catch (e) {
+        console.error('UV index error:', e);
+        setUvData(null);
+      }
+
+    } else {
+      // Логика для будущих дат
+      const { list: forecastList } = await fetchForecast(city);
+      const now = new Date();
+      const targetHour = now.getHours();
+      const mainForecast = findNearestForecast(forecastList, date, targetHour);
+      
+      if (mainForecast) {
+        const forecastWeather = {
+          city: city,
+          temp: Math.round(mainForecast.main.temp),
+          desc: mainForecast.weather[0].description[0].toUpperCase() + mainForecast.weather[0].description.slice(1),
+          icon: `https://openweathermap.org/img/wn/${mainForecast.weather[0].icon}@4x.png`,
+          details: {
+            feels: Math.round(mainForecast.main.feels_like),
+            pressure: Math.round(mainForecast.main.pressure * 0.750062),
+            humidity: mainForecast.main.humidity,
+            wind: `${Math.round(mainForecast.wind.speed)} м/с`
+          }
+        };
+        
+        setWeather(forecastWeather);
+        setSelectedWeatherData(forecastWeather);
+        setForecastData(forecastList);
+        
+        // Записываем достижения для прогнозов
+        const achievementResult = recordWeatherCheck(city, forecastWeather, premiumUser);
+        setGameStats(achievementResult.stats);
+
+        achievementResult.newAchievements.forEach((achievementId, index) => {
+          setTimeout(() => {
+            handleAchievementUnlocked(achievementId);
+          }, index * 1000);
+        });
+      }
+      
+      setDesc(mainForecast?.weather?.[0]?.description || "");
+      setIsNight(mainForecast?.weather?.[0]?.icon?.includes("n") || false);
     }
+  } catch (e) {
+    console.error('Weather error:', e);
+    alert("Ошибка получения данных: " + e.message);
+  }
+  setLoading(false);
+};
 
-    setLoading(true);
-    recordRequest();
-    setUsageStats(getUsageStats());
+// 🔧 ИСПРАВЛЕННАЯ функция handleGeoWeather
+const handleGeoWeather = () => {
+  const requestCheck = canMakeRequest();
 
-    // Показываем уведомления о новых достижениях
-    achievementResult.newAchievements.forEach((achievementId, index) => {
-      setTimeout(() => {
-        handleAchievementUnlocked(achievementId);
-      }, index * 1000);
-    });
+  if (!requestCheck.canMake) {
+    setShowPremiumModal(true);
+    return;
+  }
 
+  if (!navigator.geolocation) {
+    alert("Геолокация не поддерживается браузером");
+    return;
+  }
 
-    try {
-      if (isToday(date)) {
-        // Получаем текущую погоду
-        const data = await fetchWeatherFromBackend(city);
+  setLoading(true);
+  recordRequest();
+  setUsageStats(getUsageStats());
+
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      try {
+        const data = await fetchWeather({ lat, lon });
         const details = {
           feels: Math.round(data.main.feels_like),
           pressure: Math.round(data.main.pressure * 0.750062),
           humidity: data.main.humidity,
           wind: `${Math.round(data.wind.speed)} м/с`
         };
+
+        setCity(data.name);
 
         const currentWeather = {
           city: data.name,
@@ -789,21 +907,16 @@ useEffect(() => {
         };
 
         setWeather(currentWeather);
-        setSelectedWeatherData(currentWeather); // 🆕 Инициализируем выбранные данные
-        setInitialDesc(data.weather[0].description);
-        setInitialIsNight(data.weather[0].icon.includes("n"));
+        setSelectedWeatherData(currentWeather);
+        setDesc(data.weather[0].description);
+        setIsNight(data.weather[0].icon.includes("n"));
+        setCoords({ lat, lon });
 
-        if (data.coord) {
-          setCoords({ lat: data.coord.lat, lon: data.coord.lon });
-        }
+        const { list: forecastList } = await fetchForecast({ lat, lon });
+        setForecastData(forecastList);
 
-        // Получаем почасовой прогноз
-        const { list: forecastList } = await fetchForecast(city);
-        setForecastData(forecastList); // 🆕 Сохраняем для карусели
-
-        // Получаем дополнительные данные
         try {
-          const airData = await fetchAirQuality(city);
+          const airData = await fetchAirQuality({ lat, lon });
           setAirQualityData(airData);
         } catch (e) {
           console.error('Air quality error:', e);
@@ -811,58 +924,45 @@ useEffect(() => {
         }
 
         try {
-          const uvIndexData = await fetchUVIndex(city);
+          const uvIndexData = await fetchUVIndex({ lat, lon });
           setUvData(uvIndexData);
         } catch (e) {
           console.error('UV index error:', e);
           setUvData(null);
         }
 
-      } else {
-        // Логика для будущих дат остается без изменений
-        const { list: forecastList } = await fetchForecast(city);
-        const now = new Date();
-        const targetHour = now.getHours();
-        const mainForecast = findNearestForecast(forecastList, date, targetHour);
-        
-        if (mainForecast) {
-          const forecastWeather = {
-            city: city,
-            temp: Math.round(mainForecast.main.temp),
-            desc: mainForecast.weather[0].description[0].toUpperCase() + mainForecast.weather[0].description.slice(1),
-            icon: `https://openweathermap.org/img/wn/${mainForecast.weather[0].icon}@4x.png`,
-            details: {
-              feels: Math.round(mainForecast.main.feels_like),
-              pressure: Math.round(mainForecast.main.pressure * 0.750062),
-              humidity: mainForecast.main.humidity,
-              wind: `${Math.round(mainForecast.wind.speed)} м/с`
-            }
-          };
-          
-          setWeather(forecastWeather);
-          setSelectedWeatherData(forecastWeather);
-          setForecastData(forecastList);
-          
-          // Записываем достижения даже для прогнозов
-          const achievementResult = recordWeatherCheck(city, forecastWeather, premiumUser);
-          setGameStats(achievementResult.stats);
+        // 🆕 ЗАПИСЫВАЕМ ДОСТИЖЕНИЯ ДЛЯ ГЕОЛОКАЦИИ (ИСПРАВЛЕНО - БЕЗ ДУБЛИРОВАНИЯ)
+        const achievementResult = recordWeatherCheck(data.name, currentWeather, premiumUser);
+        setGameStats(achievementResult.stats);
 
-          achievementResult.newAchievements.forEach((achievementId, index) => {
-            setTimeout(() => {
-              handleAchievementUnlocked(achievementId);
-            }, index * 1000);
-          });
-        }
-        
-        setDesc(mainForecast?.weather?.[0]?.description || "");
-        setIsNight(mainForecast?.weather?.[0]?.icon?.includes("n") || false);
+        achievementResult.newAchievements.forEach((achievementId, index) => {
+          setTimeout(() => {
+            handleAchievementUnlocked(achievementId);
+          }, index * 1000);
+        });
+
+      } catch (error) {
+        console.error('Geo weather error:', error);
+        setWeather({ 
+          city: "?", 
+          temp: '--', 
+          desc: 'Ошибка при получении геолокации', 
+          icon: '', 
+          details: {} 
+        });
+        setForecastData([]);
+        setPhotoUrl(null);
+      } finally {
+        setLoading(false);
       }
-    } catch (e) {
-      console.error('Weather error:', e);
-      alert("Ошибка получения данных: " + e.message);
+    },
+    (error) => {
+      console.error('Geolocation error:', error);
+      alert("Не удалось получить геолокацию: " + error.message);
+      setLoading(false);
     }
-    setLoading(false);
-  };
+  );
+};
 
   // Геолокация остается без изменений (аналогично handleShowWeather)
   const handleGeoWeather = () => {
