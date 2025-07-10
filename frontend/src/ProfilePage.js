@@ -29,18 +29,46 @@ const ProfilePage = ({ userProfile, onStartSurvey, onClose }) => {
       work_only: 'Только работа'
     };
 
-    const ageLabels = {
-      under_18: 'До 18 лет',
-      '18_35': '18-35 лет',
-      '35_55': '35-55 лет',
-      '55_plus': '55+ лет'
+    const getAgeDisplay = (profile) => {
+      // ✅ ПРИОРИТЕТ: Если есть ageGroup - показываем ДИАПАЗОН
+      if (profile.ageGroup) {
+        const ageLabels = {
+          'young': 'До 18 лет',
+          'adult': '18-35 лет', 
+          'middle': '35-55 лет',
+          'senior': '55+ лет'
+        };
+        return ageLabels[profile.ageGroup] || 'Не указан';
+      }
+
+      // Если возраст число (показываем как диапазон)
+      if (typeof profile.age === 'number') {
+        const age = profile.age;
+        if (age < 18) return 'До 18 лет';
+        if (age <= 35) return '18-35 лет';
+        if (age <= 55) return '35-55 лет';
+        return '55+ лет';
+      }
+
+      // Старый формат (для совместимости)
+      const ageLabels = {
+        under_18: 'До 18 лет',
+        '18_35': '18-35 лет',
+        '35_55': '35-55 лет',
+        '55_plus': '55+ лет',
+        'young': 'До 18 лет',
+        'adult': '18-35 лет',
+        'middle': '35-55 лет', 
+        'senior': '55+ лет'
+      };
+      return ageLabels[profile.age] || 'Не указан';
     };
 
     return {
       health: profile.health?.map(h => healthLabels[h]).filter(Boolean) || [],
       activity: profile.activity?.map(a => activityLabels[a]).filter(Boolean) || [],
       interests: profile.interests?.map(i => interestLabels[i]).filter(Boolean) || [],
-      age: ageLabels[profile.age] || 'Не указан',
+      age: getAgeDisplay(profile), // ✅ Используем новую функцию
       bloodPressure: profile.bloodPressure || null
     };
   };
