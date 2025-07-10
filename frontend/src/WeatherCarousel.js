@@ -1,6 +1,7 @@
 // Обновленный WeatherCarousel.js с анимированными стрелочками навигации
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
+import analytics from './analytics'; // 🆕 Импорт аналитики
 
 // Анимированные стрелочки навигации
 const NavigationArrow = ({ direction, onClick, isVisible, animationKey }) => {
@@ -157,7 +158,8 @@ export default function WeatherCarousel({
   details, 
   forecastData, 
   photoUrl,
-  onWeatherChange
+  onWeatherChange,
+  onMoodClick  // 🆕 Обновленный пропс для обработки настроения
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -185,6 +187,37 @@ export default function WeatherCarousel({
     setActiveIndex(0);
     setAnimationKey(prev => prev + 1); // Сбрасываем анимацию при изменении данных
   }, [city, temp]);
+
+  // 🔧 УЛУЧШЕННАЯ ФУНКЦИЯ ОБРАБОТКИ КЛИКА ПО НАСТРОЕНИЮ
+  const handleMoodClick = (weather) => {
+    console.log('😊 Принудительный вызов MoodTracker из карусели:', {
+      city,
+      weather,
+      time: weather.time
+    });
+    
+    // 📊 ОТСЛЕЖИВАЕМ СОБЫТИЕ В АНАЛИТИКЕ
+    analytics.trackAction('mood_button_clicked', {
+      source: 'weather_carousel',
+      city: city,
+      time: weather.time,
+      temp: weather.temp,
+      desc: weather.desc
+    });
+    
+    // 🎯 ВЫЗЫВАЕМ ФУНКЦИЮ ОБРАБОТКИ НАСТРОЕНИЯ
+    if (onMoodClick) {
+      onMoodClick({
+        source: 'carousel_button',
+        weather: weather,
+        city: city,
+        time: weather.time,
+        temp: weather.temp,
+        desc: weather.desc,
+        timestamp: Date.now()
+      });
+    }
+  };
 
   // Обработка свайпа
   const handleDragEnd = (event, info) => {
@@ -242,6 +275,7 @@ export default function WeatherCarousel({
       overflow: "hidden",
       padding: "8px 16px"
     }}>
+    
       {/* Фоновое изображение города */}
       {photoUrl && (
         <div
@@ -446,6 +480,41 @@ export default function WeatherCarousel({
                           </svg>
                         </motion.div>
                       )}
+
+                      {/* 😊 КНОПКА НАСТРОЕНИЯ - в правом верхнем углу */}
+                      <motion.button
+                        onClick={(e) => {
+                          e.stopPropagation(); // Останавливаем всплытие события
+                          handleMoodClick(weather); // 🔧 ВЫЗЫВАЕМ УЛУЧШЕННУЮ ФУНКЦИЮ
+                        }}
+                        style={{
+                          position: "absolute",
+                          top: "8px",
+                          right: "8px",
+                          width: "42px",
+                          height: "42px",
+                          borderRadius: "50%",
+                          background: "rgba(255, 255, 255, 0.9)",
+                          border: "1px solid rgba(59, 130, 246, 0.2)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          zIndex: 15,
+                          cursor: "pointer",
+                          fontSize: "24px",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                        }}
+                        whileHover={{ 
+                          scale: 1.1,
+                          background: "rgba(255, 255, 255, 1)",
+                          boxShadow: "0 4px 12px rgba(139, 92, 246, 0.3)"
+                        }}
+                        whileTap={{ scale: 0.9 }}
+                        transition={{ duration: 0.2 }}
+                        title="Записать настроение для этого времени"
+                      >
+                        😊
+                      </motion.button>
 
                       {/* Время - увеличенный размер */}
                       <div style={{

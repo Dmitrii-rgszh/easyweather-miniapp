@@ -284,7 +284,14 @@ const SuccessNotification = ({ mood, onClose }) => {
 };
 
 // Основной компонент трекера настроения
-export default function MoodTracker({ weather, city, isVisible = true }) {
+export default function MoodTracker({ 
+  weather, 
+  city, 
+  isVisible = true, 
+  context = null, 
+  onClose = null, 
+  onSuccess = null 
+}) {
   const [showSelector, setShowSelector] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [selectedMood, setSelectedMood] = useState(null);
@@ -316,6 +323,16 @@ export default function MoodTracker({ weather, city, isVisible = true }) {
       // Обновляем статистику
       const updatedStats = getMoodStats();
       setMoodStats(updatedStats);
+
+      // 🆕 ВЫЗЫВАЕМ CALLBACK УСПЕХА
+      if (onSuccess) {
+        onSuccess({
+          mood: mood.id,
+          city: city,
+          weather: weather,
+          context: context
+        });
+      }
     }
   };
 

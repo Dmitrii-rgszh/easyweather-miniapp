@@ -72,6 +72,39 @@ export default function QuickActions({
       color: '#8b5cf6',
       bgColor: '#8b5cf6',
       action: onOpenAdminPanel
+    },
+    // 💰 КНОПКА ДОНАТА
+    {
+      id: 'donate',
+      icon: '💖',
+      text: 'Поддержать',
+      color: '#ec4899',
+      bgColor: '#ec4899',
+      action: () => {
+        // Выбери лучший сервис для тебя:
+        window.open('https://boosty.to/твой_аккаунт', '_blank'); // Boosty (рекомендую)
+        // или замени на:
+        // window.open('https://www.donationalerts.com/r/твой_аккаунт', '_blank'); // DonationAlerts
+        // window.open('https://pay.cloudtips.ru/p/твой_id', '_blank'); // CloudTips
+      },
+      description: 'Развитие проекта'
+    },
+  
+    // 📱 СВЯЗЬ С РАЗРАБОТЧИКОМ
+    {
+      id: 'contact',
+      icon: '📱',
+      text: 'Написать автору',
+      color: '#3b82f6',
+      bgColor: '#3b82f6',
+      action: () => {
+        // Выбери лучший способ связи:
+        window.open('https://t.me/dmitrii_poliakov', '_blank'); // Telegram (рекомендую)
+        // или замени на:
+        // window.open('mailto:твоя_почта@gmail.com?subject=EasyWeather - вопрос', '_blank'); // Email
+        // window.open('https://github.com/твой_ник/easyweather/issues', '_blank'); // GitHub
+      },
+      description: 'Обратная связь'
     }
   ];
 

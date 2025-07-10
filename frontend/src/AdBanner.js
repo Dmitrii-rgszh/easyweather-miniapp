@@ -1,4 +1,4 @@
-// 🧪 A/B ТЕСТИРОВАНИЕ БАННЕРОВ - Обновленный AdBanner.js
+// 🧪 A/B ТЕСТИРОВАНИЕ БАННЕРОВ - Исправленный AdBanner.js
 
 import analytics from './analytics';
 import React, { useState, useEffect } from 'react';
@@ -50,8 +50,23 @@ const AdBanner = () => {
   const [currentVariant, setCurrentVariant] = useState(null);
   const [abTestId, setAbTestId] = useState('');
 
+  // 🔧 ОТЛАДКА - показываем все варианты в консоли
+  useEffect(() => {
+    console.log('🎯 Доступные варианты A/B теста:', BANNER_VARIANTS.map(v => ({
+      id: v.id,
+      name: v.name,
+      title: v.title
+    })));
+  }, []);
+
   // 🎲 ВЫБОР ВАРИАНТА ДЛЯ A/B ТЕСТИРОВАНИЯ
   useEffect(() => {
+    // 🔧 ОТЛАДКА - показываем что сохранено в localStorage
+    console.log('📦 Сохраненные данные A/B теста:', {
+      savedVariant: localStorage.getItem('abTestVariant'),
+      savedTestId: localStorage.getItem('abTestId')
+    });
+  
     // Проверяем есть ли уже выбранный вариант в сессии
     let savedVariant = localStorage.getItem('abTestVariant');
     let savedTestId = localStorage.getItem('abTestId');
@@ -88,7 +103,33 @@ const AdBanner = () => {
       });
     }
   }, []);
-
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      // Добавляем функцию в window для вызова из консоли
+      window.resetABTest = () => {
+        localStorage.removeItem('abTestVariant');
+        localStorage.removeItem('abTestId');
+        console.log('🔄 A/B тест сброшен! Перезагрузите страницу.');
+        window.location.reload();
+      };
+    
+      window.forceVariant = (variantId) => {
+        const variant = BANNER_VARIANTS.find(v => v.id === variantId);
+        if (variant) {
+          localStorage.setItem('abTestVariant', variantId);
+          localStorage.setItem('abTestId', `forced_${Date.now()}`);
+          console.log(`🎯 Принудительно выбран вариант: ${variant.name}`);
+          window.location.reload();
+        } else {
+          console.log('❌ Неверный ID варианта. Доступные:', BANNER_VARIANTS.map(v => v.id));
+        }
+      };
+    
+      console.log('🛠️ Функции для отладки A/B теста добавлены в window:');
+      console.log('• window.resetABTest() - сбросить тест');
+      console.log('• window.forceVariant("variant_a") - принудительно выбрать вариант');
+    }
+  }, []);
   // Показываем баннер через 2 секунды после загрузки
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -288,20 +329,6 @@ const AdBanner = () => {
           }}
           onClick={handleBannerClick}
         >
-          {/* 🧪 ИНДИКАТОР A/B ТЕСТА */}
-          <div style={{
-            position: 'absolute',
-            top: '4px',
-            left: '4px',
-            background: 'rgba(255,255,255,0.2)',
-            color: 'white',
-            fontSize: '8px',
-            padding: '2px 6px',
-            borderRadius: '8px',
-            fontWeight: '600'
-          }}>
-            {currentVariant.name}
-          </div>
 
           {/* Кнопка закрытия */}
           <button

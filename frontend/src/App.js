@@ -449,6 +449,8 @@ function App() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showProfilePage, setShowProfilePage] = useState(false);
   const [showMoodTracker, setShowMoodTracker] = useState(false);
+  const [forceMoodTracker, setForceMoodTracker] = useState(false); 
+  const [moodContext, setMoodContext] = useState(null);
   // 🆕 Состояния для системы достижений
   const [gameStats, setGameStats] = useState(getGameStats());
 
@@ -1046,7 +1048,10 @@ const handleGeoWeather = () => {
             width: 130,
             maxWidth: "80vw",
             zIndex: 99,
-            height: "auto"
+            height: "auto",
+            // 🌓 ИНВЕРТИРОВАНИЕ ДЛЯ ТЕМНОЙ ТЕМЫ
+            filter: initialIsNight ? 'invert(1) brightness(1.2)' : 'none',
+            transition: 'filter 0.5s ease'
           }}
           animate={{
             scale: [1, 1.08, 0.97, 1],
@@ -1351,6 +1356,11 @@ const handleGeoWeather = () => {
               forecastData={forecastData}
               photoUrl={photoUrl}
               onWeatherChange={handleWeatherChange}
+              onMoodClick={(data) => {
+                console.log('🎯 Обработка настроения:', data);
+                // Показываем MoodTracker
+                setShowMoodTracker(true);
+              }}
             />
 
             {/* 📋 ИНДИКАТОР ПРОКРУТКИ ВНИЗ */}
@@ -1435,11 +1445,30 @@ const handleGeoWeather = () => {
               uvData={uvData}
             />
 
+            {/* 😊 УНИВЕРСАЛЬНЫЙ MOOD TRACKER */}
             {activeWeatherData && (
               <MoodTracker
-                weather={activeWeatherData}
-                city={weather?.city || city}
-                isVisible={showMoodTracker && !!weather}
+                weather={moodContext?.weather || activeWeatherData}
+                city={moodContext?.city || weather?.city || city}
+                isVisible={(showMoodTracker && !!weather) || forceMoodTracker}
+                context={moodContext} // 🆕 Передаем контекст
+                onClose={handleMoodTrackerClose} // 🆕 Универсальное закрытие
+                onSuccess={(moodData) => {
+                  // 🎉 ОБРАБОТКА УСПЕШНОГО СОХРАНЕНИЯ
+                  console.log('🎉 Настроение успешно сохранено:', moodData);
+      
+                  // 📊 АНАЛИТИКА
+                  analytics.trackAction('mood_saved', {
+                    mood: moodData.mood,
+                    source: moodContext?.source || 'automatic',
+                    city: moodData.city
+                  });
+      
+                  // Закрываем через 2 секунды
+                  setTimeout(() => {
+                    handleMoodTrackerClose();
+                  }, 2000);
+                }}
               />
             )}
 
