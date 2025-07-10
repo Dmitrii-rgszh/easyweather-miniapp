@@ -42,6 +42,7 @@ import AchievementsSystem, {
   recordWeatherCheck, 
   getGameStats
 } from "./Achievements";
+import HeaderAchievements from "./HeaderAchievements";
 
 // Все эффекты остаются без изменений
 function CloudsEffect() {
@@ -1039,6 +1040,10 @@ const handleGeoWeather = () => {
             ease: "easeInOut"
           }}
         />
+        
+        <div style={{ maxWidth: 340, margin: "0px auto", width: "100%" }}>
+          <HeaderAchievements gameStats={gameStats} />
+        </div>
 
         {/* Форма ввода */}
         <motion.div
@@ -1355,8 +1360,6 @@ const handleGeoWeather = () => {
                 isVisible={showMoodTracker && !!weather}
               />
             )}
-
-            <AchievementsSystem />
 
             {/* 🆕 ВСЕ БЛОКИ ПОЛУЧАЮТ ДАННЫЕ ИЗ ВЫБРАННОГО ВРЕМЕНИ */}
             <WeatherAlerts 
