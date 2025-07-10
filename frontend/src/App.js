@@ -1136,35 +1136,35 @@ const handleGeoWeather = () => {
         </motion.div>
         
         {/* Избранные города - ОБНОВЛЕННАЯ ВЕРСИЯ */}
-{favorites.length > 0 && (
-  <motion.div
-    style={{
-      margin: "20px auto 0",
-      maxWidth: 340,
-      width: "100%"
-    }}
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.6, delay: 0.5 }}
-  >
-    {/* Заголовок избранного */}
-    <div style={{
-      textAlign: "center",
-      marginBottom: 12,
-      color: "#fff",
-      fontWeight: 600,
-      fontSize: 16,
-      letterSpacing: 0.3,
-      textShadow: "0 2px 8px rgba(0,0,0,0.57), 0 0 1px #fff",
-      fontFamily: "Montserrat, Arial, sans-serif",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 8
-    }}>
-      <span style={{ fontSize: 18 }}>⭐</span>
-      Избранные города
-      </div>
+        {favorites.length > 0 && (
+          <motion.div
+            style={{
+              margin: "20px auto 0",
+              maxWidth: 340,
+              width: "100%"
+            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+          >
+            {/* Заголовок избранного */}
+            <div style={{
+              textAlign: "center",
+              marginBottom: 12,
+              color: "#fff",
+              fontWeight: 600,
+              fontSize: 16,
+              letterSpacing: 0.3,
+              textShadow: "0 2px 8px rgba(0,0,0,0.57), 0 0 1px #fff",
+              fontFamily: "Montserrat, Arial, sans-serif",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8
+            }}>
+              <span style={{ fontSize: 18 }}>⭐</span>
+              Избранные города
+              </div>
 
       {/* Список городов */}
       <div style={{
@@ -1337,6 +1337,44 @@ const handleGeoWeather = () => {
               photoUrl={photoUrl}
               onWeatherChange={handleWeatherChange}
             />
+
+            {/* 📋 ИНДИКАТОР ПРОКРУТКИ ВНИЗ */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.5, duration: 0.8 }}
+              style={{
+                textAlign: 'center',
+                margin: '-15px auto 20px',
+                maxWidth: 340
+              }}
+            >
+              <motion.div
+                animate={{ y: [0, 8, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 16px',
+                  background: 'rgba(255,255,255,0.9)',
+                  borderRadius: 25,
+                  boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                  fontSize: 14,
+                  color: '#3b82f6',
+                  fontWeight: 600,
+                  fontFamily: 'Montserrat, Arial, sans-serif'
+                }}
+              >
+                <span>📋 Еще больше информации</span>
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  ⬇️
+                </motion.div>
+              </motion.div>
+            </motion.div>
 
             {/* Медицинские алерты */}
             {activeWeatherData && (

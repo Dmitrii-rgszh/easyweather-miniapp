@@ -269,7 +269,7 @@ export default function WeatherCarousel({
         {/* Название города */}
         <h2 style={{
           textAlign: "center",
-          fontSize: 20,
+          fontSize: 24,
           fontWeight: 600,
           color: "#1e293b",
           margin: "0 0 10px 0",
@@ -449,7 +449,7 @@ export default function WeatherCarousel({
 
                       {/* Время - увеличенный размер */}
                       <div style={{
-                        fontSize: 18, // Увеличил с 14 до 18
+                        fontSize: 20, // Увеличил с 14 до 18
                         fontWeight: 600,
                         color: "#3b82f6",
                         marginBottom: 12,
@@ -486,7 +486,7 @@ export default function WeatherCarousel({
                         fontSize: 32, // Увеличил с 24 до 32
                         fontWeight: 700,
                         color: "#1e293b",
-                        marginBottom: 8,
+                        marginBottom: 4,
                         fontFamily: "Montserrat, Arial, sans-serif"
                       }}>
                         {weather.temp}°
@@ -494,7 +494,7 @@ export default function WeatherCarousel({
 
                       {/* Описание - увеличенный размер */}
                       <div style={{
-                        fontSize: 14, // Увеличил с 12 до 14
+                        fontSize: 16, // Увеличил с 12 до 14
                         color: "#64748b",
                         textAlign: "center",
                         fontFamily: "Montserrat, Arial, sans-serif",
@@ -555,7 +555,7 @@ export default function WeatherCarousel({
 
                       {/* Температура */}
                       <div style={{
-                        fontSize: 12,
+                        fontSize: 14,
                         fontWeight: 600,
                         color: "#1e293b",
                         fontFamily: "Montserrat, Arial, sans-serif"
@@ -590,34 +590,34 @@ export default function WeatherCarousel({
           }}
         >
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 10, color: "#64748b", fontFamily: "Montserrat" }}>
+            <div style={{ fontSize: 12, color: "#64748b", fontFamily: "Montserrat" }}>
               Ощущается
             </div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "#1e293b", fontFamily: "Montserrat" }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "#1e293b", fontFamily: "Montserrat" }}>
               {activeWeather.details?.feels || '--'}°
             </div>
           </div>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 10, color: "#64748b", fontFamily: "Montserrat" }}>
+            <div style={{ fontSize: 12, color: "#64748b", fontFamily: "Montserrat" }}>
               Давление
             </div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "#1e293b", fontFamily: "Montserrat" }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "#1e293b", fontFamily: "Montserrat" }}>
               {activeWeather.details?.pressure || '--'} мм
             </div>
           </div>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 10, color: "#64748b", fontFamily: "Montserrat" }}>
+            <div style={{ fontSize: 12, color: "#64748b", fontFamily: "Montserrat" }}>
               Влажность
             </div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "#1e293b", fontFamily: "Montserrat" }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "#1e293b", fontFamily: "Montserrat" }}>
               {activeWeather.details?.humidity || '--'}%
             </div>
           </div>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 10, color: "#64748b", fontFamily: "Montserrat" }}>
+            <div style={{ fontSize: 12, color: "#64748b", fontFamily: "Montserrat" }}>
               Ветер
             </div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "#1e293b", fontFamily: "Montserrat" }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "#1e293b", fontFamily: "Montserrat" }}>
               {activeWeather.details?.wind || '--'}
             </div>
           </div>

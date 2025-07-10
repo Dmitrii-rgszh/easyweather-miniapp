@@ -427,7 +427,7 @@ export default function ClothingRecommendations({ temp, desc, humidity, windSpee
                     </span>
                   ))}
                   <span style={{ 
-                    fontSize: 12, 
+                    fontSize: 14, 
                     color: "#6b7280",
                     fontFamily: "Montserrat, Arial, sans-serif"
                   }}>
@@ -468,7 +468,7 @@ export default function ClothingRecommendations({ temp, desc, humidity, windSpee
               marginBottom: showChildrenRecommendations ? 16 : 0
             }}>
               <div style={{
-                fontSize: 14,
+                fontSize: 16,
                 fontWeight: 600,
                 color: "#374151",
                 fontFamily: "Montserrat, Arial, sans-serif",
@@ -526,7 +526,7 @@ export default function ClothingRecommendations({ temp, desc, humidity, windSpee
                         {rec.icon}
                       </span>
                       <div style={{
-                        fontSize: 14,
+                        fontSize: 15,
                         fontWeight: 600,
                         color: "#374151",
                         fontFamily: "Montserrat, Arial, sans-serif"
@@ -543,7 +543,7 @@ export default function ClothingRecommendations({ temp, desc, humidity, windSpee
             {showChildrenRecommendations && childrenRecommendations.length > 0 && (
               <div>
                 <div style={{
-                  fontSize: 14,
+                  fontSize: 16,
                   fontWeight: 600,
                   color: "#374151",
                   fontFamily: "Montserrat, Arial, sans-serif",
@@ -565,7 +565,7 @@ export default function ClothingRecommendations({ temp, desc, humidity, windSpee
                   border: "1px solid rgba(251, 191, 36, 0.3)"
                 }}>
                   <div style={{
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: 600,
                     color: "#92400e",
                     fontFamily: "Montserrat, Arial, sans-serif"
@@ -620,7 +620,7 @@ export default function ClothingRecommendations({ temp, desc, humidity, windSpee
                           {rec.icon}
                         </span>
                         <div style={{
-                          fontSize: 13,
+                          fontSize: 15,
                           fontWeight: 600,
                           color: "#374151",
                           fontFamily: "Montserrat, Arial, sans-serif"
@@ -645,7 +645,7 @@ export default function ClothingRecommendations({ temp, desc, humidity, windSpee
                   }}
                 >
                   <div style={{
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: 600,
                     color: "#6b46c1",
                     fontFamily: "Montserrat, Arial, sans-serif",

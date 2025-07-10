@@ -236,7 +236,7 @@ const HeaderAchievements = ({ gameStats: propStats }) => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '18px',
+            fontSize: '25px',
             boxShadow: `0 4px 12px ${userLevel.color}30`,
             position: 'relative',
             border: `2px solid rgba(255,255,255,0.8)`
@@ -301,7 +301,7 @@ const HeaderAchievements = ({ gameStats: propStats }) => {
         <div>
           <motion.div 
             style={{ 
-              fontSize: '15px', // Увеличили с 13px до 15px
+              fontSize: '16px', // Увеличили с 13px до 15px
               fontWeight: '700',
               background: `linear-gradient(135deg, ${userLevel.color}, ${userLevel.color}dd)`,
               WebkitBackgroundClip: 'text',
@@ -316,7 +316,7 @@ const HeaderAchievements = ({ gameStats: propStats }) => {
           </motion.div>
           <motion.div 
             style={{ 
-              fontSize: '12px', // Увеличили с 10px до 12px
+              fontSize: '14px', // Увеличили с 10px до 12px
               color: '#64748b',
               lineHeight: '1.3',
               fontFamily: 'Montserrat, Arial, sans-serif',
@@ -404,7 +404,7 @@ const HeaderAchievements = ({ gameStats: propStats }) => {
                 top: '14px',
                 left: '50%',
                 transform: 'translateX(-50%)',
-                fontSize: '11px', // Увеличили с 9px до 11px
+                fontSize: '12px', // Увеличили с 9px до 11px
                 color: '#64748b',
                 fontFamily: 'Montserrat, Arial, sans-serif',
                 whiteSpace: 'nowrap',
@@ -428,7 +428,7 @@ const HeaderAchievements = ({ gameStats: propStats }) => {
       >
         <motion.div 
           style={{ 
-            fontSize: '15px', // Увеличили с 13px до 15px
+            fontSize: '17px', // Увеличили с 13px до 15px
             fontWeight: '700',
             color: '#374151',
             lineHeight: '1',
@@ -445,7 +445,7 @@ const HeaderAchievements = ({ gameStats: propStats }) => {
               scale: [1, 1.1, 1]
             } : {}}
             transition={{ duration: 0.6 }}
-            style={{ fontSize: '14px' }} // Увеличили иконку с 12px до 14px
+            style={{ fontSize: '17px' }} // Увеличили иконку с 12px до 14px
           >
             🏆
           </motion.span>
@@ -457,12 +457,12 @@ const HeaderAchievements = ({ gameStats: propStats }) => {
           >
             {stats.unlockedAchievements.length}
           </motion.span>
-          <span style={{ opacity: 0.6, fontSize: '13px' }}>/{Object.keys(ACHIEVEMENTS).length}</span> {/* Увеличили с 11px до 13px */}
+          <span style={{ opacity: 0.6, fontSize: '17px' }}>/{Object.keys(ACHIEVEMENTS).length}</span> {/* Увеличили с 11px до 13px */}
         </motion.div>
         
         <motion.div 
           style={{ 
-            fontSize: '12px', // Увеличили с 10px до 12px
+            fontSize: '14px', // Увеличили с 10px до 12px
             color: '#64748b',
             lineHeight: '1.3',
             fontFamily: 'Montserrat, Arial, sans-serif',

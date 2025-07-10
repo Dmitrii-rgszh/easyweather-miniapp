@@ -48,7 +48,7 @@ const AdBanner = () => {
           style={{
             background: 'linear-gradient(135deg, #0066cc 0%, #004999 100%)',
             borderRadius: '18px',
-            padding: '20px',
+            padding: '10px',
             color: 'white',
             boxShadow: '0 8px 32px rgba(0, 102, 204, 0.3)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -72,35 +72,6 @@ const AdBanner = () => {
             background: 'linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%)',
             animation: 'shimmer 3s infinite'
           }} />
-          
-          {/* Кнопка закрытия */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDismiss();
-            }}
-            style={{
-              position: 'absolute',
-              top: '8px',
-              right: '8px',
-              background: 'rgba(255,255,255,0.2)',
-              border: 'none',
-              borderRadius: '50%',
-              width: '28px',
-              height: '28px',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'background 0.2s ease'
-            }}
-            onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.3)'}
-            onMouseLeave={(e) => e.target.style.background = 'rgba(255,255,255,0.2)'}
-          >
-            ×
-          </button>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px', position: 'relative', zIndex: 2 }}>
             {/* Логотип ВТБ */}

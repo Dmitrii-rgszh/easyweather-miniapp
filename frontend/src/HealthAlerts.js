@@ -87,7 +87,7 @@ function mapHealthConditions(userProfile) {
 }
 
 // Функция анализа рисков для здоровья
-function analyzeHealthRisks(weather, userProfile, spaceWeatherData) {
+async function analyzeHealthRisks(weather, userProfile, spaceWeatherData) {
   console.log('🏥 Начинаем анализ рисков для здоровья...');
   
   if (!weather || !userProfile) {
@@ -270,6 +270,79 @@ function analyzeHealthRisks(weather, userProfile, spaceWeatherData) {
 
   console.log(`✅ Анализ завершен. Найдено ${alerts.length} рисков для здоровья`);
   
+  // 🌌 АНАЛИЗ МАГНИТНЫХ БУРЬ (добавляем в конец функции analyzeHealthRisks)
+  if (conditions.includes('meteoropathy') || conditions.includes('migraine')) {
+    // Получаем данные о магнитных бурях асинхронно
+    try {
+      console.log('🌌 Получаем данные о магнитных бурях...');
+      
+      // Простой fetch к NOAA API
+      const response = await fetch('https://services.swpc.noaa.gov/json/planetary_k_index_1m.json');
+      if (response.ok) {
+        const kpData = await response.json();
+        const latest = kpData[kpData.length - 1];
+        const currentKp = parseFloat(latest.kp_index) || 2;
+        
+        console.log(`🌌 Kp-индекс: ${currentKp}`);
+        
+        if (currentKp >= 5) {
+          // Магнитная буря
+          alerts.push({
+            id: 'magnetic_storm',
+            type: 'warning',
+            icon: '🌌',
+            title: 'Магнитная буря',
+            description: `Геомагнитная активность (Kp=${currentKp.toFixed(1)})`,
+            details: 'Магнитные бури могут ухудшать самочувствие метеочувствительных людей',
+            recommendation: 'Больше отдыхайте, пейте воду, избегайте стрессов',
+            color: '#8b5cf6',
+            bgColor: 'rgba(139, 92, 246, 0.1)'
+          });
+        } else if (currentKp >= 3) {
+          // Умеренная активность
+          alerts.push({
+            id: 'magnetic_moderate',
+            type: 'info',
+            icon: '🌌',
+            title: 'Умеренная магнитная активность',
+            description: `Геомагнитная активность (Kp=${currentKp.toFixed(1)})`,
+            details: 'Возможно легкое недомогание у особо чувствительных людей',
+            recommendation: 'Контролируйте самочувствие, пейте достаточно воды',
+            color: '#6366f1',
+            bgColor: 'rgba(99, 102, 241, 0.1)'
+          });
+        } else {
+          // Спокойная обстановка
+          alerts.push({
+            id: 'magnetic_calm',
+            type: 'info',
+            icon: '🌌',
+            title: 'Спокойная магнитная обстановка',
+            description: `Низкая геомагнитная активность (Kp=${currentKp.toFixed(1)})`,
+            details: 'Благоприятные условия для метеочувствительных людей',
+            recommendation: 'Отличное время для активности и прогулок',
+            color: '#10b981',
+            bgColor: 'rgba(16, 185, 129, 0.1)'
+          });
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Не удалось получить данные о магнитных бурях:', error);
+      // Добавляем fallback алерт
+      alerts.push({
+        id: 'magnetic_unknown',
+        type: 'info',
+        icon: '🌌',
+        title: 'Мониторинг космической погоды',
+        description: 'Данные о магнитной активности временно недоступны',
+        details: 'Следите за самочувствием и принимайте обычные меры предосторожности',
+        recommendation: 'При ухудшении самочувствия обратитесь к врачу',
+        color: '#6b7280',
+        bgColor: 'rgba(107, 114, 128, 0.1)'
+      });
+    }
+  }
+
   return alerts;
 }
 
@@ -311,24 +384,31 @@ export default function HealthAlerts({ weather, userProfile, spaceWeatherData })
     setLoading(true);
     setError(null);
 
-    try {
-      console.log('🏥 HealthAlerts: Запуск анализа здоровья');
-      console.log('📊 Данные погоды:', weather);
-      console.log('👤 Профиль пользователя:', userProfile);
-      
-      const alerts = analyzeHealthRisks(weather, userProfile, spaceWeatherData);
-      setHealthAlerts(alerts);
-      setLastUpdate(new Date());
-      
-      console.log('✅ HealthAlerts: Получено алертов:', alerts.length);
-    } catch (err) {
-      console.error('❌ Ошибка анализа здоровья:', err);
-      setError('Ошибка анализа данных о здоровье');
-      setHealthAlerts([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [weather, userProfile, spaceWeatherData]);
+    // Асинхронная функция для получения данных о магнитных бурях
+    // Простая функция анализа без импорта
+    const analyzeWithSpaceWeather = async () => {
+      try {
+        console.log('🏥 HealthAlerts: Запуск анализа здоровья');
+        console.log('📊 Данные погоды:', weather);
+        console.log('👤 Профиль пользователя:', userProfile);
+  
+        // Используем локальную функцию analyzeHealthRisks (которая уже есть в этом файле)
+        const alerts = await analyzeHealthRisks(weather, userProfile, spaceWeatherData);
+        setHealthAlerts(alerts);
+        setLastUpdate(new Date());
+  
+        console.log('✅ HealthAlerts: Получено алертов:', alerts.length);
+      } catch (err) {
+        console.error('❌ Ошибка анализа здоровья:', err);
+        setError('Ошибка анализа данных о здоровье');
+        setHealthAlerts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    analyzeWithSpaceWeather();
+  }, [weather, userProfile]);
 
   // Если нет профиля пользователя
   if (!userProfile) {
@@ -348,7 +428,7 @@ export default function HealthAlerts({ weather, userProfile, spaceWeatherData })
         style={{
           background: 'rgba(255, 255, 255, 0.9)',
           borderRadius: 16,
-          padding: 16,
+          padding: 10,
           margin: "16px auto 0",
           maxWidth: 340,
           width: "100%",
@@ -387,7 +467,7 @@ export default function HealthAlerts({ weather, userProfile, spaceWeatherData })
           background: 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(20px)',
           borderRadius: 16,
-          padding: 16,
+          padding: 12,
           margin: "16px auto 0",
           maxWidth: 340,
           width: "100%",
@@ -406,7 +486,7 @@ export default function HealthAlerts({ weather, userProfile, spaceWeatherData })
           ✅ Погода благоприятна для здоровья
         </div>
         <div style={{
-          fontSize: 12,
+          fontSize: 14,
           color: '#64748b',
           fontFamily: 'Montserrat, Arial, sans-serif'
         }}>
@@ -414,7 +494,7 @@ export default function HealthAlerts({ weather, userProfile, spaceWeatherData })
         </div>
         {error && (
           <div style={{
-            fontSize: 10,
+            fontSize: 12,
             color: '#f59e0b',
             marginTop: 8,
             fontFamily: 'Montserrat, Arial, sans-serif'
@@ -456,7 +536,7 @@ export default function HealthAlerts({ weather, userProfile, spaceWeatherData })
           <span style={{ fontSize: 20, marginRight: 8 }}>🏥</span>
           <h3 style={{
             margin: 0,
-            fontSize: 18,
+            fontSize: 20,
             fontWeight: 600,
             color: '#1e293b',
             fontFamily: 'Montserrat, Arial, sans-serif'
@@ -479,7 +559,7 @@ export default function HealthAlerts({ weather, userProfile, spaceWeatherData })
         {/* Время последнего обновления */}
         {lastUpdate && (
           <div style={{
-            fontSize: 10,
+            fontSize: 16,
             color: '#94a3b8',
             fontFamily: 'Montserrat, Arial, sans-serif'
           }}>
@@ -505,7 +585,7 @@ export default function HealthAlerts({ weather, userProfile, spaceWeatherData })
           }}
         >
           <div style={{
-            fontSize: 12,
+            fontSize: 14,
             color: '#f59e0b',
             fontFamily: 'Montserrat, Arial, sans-serif',
             textAlign: 'center'
@@ -532,7 +612,7 @@ export default function HealthAlerts({ weather, userProfile, spaceWeatherData })
               style={{
                 background: `linear-gradient(135deg, ${alert.bgColor}, rgba(255,255,255,0.9))`,
                 borderRadius: 16,
-                padding: 16,
+                padding: 12,
                 border: `2px solid ${alert.color}30`,
                 position: 'relative',
                 overflow: 'hidden',
@@ -556,7 +636,7 @@ export default function HealthAlerts({ weather, userProfile, spaceWeatherData })
               <div style={{
                 display: 'flex',
                 alignItems: 'flex-start',
-                gap: 12,
+                gap: 4,
                 marginLeft: 8
               }}>
                 {/* Иконка с анимацией */}
@@ -592,7 +672,7 @@ export default function HealthAlerts({ weather, userProfile, spaceWeatherData })
                   </div>
                   
                   <div style={{
-                    fontSize: 13,
+                    fontSize: 15,
                     color: '#64748b',
                     marginBottom: 8,
                     fontFamily: 'Montserrat, Arial, sans-serif'
@@ -615,7 +695,7 @@ export default function HealthAlerts({ weather, userProfile, spaceWeatherData })
                         }}
                       >
                         <div style={{
-                          fontSize: 12,
+                          fontSize: 14,
                           color: '#4b5563',
                           marginBottom: 6,
                           fontFamily: 'Montserrat, Arial, sans-serif'
@@ -624,7 +704,7 @@ export default function HealthAlerts({ weather, userProfile, spaceWeatherData })
                         </div>
                         
                         <div style={{
-                          fontSize: 12,
+                          fontSize: 14,
                           fontWeight: 600,
                           color: alert.color,
                           fontFamily: 'Montserrat, Arial, sans-serif'
