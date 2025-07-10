@@ -1,4 +1,4 @@
-// 🏥 healthAnalysis.js - Улучшенная система анализа здоровья с исправленным импортом
+// 🏥 healthAnalysis.js - Исправленная система анализа здоровья
 
 // Медицинские пороги для различных состояний
 const HEALTH_THRESHOLDS = {
@@ -38,27 +38,41 @@ const HEALTH_THRESHOLDS = {
   }
 };
 
-// Простая функция получения данных о магнитных бурях (без внешнего API пока)
+// ИСПРАВЛЕНО: Подключаем реальный API магнитных бурь
 async function getSpaceWeatherData() {
   try {
-    // Заглушка с реалистичными данными пока API не подключен
-    const mockData = {
+    console.log('🌌 Получаем реальные данные космической погоды...');
+    
+    // Динамический импорт реального API
+    const { getCompleteSpaceWeather } = await import('../spaceWeather.js');
+    const spaceWeatherData = await getCompleteSpaceWeather();
+    
+    if (spaceWeatherData && spaceWeatherData.kp_index) {
+      console.log('✅ Данные космической погоды получены:', spaceWeatherData.kp_index);
+      return spaceWeatherData;
+    }
+    
+    // Fallback на заглушку только если API недоступен
+    console.warn('⚠️ API недоступен, используем fallback данные');
+    return {
       kp_index: {
-        current_kp: Math.random() * 3 + 1, // 1-4
+        current_kp: 2.5, // Спокойное состояние
         activity_level: 'quiet',
         trend: 'stable'
       }
     };
     
-    // В будущем здесь будет реальный API
-    // const { getCompleteSpaceWeather } = await import('../spaceWeather');
-    // return await getCompleteSpaceWeather();
-    
-    return mockData;
-    
   } catch (error) {
     console.error('❌ Ошибка получения космической погоды:', error);
-    return null;
+    
+    // Fallback при ошибке
+    return {
+      kp_index: {
+        current_kp: 2.0,
+        activity_level: 'quiet', 
+        trend: 'stable'
+      }
+    };
   }
 }
 
@@ -77,11 +91,15 @@ function getActivityLevelRu(level) {
   return levels[level] || 'Неизвестно';
 }
 
-// Маппинг состояний здоровья пользователя на медицинские коды
+// ИСПРАВЛЕНО: Маппинг состояний здоровья с защитой от undefined
 function mapHealthConditions(userProfile) {
   const conditions = [];
   
-  if (!userProfile?.health) return conditions;
+  // ЗАЩИТА ОТ UNDEFINED - главное исправление!
+  if (!userProfile || !userProfile.health || !Array.isArray(userProfile.health)) {
+    console.log('⚠️ Профиль пользователя или health не определены:', userProfile);
+    return conditions;
+  }
   
   userProfile.health.forEach(condition => {
     switch (condition) {
@@ -100,135 +118,256 @@ function mapHealthConditions(userProfile) {
         conditions.push('asthma', 'respiratory');
         break;
       case 'allergies':
-        conditions.push('allergies');
+        conditions.push('allergies', 'respiratory');
         break;
       case 'arthritis':
         conditions.push('arthritis', 'joints');
         break;
-      case 'healthy':
-        // Не добавляем состояния
-        break;
     }
   });
   
-  return [...new Set(conditions)]; // Убираем дубликаты
+  return conditions;
 }
 
-// Основная функция анализа погодных условий для здоровья
-export async function analyzeWeatherForHealth(weather, userProfile, forecastData = []) {
+// УЛУЧШЕНО: Анализ изменений давления с валидацией данных
+function analyzePressureChanges(forecastData, currentPressure) {
+  if (!forecastData || !Array.isArray(forecastData) || forecastData.length < 2) {
+    return { maxChange: 0, trend: 'stable', periods: [] };
+  }
+  
+  const changes = [];
+  let maxChange = 0;
+  
+  // Анализируем изменения за последние 24 часа
+  for (let i = 1; i < Math.min(forecastData.length, 8); i++) { // 8 точек = 24 часа (каждые 3 часа)
+    const prev = forecastData[i - 1];
+    const curr = forecastData[i];
+    
+    if (prev?.main?.pressure && curr?.main?.pressure) {
+      const change = Math.abs(curr.main.pressure - prev.main.pressure);
+      changes.push(change);
+      maxChange = Math.max(maxChange, change);
+    }
+  }
+  
+  // Добавляем изменение от текущего давления к первому прогнозу
+  if (currentPressure && forecastData[0]?.main?.pressure) {
+    const change = Math.abs(forecastData[0].main.pressure - currentPressure);
+    maxChange = Math.max(maxChange, change);
+  }
+  
+  const avgChange = changes.length > 0 ? changes.reduce((a, b) => a + b, 0) / changes.length : 0;
+  
+  let trend = 'stable';
+  if (avgChange > 8) trend = 'volatile';
+  else if (avgChange > 4) trend = 'changing';
+  
+  return {
+    maxChange: Math.round(maxChange),
+    avgChange: Math.round(avgChange),
+    trend,
+    periods: changes.length
+  };
+}
+
+// УЛУЧШЕНО: Анализ магнитной активности с детальной обработкой
+function analyzeMagneticActivity(spaceWeather, conditions) {
+  if (!spaceWeather?.kp_index || !conditions.includes('meteoropathy')) {
+    return [];
+  }
+  
+  const alerts = [];
+  const kp = spaceWeather.kp_index;
+  const currentKp = kp.current_kp || 0;
+  
+  console.log(`🌌 Анализ магнитной активности: Kp=${currentKp}, уровень=${kp.activity_level}`);
+  
+  // Экстремальная буря (Kp >= 7)
+  if (currentKp >= HEALTH_THRESHOLDS.kp_index.storm) {
+    alerts.push({
+      id: 'magnetic_storm_severe',
+      type: 'critical',
+      icon: '🌌',
+      title: 'Сильная магнитная буря',
+      message: `Экстремальная геомагнитная активность (Kp=${currentKp.toFixed(1)})`,
+      color: '#dc2626',
+      bgColor: '#dc262615',
+      priority: 1,
+      conditions: ['meteoropathy'],
+      advice: [
+        '🚨 Максимально ограничьте физические нагрузки',
+        '😴 Увеличьте продолжительность сна на 2-3 часа',
+        '💧 Пейте много воды (до 3л в день)',
+        '💊 Держите лекарства под рукой',
+        '🧘‍♀️ Практикуйте глубокое дыхание и медитацию',
+        '📱 Минимизируйте использование электроники'
+      ]
+    });
+  }
+  // Умеренная буря (Kp 5-6)
+  else if (currentKp >= HEALTH_THRESHOLDS.kp_index.active) {
+    alerts.push({
+      id: 'magnetic_storm_moderate',
+      type: 'warning',
+      icon: '🌠',
+      title: 'Магнитная буря',
+      message: `Повышенная геомагнитная активность (Kp=${currentKp.toFixed(1)})`,
+      color: '#7c3aed',
+      bgColor: '#7c3aed15',
+      priority: 2,
+      conditions: ['meteoropathy'],
+      advice: [
+        '😴 Увеличьте продолжительность сна на 1-2 часа',
+        '💧 Пейте больше воды (до 2.5л в день)',
+        '🧘‍♀️ Практикуйте релаксацию',
+        '🚫 Избегайте стрессовых ситуаций',
+        '🌿 Больше времени проводите на природе'
+      ]
+    });
+  }
+  // Слабая активность (Kp 4-5)
+  else if (currentKp >= HEALTH_THRESHOLDS.kp_index.unsettled) {
+    alerts.push({
+      id: 'magnetic_activity_mild',
+      type: 'info',
+      icon: '🌙',
+      title: 'Умеренная геомагнитная активность',
+      message: `Небольшие возмущения (Kp=${currentKp.toFixed(1)})`,
+      color: '#6366f1',
+      bgColor: '#6366f115',
+      priority: 3,
+      conditions: ['meteoropathy'],
+      advice: [
+        '💧 Следите за водным балансом',
+        '😴 Обеспечьте качественный сон',
+        '🧘‍♀️ Практикуйте дыхательные упражнения'
+      ]
+    });
+  }
+  
+  return alerts;
+}
+
+// ОСНОВНАЯ ФУНКЦИЯ АНАЛИЗА ЗДОРОВЬЯ
+export async function analyzeHealthRisks(weather, userProfile, forecastData = null) {
+  console.log('🏥 Начинаем анализ рисков для здоровья...');
+  
+  // ДОБАВЛЕНА ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА
+  if (!weather) {
+    console.log('⚠️ Нет данных о погоде');
+    return [];
+  }
+  
+  if (!userProfile) {
+    console.log('⚠️ Нет профиля пользователя');
+    return [];
+  }
+  
+  if (!userProfile.health || !Array.isArray(userProfile.health) || userProfile.health.length === 0) {
+    console.log('⚠️ Не указаны проблемы со здоровьем или health не является массивом');
+    return [];
+  }
+  
   const alerts = [];
   const conditions = mapHealthConditions(userProfile);
   
-  if (conditions.length === 0) return alerts;
+  if (conditions.length === 0) {
+    console.log('ℹ️ Пользователь не указал проблем со здоровьем');
+    return [];
+  }
   
-  // Извлекаем данные о погоде
-  const pressure = weather.details?.pressure || 760;
-  const humidity = weather.details?.humidity || 50;
-  const temp = weather.temp || 20;
-  const windSpeed = parseFloat(weather.details?.wind?.replace(' м/с', '') || '0');
+  console.log('📋 Анализируемые состояния:', conditions);
   
-  console.log('🩺 Анализируем здоровье:', { pressure, humidity, temp, windSpeed, conditions });
+  const { 
+    temp, 
+    pressure, 
+    humidity, 
+    wind_speed: windSpeed = 0,
+    weather: weatherDesc = []
+  } = weather;
 
-  // === КРИТИЧЕСКИЕ АЛЕРТЫ (красные) ===
-  
-  // Экстремально высокое давление
-  if (pressure >= HEALTH_THRESHOLDS.pressure.very_high && 
-      (conditions.includes('hypertension') || conditions.includes('heart_disease'))) {
-    alerts.push({
-      id: 'critical_high_pressure',
-      type: 'critical',
-      icon: '🚨',
-      title: 'КРИТИЧЕСКОЕ: Экстремально высокое давление',
-      message: `${pressure} мм рт.ст. - опасно высокое!`,
-      color: '#dc2626',
-      bgColor: '#dc262615',
-      priority: 1,
-      conditions: ['hypertension', 'heart_disease'],
-      advice: [
-        '🚨 СРОЧНО измерьте артериальное давление',
-        '💊 При необходимости примите лекарства',
-        '🚶‍♂️ Ограничьте физическую активность',
-        '📞 При ухудшении - вызовите врача'
-      ]
-    });
-  }
-  
-  // Экстремально низкое давление
-  if (pressure <= HEALTH_THRESHOLDS.pressure.very_low && 
-      conditions.includes('hypotension')) {
-    alerts.push({
-      id: 'critical_low_pressure',
-      type: 'critical',
-      icon: '⚠️',
-      title: 'КРИТИЧЕСКОЕ: Экстремально низкое давление',
-      message: `${pressure} мм рт.ст. - риск обморока!`,
-      color: '#dc2626',
-      bgColor: '#dc262615',
-      priority: 1,
-      conditions: ['hypotension'],
-      advice: [
-        '☕ СРОЧНО выпейте кофе или сладкий чай',
-        '🍫 Съешьте что-то сладкое',
-        '🚫 Избегайте резких движений',
-        '📞 При головокружении - вызовите помощь'
-      ]
-    });
-  }
-
-  // === ПРЕДУПРЕЖДАЮЩИЕ АЛЕРТЫ (оранжевые) ===
-  
-  // Анализ давления для гипертоников
-  if (pressure >= HEALTH_THRESHOLDS.pressure.high && 
-      conditions.includes('hypertension')) {
-    alerts.push({
-      id: 'high_pressure_warning',
-      type: 'warning',
-      icon: '📈',
-      title: 'Повышенное атмосферное давление',
-      message: `${pressure} мм рт.ст. - следите за самочувствием`,
-      color: '#f59e0b',
-      bgColor: '#f59e0b15',
-      priority: 2,
-      conditions: ['hypertension'],
-      advice: [
-        '🩺 Измерьте артериальное давление утром',
-        '🧂 Ограничьте соль в рационе',
-        '🚶‍♀️ Легкие прогулки вместо интенсивных тренировок',
-        '💧 Пейте больше воды'
-      ]
-    });
-  }
-  
-  // Анализ давления для гипотоников
-  if (pressure <= HEALTH_THRESHOLDS.pressure.low && 
-      conditions.includes('hypotension')) {
-    alerts.push({
-      id: 'low_pressure_warning',
-      type: 'warning',
-      icon: '📉',
-      title: 'Пониженное атмосферное давление',
-      message: `${pressure} мм рт.ст. - возможна слабость`,
-      color: '#f59e0b',
-      bgColor: '#f59e0b15',
-      priority: 2,
-      conditions: ['hypotension'],
-      advice: [
-        '☕ Выпейте кофе или зеленый чай',
-        '🚿 Контрастный душ поможет взбодриться',
-        '🏃‍♀️ Легкая зарядка улучшит тонус',
-        '😴 Спите на высокой подушке'
-      ]
-    });
+  // Анализ атмосферного давления
+  if (pressure && (conditions.includes('hypertension') || conditions.includes('hypotension') || conditions.includes('meteoropathy'))) {
+    if (pressure <= HEALTH_THRESHOLDS.pressure.very_low) {
+      alerts.push({
+        id: 'pressure_very_low',
+        type: 'critical',
+        icon: '📉',
+        title: 'Критически низкое давление',
+        message: `${Math.round(pressure)} мм рт.ст. - опасно для гипотоников`,
+        color: '#dc2626',
+        bgColor: '#dc262615',
+        priority: 1,
+        conditions: ['hypotension', 'meteoropathy'],
+        advice: [
+          '☕ Выпейте крепкий кофе или чай',
+          '🧂 Немного подсоленной воды поможет',
+          '🚫 Избегайте резких движений',
+          '💊 Имейте под рукой тонизирующие препараты',
+          '🛏️ При плохом самочувствии - постельный режим'
+        ]
+      });
+    } else if (pressure <= HEALTH_THRESHOLDS.pressure.low) {
+      alerts.push({
+        id: 'pressure_low',
+        type: 'warning',
+        icon: '📉',
+        title: 'Низкое атмосферное давление',
+        message: `${Math.round(pressure)} мм рт.ст. - возможна слабость`,
+        color: '#f59e0b',
+        bgColor: '#f59e0b15',
+        priority: 2,
+        conditions: ['hypotension', 'meteoropathy'],
+        advice: [
+          '☕ Утренний кофе обязателен',
+          '💧 Пейте больше жидкости',
+          '🚶‍♀️ Легкая физическая активность поможет',
+          '😴 Высыпайтесь (8+ часов сна)'
+        ]
+      });
+    } else if (pressure >= HEALTH_THRESHOLDS.pressure.very_high) {
+      alerts.push({
+        id: 'pressure_very_high',
+        type: 'critical',
+        icon: '📈',
+        title: 'Критически высокое давление',
+        message: `${Math.round(pressure)} мм рт.ст. - опасно для гипертоников`,
+        color: '#dc2626',
+        bgColor: '#dc262615',
+        priority: 1,
+        conditions: ['hypertension', 'heart_disease'],
+        advice: [
+          '💊 Примите назначенные препараты',
+          '🧘‍♀️ Глубокое дыхание и релаксация',
+          '🚫 Исключите физические нагрузки',
+          '💧 Ограничьте потребление соли',
+          '📞 При плохом самочувствии - вызов врача'
+        ]
+      });
+    } else if (pressure >= HEALTH_THRESHOLDS.pressure.high) {
+      alerts.push({
+        id: 'pressure_high',
+        type: 'warning',
+        icon: '📈',
+        title: 'Высокое атмосферное давление',
+        message: `${Math.round(pressure)} мм рт.ст. - контролируйте АД`,
+        color: '#f59e0b',
+        bgColor: '#f59e0b15',
+        priority: 2,
+        conditions: ['hypertension', 'heart_disease'],
+        advice: [
+          '💊 Контролируйте прием лекарств',
+          '🧘‍♀️ Избегайте стрессов',
+          '🚶‍♀️ Только легкие прогулки',
+          '💧 Пейте травяные чаи'
+        ]
+      });
+    }
   }
 
-  // Комплексный анализ для мигрени
+  // Анализ для метеозависимых и склонных к мигрени
   if (conditions.includes('migraine') || conditions.includes('meteoropathy')) {
     const migraineTriggers = [];
-    
-    if (pressure <= HEALTH_THRESHOLDS.pressure.low || 
-        pressure >= HEALTH_THRESHOLDS.pressure.high) {
-      migraineTriggers.push('перепады давления');
-    }
     
     if (humidity >= HEALTH_THRESHOLDS.humidity.very_high) {
       migraineTriggers.push('высокая влажность');
@@ -238,9 +377,12 @@ export async function analyzeWeatherForHealth(weather, userProfile, forecastData
       migraineTriggers.push('сильный ветер');
     }
     
-    if (temp >= HEALTH_THRESHOLDS.temperature.hot || 
-        temp <= HEALTH_THRESHOLDS.temperature.very_cold) {
-      migraineTriggers.push('экстремальная температура');
+    if (temp >= HEALTH_THRESHOLDS.temperature.very_hot) {
+      migraineTriggers.push('сильная жара');
+    }
+    
+    if (weatherDesc.length > 0 && weatherDesc[0].main && weatherDesc[0].main.includes('Rain')) {
+      migraineTriggers.push('дождь');
     }
     
     if (migraineTriggers.length >= 2) {
@@ -258,7 +400,8 @@ export async function analyzeWeatherForHealth(weather, userProfile, forecastData
           '💊 Подготовьте обезболивающие заранее',
           '😎 Носите солнцезащитные очки',
           '🧘‍♀️ Практикуйте релаксацию',
-          '🚫 Избегайте стрессовых ситуаций'
+          '🚫 Избегайте стрессовых ситуаций',
+          '🌙 Приглушите яркий свет дома'
         ]
       });
     } else if (migraineTriggers.length === 1) {
@@ -318,18 +461,36 @@ export async function analyzeWeatherForHealth(weather, userProfile, forecastData
     }
   }
 
-  // Анализ перепадов давления за последние 24 часа
-  if (forecastData && forecastData.length > 0 && 
+  // ИСПРАВЛЕНО: Анализ перепадов давления с улучшенной валидацией
+  if (forecastData && Array.isArray(forecastData) && forecastData.length > 0 && 
       (conditions.includes('meteoropathy') || conditions.includes('migraine'))) {
     
     const pressureChanges = analyzePressureChanges(forecastData, pressure);
     
     if (pressureChanges.maxChange >= 15) {
       alerts.push({
-        id: 'pressure_fluctuation',
+        id: 'pressure_fluctuation_severe',
         type: 'warning',
         icon: '📊',
         title: 'Резкие перепады давления',
+        message: `Изменение на ${pressureChanges.maxChange} мм рт.ст. за сутки`,
+        color: '#dc2626',
+        bgColor: '#dc262615',
+        priority: 1,
+        conditions: ['meteoropathy', 'migraine'],
+        advice: [
+          '💊 Подготовьте необходимые лекарства',
+          '😴 Высыпайтесь перед изменением погоды',
+          '🧘‍♀️ Практикуйте дыхательные техники',
+          '🚫 Избегайте стрессов и переутомления'
+        ]
+      });
+    } else if (pressureChanges.maxChange >= 8) {
+      alerts.push({
+        id: 'pressure_fluctuation_moderate',
+        type: 'info',
+        icon: '📈',
+        title: 'Умеренные изменения давления',
         message: `Изменение на ${pressureChanges.maxChange} мм рт.ст. за сутки`,
         color: '#6366f1',
         bgColor: '#6366f115',
@@ -337,150 +498,42 @@ export async function analyzeWeatherForHealth(weather, userProfile, forecastData
         conditions: ['meteoropathy', 'migraine'],
         advice: [
           '⏰ Будьте готовы к изменению самочувствия',
-          '💊 Подготовьте необходимые лекарства',
-          '😴 Высыпайтесь перед изменением погоды',
-          '🧘‍♀️ Практикуйте дыхательные техники'
+          '💧 Пейте достаточно воды',
+          '😴 Обеспечьте качественный сон'
         ]
       });
     }
   }
 
-  // Получаем данные о магнитных бурях
+  // ИСПРАВЛЕНО: Получаем РЕАЛЬНЫЕ данные о магнитных бурях
   if (conditions.includes('meteoropathy')) {
     try {
+      console.log('🌌 Получаем данные о магнитных бурях...');
       const spaceWeather = await getSpaceWeatherData();
       const magneticAlerts = analyzeMagneticActivity(spaceWeather, conditions);
       alerts.push(...magneticAlerts);
+      console.log(`🌌 Добавлено ${magneticAlerts.length} магнитных алертов`);
     } catch (error) {
       console.error('❌ Ошибка получения данных о магнитных бурях:', error);
     }
   }
   
-  // Сортируем алерты по приоритету
-  return alerts.sort((a, b) => a.priority - b.priority);
+  // Сортируем алерты по приоритету и убираем дубликаты
+  const uniqueAlerts = alerts.filter((alert, index, self) => 
+    index === self.findIndex(a => a.id === alert.id)
+  );
+  
+  const sortedAlerts = uniqueAlerts.sort((a, b) => a.priority - b.priority);
+  
+  console.log(`✅ Анализ завершен. Найдено ${sortedAlerts.length} рисков для здоровья`);
+  
+  return sortedAlerts;
 }
 
-// Анализ магнитной активности
-function analyzeMagneticActivity(spaceWeather, conditions) {
-  if (!spaceWeather?.kp_index || !conditions.includes('meteoropathy')) {
-    return [];
-  }
-  
-  const alerts = [];
-  const kp = spaceWeather.kp_index;
-  
-  // Сильная магнитная буря
-  if (kp.current_kp >= HEALTH_THRESHOLDS.kp_index.storm) {
-    alerts.push({
-      id: 'magnetic_storm_severe',
-      type: 'warning',
-      icon: '🌌',
-      title: 'Сильная магнитная буря',
-      message: `Геомагнитная активность: ${getActivityLevelRu(kp.activity_level)} (Kp=${kp.current_kp})`,
-      color: '#7c3aed',
-      bgColor: '#7c3aed15',
-      priority: 2,
-      conditions: ['meteoropathy'],
-      advice: [
-        '😴 Увеличьте продолжительность сна на 1-2 часа',
-        '💧 Пейте больше воды (до 2.5л в день)',
-        '🧘‍♀️ Практикуйте медитацию и релаксацию',
-        '📱 Ограничьте использование гаджетов',
-        '🚫 Избегайте стрессовых ситуаций'
-      ]
-    });
-  }
-  // Умеренная активность
-  else if (kp.current_kp >= HEALTH_THRESHOLDS.kp_index.active) {
-    alerts.push({
-      id: 'magnetic_activity_moderate',
-      type: 'info',
-      icon: '🌠',
-      title: 'Повышенная геомагнитная активность',
-      message: `${getActivityLevelRu(kp.activity_level)} (Kp=${kp.current_kp})`,
-      color: '#6366f1',
-      bgColor: '#6366f115',
-      priority: 3,
-      conditions: ['meteoropathy'],
-      advice: [
-        '😴 Обеспечьте качественный сон',
-        '🚶‍♀️ Больше времени проводите на свежем воздухе',
-        '🥗 Легкое питание, избегайте тяжелой пищи',
-        '💡 При головной боли - отдохните в тишине'
-      ]
-    });
-  }
-  
-  return alerts;
-}
-
-// Анализ изменений давления
-function analyzePressureChanges(forecastData, currentPressure) {
-  if (!forecastData || forecastData.length === 0) {
-    return { maxChange: 0, trend: 'stable' };
-  }
-  
-  const pressureValues = [currentPressure];
-  
-  // Извлекаем давление из прогноза
-  forecastData.forEach(item => {
-    if (item.details?.pressure) {
-      pressureValues.push(item.details.pressure);
-    }
-  });
-  
-  if (pressureValues.length < 2) {
-    return { maxChange: 0, trend: 'stable' };
-  }
-  
-  const minPressure = Math.min(...pressureValues);
-  const maxPressure = Math.max(...pressureValues);
-  const maxChange = Math.round(maxPressure - minPressure);
-  
-  // Определяем общий тренд
-  const first = pressureValues[0];
-  const last = pressureValues[pressureValues.length - 1];
-  const trend = last > first + 5 ? 'rising' : 
-                last < first - 5 ? 'falling' : 'stable';
-  
-  return { maxChange, trend, minPressure, maxPressure };
-}
-
-// Функция для получения рекомендаций по времени дня
-export function getTimeBasedHealthAdvice(conditions, currentHour) {
-  const advice = [];
-  
-  // Утренние рекомендации для метеозависимых
-  if (conditions.includes('meteoropathy') && currentHour >= 6 && currentHour <= 10) {
-    advice.push({
-      time: 'morning',
-      icon: '🌅',
-      text: 'Утром медленно вставайте с кровати, измерьте давление'
-    });
-  }
-  
-  // Вечерние рекомендации
-  if (conditions.includes('hypertension') && currentHour >= 18 && currentHour <= 22) {
-    advice.push({
-      time: 'evening',
-      icon: '🌆',
-      text: 'Вечером избегайте соленой пищи и кофеина'
-    });
-  }
-  
-  return advice;
-}
-
-// Экспорт устаревших функций для совместимости с существующим кодом
-export async function getMagneticStormData() {
-  const spaceWeather = await getSpaceWeatherData();
-  return spaceWeather?.kp_index || null;
-}
-
-export function analyzeMagneticStorms(stormData, userProfile) {
-  if (!stormData || !userProfile?.health?.includes('meteosensitive')) {
-    return [];
-  }
-  
-  return analyzeMagneticActivity({ kp_index: stormData }, ['meteoropathy']);
-}
+// Экспорт для тестирования
+export { 
+  mapHealthConditions, 
+  analyzePressureChanges, 
+  analyzeMagneticActivity,
+  HEALTH_THRESHOLDS 
+};

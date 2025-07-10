@@ -1,86 +1,196 @@
-// 🏥 HealthAlerts.js - Обновленные медицинские алерты с новой системой анализа
+// HealthAlerts.js с унифицированной шириной блоков
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { analyzeWeatherForHealth } from './utils/healthAnalysis';
 
-const HealthAlerts = ({ weather, userProfile, forecastData = [] }) => {
+// Функция анализа здоровья 
+function analyzeHealthRisks(weather, userProfile, spaceWeatherData) {
+  const alerts = [];
+  
+  if (!weather || !userProfile) return alerts;
+  
+  const { temp, pressure, humidity, wind_speed: windSpeed, weather: weatherDesc } = weather;
+  const conditions = userProfile.medicalConditions || [];
+  const age = userProfile.age;
+  
+  // Анализ атмосферного давления
+  if (pressure && (pressure < 1000 || pressure > 1025)) {
+    if (conditions.includes('hypertension') || conditions.includes('cardiovascular') || age >= 60) {
+      alerts.push({
+        id: 'pressure',
+        type: pressure < 1000 ? 'critical' : 'warning',
+        icon: pressure < 1000 ? '📉' : '📈',
+        title: pressure < 1000 ? 'Низкое давление' : 'Высокое давление',
+        description: `Атмосферное давление ${Math.round(pressure)} мм рт.ст.`,
+        details: pressure < 1000 
+          ? 'Может вызывать головные боли, слабость и ухудшение самочувствия у людей с гипотонией'
+          : 'Может способствовать повышению артериального давления у гипертоников',
+        recommendation: pressure < 1000
+          ? 'Больше отдыхайте, пейте воду, избегайте резких движений'
+          : 'Ограничьте физические нагрузки, контролируйте давление',
+        color: pressure < 1000 ? '#ef4444' : '#f59e0b',
+        bgColor: pressure < 1000 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)'
+      });
+    }
+  }
+
+  // Анализ температуры и возраста
+  if (temp !== undefined) {
+    if ((temp < -15 || temp > 30) && (age <= 5 || age >= 65)) {
+      alerts.push({
+        id: 'temperature',
+        type: 'warning',
+        icon: temp < -15 ? '🥶' : '🥵',
+        title: temp < -15 ? 'Экстремальный холод' : 'Экстремальная жара',
+        description: `Температура ${Math.round(temp)}°C опасна для вашей возрастной группы`,
+        details: temp < -15 
+          ? 'Повышенный риск переохлаждения и обморожения' 
+          : 'Риск теплового удара и обезвоживания',
+        recommendation: temp < -15
+          ? 'Сократите время на улице, теплая одежда обязательна'
+          : 'Избегайте длительного пребывания на солнце, пейте больше воды',
+        color: '#f59e0b',
+        bgColor: 'rgba(245, 158, 11, 0.1)'
+      });
+    }
+  }
+
+  // Анализ влажности при астме
+  if (humidity !== undefined && conditions.includes('asthma')) {
+    if (humidity > 80) {
+      alerts.push({
+        id: 'humidity',
+        type: 'warning',
+        icon: '💨',
+        title: 'Высокая влажность',
+        description: `Влажность ${humidity}% может ухудшить дыхание`,
+        details: 'Высокая влажность способствует размножению плесени и пылевых клещей',
+        recommendation: 'Имейте при себе ингалятор, избегайте интенсивных нагрузок',
+        color: '#3b82f6',
+        bgColor: 'rgba(59, 130, 246, 0.1)'
+      });
+    }
+  }
+
+  // Анализ ветра при мигренях
+  if (windSpeed > 7 && conditions.includes('migraine')) {
+    alerts.push({
+      id: 'wind',
+      type: 'warning',
+      icon: '🌪️',
+      title: 'Сильный ветер',
+      description: `Ветер ${Math.round(windSpeed)} м/с может спровоцировать мигрень`,
+      details: 'Резкие изменения атмосферного давления при ветре часто вызывают головные боли',
+      recommendation: 'Примите профилактические меры, избегайте открытых пространств',
+      color: '#8b5cf6',
+      bgColor: 'rgba(139, 92, 246, 0.1)'
+    });
+  }
+
+  // Анализ магнитных бурь
+  if (spaceWeatherData && spaceWeatherData.length > 0) {
+    const currentStorm = spaceWeatherData.find(item => {
+      const stormDate = new Date(item.message_issue_time);
+      const today = new Date();
+      return stormDate.toDateString() === today.toDateString();
+    });
+
+    if (currentStorm && (conditions.includes('cardiovascular') || conditions.includes('hypertension'))) {
+      alerts.push({
+        id: 'magnetic',
+        type: 'warning',
+        icon: '🌌',
+        title: 'Магнитная буря',
+        description: 'Геомагнитная активность повышена',
+        details: 'Магнитные бури могут влиять на сердечно-сосудистую систему и артериальное давление',
+        recommendation: 'Контролируйте давление, избегайте стрессов, больше отдыхайте',
+        color: '#ec4899',
+        bgColor: 'rgba(236, 72, 153, 0.1)'
+      });
+    }
+  }
+
+  return alerts;
+}
+
+// Компонент анимированной стрелки
+const ChevronIcon = ({ isOpen }) => (
+  <motion.svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    animate={{ rotate: isOpen ? 180 : 0 }}
+    transition={{ duration: 0.3 }}
+    style={{ color: "#6b7280" }}
+  >
+    <path
+      d="M6 9L12 15L18 9"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </motion.svg>
+);
+
+export default function HealthAlerts({ weather, userProfile, spaceWeatherData }) {
   const [healthAlerts, setHealthAlerts] = useState([]);
-  const [showDetails, setShowDetails] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showDetails, setShowDetails] = useState({});
   const [lastUpdate, setLastUpdate] = useState(null);
 
   useEffect(() => {
-    if (!weather || !userProfile?.health) return;
+    if (!weather || !userProfile) return;
 
-    const analyzeHealth = async () => {
-      setLoading(true);
-      setError(null);
-      
-      try {
-        console.log('🩺 Начинаем анализ здоровья...', { weather, userProfile });
-        
-        // Получаем алерты с учетом магнитных бурь
-        const alerts = await analyzeWeatherForHealth(weather, userProfile, forecastData);
-        
-        setHealthAlerts(alerts);
-        setLastUpdate(new Date());
-        
-        console.log('✅ Анализ здоровья завершен:', { 
-          alertsCount: alerts.length
-        });
-        
-      } catch (error) {
-        console.error('❌ Ошибка анализа здоровья:', error);
-        setError('Не удалось полностью проанализировать влияние погоды на здоровье');
-        
-        // Показываем базовые алерты даже при ошибке
-        try {
-          const basicAlerts = await analyzeWeatherForHealth(weather, userProfile, []);
-          setHealthAlerts(basicAlerts);
-        } catch (basicError) {
-          console.error('❌ Критическая ошибка:', basicError);
-          setHealthAlerts([]);
-        }
-        
-      } finally {
-        setLoading(false);
-      }
-    };
+    setLoading(true);
+    setError(null);
 
-    analyzeHealth();
-  }, [weather, userProfile, forecastData]);
+    try {
+      const alerts = analyzeHealthRisks(weather, userProfile, spaceWeatherData);
+      setHealthAlerts(alerts);
+      setLastUpdate(new Date());
+    } catch (err) {
+      console.error('Ошибка анализа здоровья:', err);
+      setError('Ошибка анализа данных о здоровье');
+    } finally {
+      setLoading(false);
+    }
+  }, [weather, userProfile, spaceWeatherData]);
 
-  // Если пользователь не указал проблемы со здоровьем
-  if (!userProfile?.health?.length || (userProfile.health.includes('healthy') && userProfile.health.length === 1)) {
+  // Если нет профиля пользователя
+  if (!userProfile) {
+    return null;
+  }
+
+  // Если нет медицинских состояний в профиле
+  if (!userProfile.medicalConditions || userProfile.medicalConditions.length === 0) {
     return (
-      <div style={{ 
-        margin: '10px auto',
-        maxWidth: '340px',
-        width: '100%'
-      }}>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          style={{
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
-            borderRadius: 16,
-            padding: 16,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-            border: '1px solid rgba(255,255,255,0.3)',
-            textAlign: 'center',
-            width: '100%'
-          }}
-        >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        style={{
+          background: 'rgba(255, 255, 255, 0.9)',
+          borderRadius: 16,
+          padding: 16,
+          margin: "16px auto 0", // ← ИСПРАВЛЕНО: теперь как у других блоков
+          maxWidth: 340, // ← ИСПРАВЛЕНО: убрали кавычки
+          width: "100%",
+          boxSizing: "border-box", // ← ДОБАВЛЕНО
+          backdropFilter: 'blur(10px)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+          textAlign: 'center'
+        }}
+      >
         <div style={{
           fontSize: 16,
           color: '#10b981',
           fontFamily: 'Montserrat, Arial, sans-serif',
           marginBottom: 4
         }}>
-          💪 У вас отличное здоровье!
+          ✅ Отличное здоровье!
         </div>
         <div style={{
           fontSize: 12,
@@ -104,12 +214,13 @@ const HealthAlerts = ({ weather, userProfile, forecastData = [] }) => {
           backdropFilter: 'blur(20px)',
           borderRadius: 16,
           padding: 16,
-          margin: '10px auto', // ← Изменили на auto для центрирования
+          margin: "16px auto 0", // ← ИСПРАВЛЕНО: теперь как у других блоков
+          maxWidth: 340, // ← ИСПРАВЛЕНО: убрали кавычки
+          width: "100%",
+          boxSizing: "border-box", // ← ДОБАВЛЕНО
           boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
           border: '1px solid rgba(255,255,255,0.3)',
-          textAlign: 'center',
-          maxWidth: '340px', // ← Ограничиваем максимальную ширину как у других блоков
-          width: '100%' // ← Полная ширина в рамках maxWidth
+          textAlign: 'center'
         }}
       >
         <div style={{
@@ -153,9 +264,10 @@ const HealthAlerts = ({ weather, userProfile, forecastData = [] }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       style={{ 
-        margin: '10px auto', // ← Центрируем основной контейнер
-        maxWidth: '340px', // ← Ограничиваем ширину как у других блоков
-        width: '100%'
+        margin: "16px auto 0", // ← ИСПРАВЛЕНО: теперь как у других блоков
+        maxWidth: 340, // ← ИСПРАВЛЕНО: убрали кавычки
+        width: "100%",
+        boxSizing: "border-box" // ← ДОБАВЛЕНО
       }}
     >
       {/* Заголовок блока с индикатором обновления */}
@@ -287,146 +399,76 @@ const HealthAlerts = ({ weather, userProfile, forecastData = [] }) => {
                   transition={{
                     duration: alert.type === 'critical' ? 1 : 2,
                     repeat: alert.type === 'critical' ? Infinity : 0,
-                    repeatType: "reverse"
+                    ease: "easeInOut"
                   }}
                 >
                   {alert.icon}
                 </motion.span>
 
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  {/* Заголовок */}
+                {/* Текстовая информация */}
+                <div style={{ flex: 1 }}>
                   <div style={{
                     fontSize: 16,
-                    fontWeight: 700,
-                    color: alert.color,
-                    marginBottom: 4,
-                    fontFamily: 'Montserrat, Arial, sans-serif',
-                    lineHeight: 1.2
+                    fontWeight: 600,
+                    color: '#1e293b',
+                    marginBottom: 2,
+                    fontFamily: 'Montserrat, Arial, sans-serif'
                   }}>
                     {alert.title}
                   </div>
-
-                  {/* Сообщение */}
+                  
                   <div style={{
-                    fontSize: 14,
-                    color: '#374151',
+                    fontSize: 13,
+                    color: '#64748b',
                     marginBottom: 8,
-                    fontFamily: 'Montserrat, Arial, sans-serif',
-                    lineHeight: 1.3
+                    fontFamily: 'Montserrat, Arial, sans-serif'
                   }}>
-                    {alert.message}
+                    {alert.description}
                   </div>
 
-                  {/* Индикатор развернутости */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between'
-                  }}>
-                    <div style={{
-                      fontSize: 12,
-                      color: '#64748b',
-                      fontFamily: 'Montserrat, Arial, sans-serif'
-                    }}>
-                      {showDetails[alert.id] ? 'Скрыть советы' : 'Показать советы'}
-                    </div>
-                    
-                    <motion.div
-                      animate={{ rotate: showDetails[alert.id] ? 180 : 0 }}
-                      transition={{ duration: 0.3 }}
-                      style={{
-                        fontSize: 12,
-                        color: alert.color,
-                        fontWeight: 'bold'
-                      }}
-                    >
-                      ▼
-                    </motion.div>
-                  </div>
+                  {/* Детальная информация (раскрывающаяся) */}
+                  <AnimatePresence>
+                    {showDetails[alert.id] && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        style={{
+                          borderTop: '1px solid rgba(107, 114, 128, 0.2)',
+                          paddingTop: 8,
+                          marginTop: 8
+                        }}
+                      >
+                        <div style={{
+                          fontSize: 12,
+                          color: '#4b5563',
+                          marginBottom: 6,
+                          fontFamily: 'Montserrat, Arial, sans-serif'
+                        }}>
+                          {alert.details}
+                        </div>
+                        
+                        <div style={{
+                          fontSize: 12,
+                          fontWeight: 600,
+                          color: alert.color,
+                          fontFamily: 'Montserrat, Arial, sans-serif'
+                        }}>
+                          💡 {alert.recommendation}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-              </div>
 
-              {/* Развернутые советы */}
-              <AnimatePresence>
-                {showDetails[alert.id] && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    style={{ overflow: 'hidden' }}
-                  >
-                    <div style={{
-                      marginTop: 16,
-                      marginLeft: 44, // Выравниваем с текстом
-                      paddingTop: 12,
-                      borderTop: `1px solid ${alert.color}30`
-                    }}>
-                      <div style={{
-                        fontSize: 13,
-                        fontWeight: 600,
-                        color: alert.color,
-                        marginBottom: 8,
-                        fontFamily: 'Montserrat, Arial, sans-serif'
-                      }}>
-                        💡 Рекомендации:
-                      </div>
-                      
-                      {alert.advice?.map((tip, tipIndex) => (
-                        <motion.div
-                          key={tipIndex}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: tipIndex * 0.1 }}
-                          style={{
-                            fontSize: 12,
-                            color: '#4b5563',
-                            marginBottom: 4,
-                            fontFamily: 'Montserrat, Arial, sans-serif',
-                            lineHeight: 1.4
-                          }}
-                        >
-                          {tip}
-                        </motion.div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                {/* Стрелка раскрытия */}
+                <ChevronIcon isOpen={showDetails[alert.id]} />
+              </div>
             </motion.div>
           ))}
         </AnimatePresence>
       </div>
-
-      {/* Дисклеймер */}
-      <div style={{
-        marginTop: 16,
-        padding: 12,
-        background: 'rgba(248, 250, 252, 0.8)',
-        borderRadius: 12,
-        border: '1px solid rgba(226, 232, 240, 0.5)'
-      }}>
-        <div style={{
-          fontSize: 10,
-          color: '#64748b',
-          textAlign: 'center',
-          fontFamily: 'Montserrat, Arial, sans-serif',
-          lineHeight: 1.4
-        }}>
-          ⚠️ Рекомендации носят информационный характер. 
-          При ухудшении самочувствия обратитесь к врачу.
-        </div>
-      </div>
-
-      {/* CSS для анимации загрузки */}
-      <style jsx>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </motion.div>
   );
-};
-
-export default HealthAlerts;
+}

@@ -1,229 +1,184 @@
-// Achievements.js - Система достижений и геймификации
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+// Achievements.js с унифицированной шириной блоков
 
-// Список всех достижений
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// Система достижений и очков
 const ACHIEVEMENTS = {
-  first_check: {
-    id: 'first_check',
+  firstCheck: {
+    id: 'firstCheck',
     title: 'Новичок',
     description: 'Первая проверка погоды',
     icon: '🌤️',
     points: 10,
     condition: (stats) => stats.totalChecks >= 1
   },
-  daily_user: {
-    id: 'daily_user',
-    title: 'Постоянный клиент',
+  weekStreak: {
+    id: 'weekStreak',
+    title: 'Постоянный',
     description: '7 дней подряд',
-    icon: '🗓️',
+    icon: '📅',
     points: 50,
     condition: (stats) => stats.consecutiveDays >= 7
   },
-  weather_expert: {
-    id: 'weather_expert',
+  monthStreak: {
+    id: 'monthStreak',
     title: 'Метеоролог',
     description: '30 дней подряд',
-    icon: '🌡️',
+    icon: '🌦️',
     points: 200,
     condition: (stats) => stats.consecutiveDays >= 30
   },
-  storm_chaser: {
-    id: 'storm_chaser',
-    title: 'Охотник за штормами',
-    description: 'Проверка при экстремальной погоде',
+  extremeWeather: {
+    id: 'extremeWeather',
+    title: 'Погодный воин',
+    description: 'Проверка в экстремальную погоду',
     icon: '⛈️',
-    points: 30,
+    points: 25,
     condition: (stats) => stats.extremeWeatherChecks >= 1
   },
-  early_bird: {
-    id: 'early_bird',
+  earlyBird: {
+    id: 'earlyBird',
     title: 'Ранняя пташка',
-    description: 'Проверка погоды до 7 утра',
+    description: 'Проверка до 7 утра',
     icon: '🌅',
-    points: 25,
-    condition: (stats) => stats.earlyChecks >= 1
+    points: 15,
+    condition: (stats) => stats.earlyChecks >= 5
   },
-  night_owl: {
-    id: 'night_owl',
-    title: 'Сова',
-    description: 'Проверка погоды после 23:00',
-    icon: '🦉',
-    points: 25,
-    condition: (stats) => stats.lateChecks >= 1
-  },
-  globe_trotter: {
-    id: 'globe_trotter',
-    title: 'Путешественник',
-    description: 'Проверка погоды в 10 разных городах',
-    icon: '🌍',
-    points: 100,
-    condition: (stats) => stats.uniqueCities.length >= 10
-  },
-  premium_user: {
-    id: 'premium_user',
-    title: 'VIP клиент',
-    description: 'Активация Premium',
-    icon: '💎',
-    points: 500,
-    condition: (stats) => stats.isPremium
+  nightOwl: {
+    id: 'nightOwl',
+    title: 'Полуночник',
+    description: 'Проверка после 11 вечера',
+    icon: '🌙',
+    points: 15,
+    condition: (stats) => stats.lateChecks >= 5
   }
 };
 
 // Уровни пользователя
-const LEVELS = [
-  { level: 1, minPoints: 0, title: 'Новичок', color: '#94a3b8', icon: '🌱' },
-  { level: 2, minPoints: 50, title: 'Любитель', color: '#3b82f6', icon: '🌿' },
-  { level: 3, minPoints: 150, title: 'Знаток', color: '#10b981', icon: '🌳' },
-  { level: 4, minPoints: 300, title: 'Эксперт', color: '#f59e0b', icon: '⭐' },
-  { level: 5, minPoints: 600, title: 'Мастер', color: '#ef4444', icon: '🏆' },
-  { level: 6, minPoints: 1000, title: 'Легенда', color: '#8b5cf6', icon: '👑' }
+const USER_LEVELS = [
+  { level: 1, title: 'Новичок', minPoints: 0, icon: '🌱', color: '#10b981' },
+  { level: 2, title: 'Любитель', minPoints: 50, icon: '☀️', color: '#f59e0b' },
+  { level: 3, title: 'Энтузиаст', minPoints: 150, icon: '🌤️', color: '#3b82f6' },
+  { level: 4, title: 'Эксперт', minPoints: 300, icon: '⛅', color: '#8b5cf6' },
+  { level: 5, title: 'Метеоролог', minPoints: 500, icon: '🌦️', color: '#ec4899' },
+  { level: 6, title: 'Мастер погоды', minPoints: 1000, icon: '⛈️', color: '#ef4444' }
 ];
 
-// Функции для работы с достижениями
-export function getGameStats() {
-  try {
-    const stats = localStorage.getItem('gameStats');
-    return stats ? JSON.parse(stats) : {
-      totalPoints: 0,
-      totalChecks: 0,
-      consecutiveDays: 0,
-      lastCheckDate: null,
-      extremeWeatherChecks: 0,
-      earlyChecks: 0,
-      lateChecks: 0,
-      uniqueCities: [],
-      unlockedAchievements: [],
-      isPremium: false
-    };
-  } catch {
-    return {
-      totalPoints: 0,
-      totalChecks: 0,
-      consecutiveDays: 0,
-      lastCheckDate: null,
-      extremeWeatherChecks: 0,
-      earlyChecks: 0,
-      lateChecks: 0,
-      uniqueCities: [],
-      unlockedAchievements: [],
-      isPremium: false
-    };
+// Функции для работы с localStorage
+const getGameStats = () => {
+  const saved = localStorage.getItem('gameProgress');
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch (e) {
+      console.error('Ошибка загрузки прогресса:', e);
+    }
   }
-}
+  
+  return {
+    totalPoints: 0,
+    totalChecks: 0,
+    consecutiveDays: 0,
+    lastCheckDate: null,
+    unlockedAchievements: [],
+    extremeWeatherChecks: 0,
+    earlyChecks: 0,
+    lateChecks: 0
+  };
+};
 
-export function saveGameStats(stats) {
+const saveGameStats = (stats) => {
   try {
-    localStorage.setItem('gameStats', JSON.stringify(stats));
-  } catch (error) {
-    console.error('Ошибка сохранения статистики игры:', error);
+    localStorage.setItem('gameProgress', JSON.stringify(stats));
+    // Отправляем событие обновления статистики
+    window.dispatchEvent(new CustomEvent('statsUpdated', { detail: stats }));
+  } catch (e) {
+    console.error('Ошибка сохранения прогресса:', e);
   }
-}
+};
 
-export function recordWeatherCheck(city, weather, isPremium = false) {
+// Функция записи проверки погоды
+const recordWeatherCheck = (weather) => {
   const stats = getGameStats();
   const now = new Date();
   const today = now.toDateString();
-  const hour = now.getHours();
   
-  // Увеличиваем общее количество проверок
-  stats.totalChecks++;
+  // Обновляем статистику
+  stats.totalChecks += 1;
   
   // Проверяем последовательные дни
-  if (stats.lastCheckDate === today) {
-    // Уже проверяли сегодня, не увеличиваем счетчик
-  } else if (stats.lastCheckDate === new Date(now.getTime() - 24 * 60 * 60 * 1000).toDateString()) {
-    // Вчера проверяли, продолжаем серию
-    stats.consecutiveDays++;
+  if (stats.lastCheckDate) {
+    const lastDate = new Date(stats.lastCheckDate);
+    const daysDiff = Math.floor((now - lastDate) / (1000 * 60 * 60 * 24));
+    
+    if (daysDiff === 1) {
+      stats.consecutiveDays += 1;
+    } else if (daysDiff > 1) {
+      stats.consecutiveDays = 1;
+    }
   } else {
-    // Прерван цикл, начинаем заново
     stats.consecutiveDays = 1;
   }
   
   stats.lastCheckDate = today;
   
-  // Проверяем уникальные города
-  if (!stats.uniqueCities.includes(city)) {
-    stats.uniqueCities.push(city);
-  }
-  
   // Проверяем экстремальную погоду
-  if (weather && (
-    weather.temp <= -10 || weather.temp >= 35 ||
-    weather.desc.includes('гроза') || weather.desc.includes('шторм') ||
-    weather.desc.includes('снег')
-  )) {
-    stats.extremeWeatherChecks++;
+  if (weather && (weather.temp < -15 || weather.temp > 35 || weather.wind_speed > 15)) {
+    stats.extremeWeatherChecks += 1;
   }
   
   // Проверяем время
+  const hour = now.getHours();
   if (hour < 7) {
-    stats.earlyChecks++;
+    stats.earlyChecks += 1;
   } else if (hour >= 23) {
-    stats.lateChecks++;
+    stats.lateChecks += 1;
   }
   
-  // Обновляем Premium статус
-  stats.isPremium = isPremium;
-  
-  // Проверяем новые достижения
-  const newAchievements = checkNewAchievements(stats);
-  
-  // Добавляем очки за новые достижения
-  newAchievements.forEach(achievement => {
-    stats.totalPoints += ACHIEVEMENTS[achievement].points;
-    if (!stats.unlockedAchievements.includes(achievement)) {
-      stats.unlockedAchievements.push(achievement);
-    }
-  });
-  
-  // Базовые очки за проверку
-  stats.totalPoints += 5;
+  // Проверяем достижения
+  checkAchievements(stats);
   
   saveGameStats(stats);
-  
-  return {
-    stats,
-    newAchievements,
-    pointsEarned: 5 + newAchievements.reduce((sum, id) => sum + ACHIEVEMENTS[id].points, 0)
-  };
-}
+  return stats;
+};
 
-function checkNewAchievements(stats) {
-  const newAchievements = [];
-  
+// Проверка достижений
+const checkAchievements = (stats) => {
   Object.values(ACHIEVEMENTS).forEach(achievement => {
     if (!stats.unlockedAchievements.includes(achievement.id) && achievement.condition(stats)) {
-      newAchievements.push(achievement.id);
+      stats.unlockedAchievements.push(achievement.id);
+      stats.totalPoints += achievement.points;
+      
+      // Отправляем событие нового достижения
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('newAchievement', { 
+          detail: { achievement: achievement.id } 
+        }));
+      }, 1000);
     }
   });
-  
-  return newAchievements;
-}
+};
 
-export function getUserLevel(points) {
-  let userLevel = LEVELS[0];
-  
-  for (const level of LEVELS) {
-    if (points >= level.minPoints) {
-      userLevel = level;
-    } else {
-      break;
+// Получение текущего уровня пользователя
+const getUserLevel = (points) => {
+  for (let i = USER_LEVELS.length - 1; i >= 0; i--) {
+    if (points >= USER_LEVELS[i].minPoints) {
+      return USER_LEVELS[i];
     }
   }
-  
-  return userLevel;
-}
+  return USER_LEVELS[0];
+};
 
-export function getProgressToNextLevel(points) {
+// Получение прогресса до следующего уровня
+const getProgressToNextLevel = (points) => {
   const currentLevel = getUserLevel(points);
-  const nextLevelIndex = LEVELS.findIndex(l => l.level === currentLevel.level) + 1;
+  const nextLevel = USER_LEVELS.find(level => level.minPoints > points);
   
-  if (nextLevelIndex >= LEVELS.length) {
+  if (!nextLevel) {
     return { progress: 100, pointsNeeded: 0, nextLevel: null };
   }
   
-  const nextLevel = LEVELS[nextLevelIndex];
   const pointsInCurrentLevel = points - currentLevel.minPoints;
   const pointsNeededForNextLevel = nextLevel.minPoints - currentLevel.minPoints;
   const progress = Math.min(100, (pointsInCurrentLevel / pointsNeededForNextLevel) * 100);
@@ -233,7 +188,7 @@ export function getProgressToNextLevel(points) {
     pointsNeeded: nextLevel.minPoints - points,
     nextLevel
   };
-}
+};
 
 // Компонент уведомления о достижении
 const AchievementNotification = ({ achievement, onClose }) => {
@@ -304,7 +259,10 @@ const Achievements = ({ stats }) => {
       backdropFilter: 'blur(20px)',
       borderRadius: 16,
       padding: 16,
-      margin: '10px 0',
+      margin: "16px auto 0", // ← ИСПРАВЛЕНО: теперь как у других блоков
+      maxWidth: 340, // ← ДОБАВЛЕНО: ограничение ширины как у других блоков
+      width: "100%", // ← ДОБАВЛЕНО: полная ширина в рамках maxWidth
+      boxSizing: "border-box", // ← ДОБАВЛЕНО: правильный расчет размеров
       boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
       border: '1px solid rgba(255,255,255,0.3)'
     }}>
@@ -404,16 +362,17 @@ const Achievements = ({ stats }) => {
               color: '#64748b',
               fontFamily: 'Montserrat, Arial, sans-serif'
             }}>
-              До уровня {levelProgress.nextLevel.level}
+              До {levelProgress.nextLevel.title}
             </span>
             <span style={{
               fontSize: 10,
               color: '#64748b',
               fontFamily: 'Montserrat, Arial, sans-serif'
             }}>
-              -{levelProgress.pointsNeeded} очков
+              {levelProgress.pointsNeeded} очков
             </span>
           </div>
+          
           <div style={{
             width: '100%',
             height: 6,
@@ -424,7 +383,7 @@ const Achievements = ({ stats }) => {
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${levelProgress.progress}%` }}
-              transition={{ duration: 1, ease: 'easeOut' }}
+              transition={{ duration: 1, ease: "easeOut" }}
               style={{
                 height: '100%',
                 background: `linear-gradient(90deg, ${userLevel.color}, ${levelProgress.nextLevel.color})`,
@@ -442,19 +401,20 @@ const Achievements = ({ stats }) => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            style={{ overflow: 'hidden' }}
+            transition={{ duration: 0.3 }}
+            style={{ paddingTop: 12, borderTop: '1px solid rgba(0,0,0,0.1)' }}
           >
-            <div style={{
-              borderTop: '1px solid rgba(0,0,0,0.1)',
-              paddingTop: 12,
-              marginTop: 12
-            }}>
+            <div style={{ marginBottom: 12 }}>
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: 8,
-                marginBottom: 12
+                fontSize: 12,
+                fontWeight: 600,
+                color: '#1e293b',
+                marginBottom: 8,
+                fontFamily: 'Montserrat, Arial, sans-serif'
               }}>
+                Статистика:
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 <div style={{ textAlign: 'center', padding: 8, background: 'rgba(59, 130, 246, 0.1)', borderRadius: 8 }}>
                   <div style={{ fontSize: 18, fontWeight: 700, color: '#3b82f6' }}>{stats.totalChecks}</div>
                   <div style={{ fontSize: 10, color: '#64748b' }}>Проверок</div>
@@ -572,5 +532,5 @@ export default function AchievementsSystem() {
   );
 }
 
-// Экспортируем также компонент достижений отдельно
-export { Achievements, AchievementNotification };
+// Экспортируем функции для использования в других компонентах
+export { recordWeatherCheck, getGameStats, Achievements, AchievementNotification };
