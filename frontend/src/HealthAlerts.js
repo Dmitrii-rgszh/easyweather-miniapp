@@ -1,44 +1,177 @@
-// HealthAlerts.js с унифицированной шириной блоков
+// HealthAlerts.js - ПОЛНОСТЬЮ ИСПРАВЛЕННЫЙ с унифицированной структурой
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Функция анализа здоровья 
+// Медицинские пороги для различных состояний
+const HEALTH_THRESHOLDS = {
+  pressure: {
+    very_low: 735,
+    low: 745,
+    normal_low: 750,
+    normal_high: 765,
+    high: 770,
+    very_high: 780
+  },
+  humidity: {
+    low: 30,
+    comfortable: 60,
+    high: 75,
+    very_high: 85
+  },
+  temperature: {
+    very_cold: 0,
+    cold: 10,
+    cool: 18,
+    warm: 25,
+    hot: 30,
+    very_hot: 35
+  },
+  wind: {
+    calm: 3,
+    light: 8,
+    moderate: 15,
+    strong: 25
+  }
+};
+
+// ИСПРАВЛЕНО: Унифицированная функция маппинга состояний здоровья
+function mapHealthConditions(userProfile) {
+  const conditions = [];
+  
+  // ЗАЩИТА ОТ UNDEFINED - главное исправление!
+  if (!userProfile) {
+    console.log('⚠️ Профиль пользователя не определен');
+    return conditions;
+  }
+
+  // Проверяем оба возможных поля для совместимости
+  let healthArray = [];
+  if (userProfile.health && Array.isArray(userProfile.health)) {
+    healthArray = userProfile.health;
+  } else if (userProfile.medicalConditions && Array.isArray(userProfile.medicalConditions)) {
+    healthArray = userProfile.medicalConditions;
+  } else {
+    console.log('⚠️ Не найдены данные о здоровье:', userProfile);
+    return conditions;
+  }
+
+  healthArray.forEach(condition => {
+    switch (condition) {
+      case 'meteosensitive':
+      case 'meteoropathy':
+        conditions.push('meteoropathy', 'migraine');
+        break;
+      case 'pressure':
+      case 'hypertension':
+      case 'cardiovascular':
+        const bpType = userProfile.bloodPressure?.type;
+        if (bpType === 'high') conditions.push('hypertension');
+        if (bpType === 'low') conditions.push('hypotension');
+        if (bpType === 'variable') conditions.push('hypertension', 'hypotension');
+        conditions.push('heart_disease');
+        break;
+      case 'asthma':
+        conditions.push('asthma', 'respiratory');
+        break;
+      case 'allergies':
+        conditions.push('allergies', 'respiratory');
+        break;
+      case 'arthritis':
+        conditions.push('arthritis', 'joints');
+        break;
+    }
+  });
+  
+  return [...new Set(conditions)]; // Убираем дубликаты
+}
+
+// Функция анализа рисков для здоровья
 function analyzeHealthRisks(weather, userProfile, spaceWeatherData) {
+  console.log('🏥 Начинаем анализ рисков для здоровья...');
+  
+  if (!weather || !userProfile) {
+    console.log('⚠️ Недостаточно данных для анализа');
+    return [];
+  }
+  
   const alerts = [];
+  const conditions = mapHealthConditions(userProfile);
   
-  if (!weather || !userProfile) return alerts;
+  if (conditions.length === 0) {
+    console.log('ℹ️ Пользователь здоров или не указал проблем со здоровьем');
+    return [];
+  }
   
-  const { temp, pressure, humidity, wind_speed: windSpeed, weather: weatherDesc } = weather;
-  const conditions = userProfile.medicalConditions || [];
-  const age = userProfile.age;
+  console.log('📋 Анализируемые состояния:', conditions);
   
+  // Извлекаем данные о погоде с защитой от undefined
+  const temp = weather.temp || weather.temperature || 20;
+  const pressure = weather.pressure || weather.details?.pressure || 760;
+  const humidity = weather.humidity || weather.details?.humidity || 50;
+  const windSpeed = weather.wind_speed || 
+                   (weather.details?.wind ? parseFloat(weather.details.wind.replace(' м/с', '')) : 0) || 0;
+  const weatherDesc = weather.weather || weather.description || [];
+
   // Анализ атмосферного давления
-  if (pressure && (pressure < 1000 || pressure > 1025)) {
-    if (conditions.includes('hypertension') || conditions.includes('cardiovascular') || age >= 60) {
+  if (pressure && (conditions.includes('hypertension') || conditions.includes('hypotension') || conditions.includes('meteoropathy'))) {
+    if (pressure <= HEALTH_THRESHOLDS.pressure.very_low) {
       alerts.push({
-        id: 'pressure',
-        type: pressure < 1000 ? 'critical' : 'warning',
-        icon: pressure < 1000 ? '📉' : '📈',
-        title: pressure < 1000 ? 'Низкое давление' : 'Высокое давление',
-        description: `Атмосферное давление ${Math.round(pressure)} мм рт.ст.`,
-        details: pressure < 1000 
-          ? 'Может вызывать головные боли, слабость и ухудшение самочувствия у людей с гипотонией'
-          : 'Может способствовать повышению артериального давления у гипертоников',
-        recommendation: pressure < 1000
-          ? 'Больше отдыхайте, пейте воду, избегайте резких движений'
-          : 'Ограничьте физические нагрузки, контролируйте давление',
-        color: pressure < 1000 ? '#ef4444' : '#f59e0b',
-        bgColor: pressure < 1000 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)'
+        id: 'pressure_very_low',
+        type: 'critical',
+        icon: '📉',
+        title: 'Критически низкое давление',
+        description: `${Math.round(pressure)} мм рт.ст. - опасно для гипотоников`,
+        details: 'Может вызывать головные боли, слабость и ухудшение самочувствия у людей с гипотонией',
+        recommendation: 'Выпейте крепкий кофе или чай, избегайте резких движений',
+        color: '#dc2626',
+        bgColor: 'rgba(220, 38, 38, 0.1)'
+      });
+    } else if (pressure <= HEALTH_THRESHOLDS.pressure.low) {
+      alerts.push({
+        id: 'pressure_low',
+        type: 'warning',
+        icon: '📉',
+        title: 'Низкое атмосферное давление',
+        description: `${Math.round(pressure)} мм рт.ст. - возможна слабость`,
+        details: 'Пониженное давление может вызывать усталость и головокружение',
+        recommendation: 'Утренний кофе обязателен, пейте больше жидкости',
+        color: '#f59e0b',
+        bgColor: 'rgba(245, 158, 11, 0.1)'
+      });
+    } else if (pressure >= HEALTH_THRESHOLDS.pressure.very_high) {
+      alerts.push({
+        id: 'pressure_very_high',
+        type: 'critical',
+        icon: '📈',
+        title: 'Критически высокое давление',
+        description: `${Math.round(pressure)} мм рт.ст. - опасно для гипертоников`,
+        details: 'Высокое атмосферное давление может способствовать повышению артериального давления',
+        recommendation: 'Примите назначенные препараты, ограничьте физические нагрузки',
+        color: '#dc2626',
+        bgColor: 'rgba(220, 38, 38, 0.1)'
+      });
+    } else if (pressure >= HEALTH_THRESHOLDS.pressure.high) {
+      alerts.push({
+        id: 'pressure_high',
+        type: 'warning',
+        icon: '📈',
+        title: 'Высокое атмосферное давление',
+        description: `${Math.round(pressure)} мм рт.ст. - контролируйте АД`,
+        details: 'Повышенное давление требует внимания у гипертоников',
+        recommendation: 'Контролируйте прием лекарств, избегайте стрессов',
+        color: '#f59e0b',
+        bgColor: 'rgba(245, 158, 11, 0.1)'
       });
     }
   }
 
   // Анализ температуры и возраста
   if (temp !== undefined) {
+    const age = userProfile.age || 30;
     if ((temp < -15 || temp > 30) && (age <= 5 || age >= 65)) {
       alerts.push({
-        id: 'temperature',
+        id: 'temperature_extreme',
         type: 'warning',
         icon: temp < -15 ? '🥶' : '🥵',
         title: temp < -15 ? 'Экстремальный холод' : 'Экстремальная жара',
@@ -59,7 +192,7 @@ function analyzeHealthRisks(weather, userProfile, spaceWeatherData) {
   if (humidity !== undefined && conditions.includes('asthma')) {
     if (humidity > 80) {
       alerts.push({
-        id: 'humidity',
+        id: 'humidity_asthma',
         type: 'warning',
         icon: '💨',
         title: 'Высокая влажность',
@@ -75,7 +208,7 @@ function analyzeHealthRisks(weather, userProfile, spaceWeatherData) {
   // Анализ ветра при мигренях
   if (windSpeed > 7 && conditions.includes('migraine')) {
     alerts.push({
-      id: 'wind',
+      id: 'wind_migraine',
       type: 'warning',
       icon: '🌪️',
       title: 'Сильный ветер',
@@ -87,29 +220,56 @@ function analyzeHealthRisks(weather, userProfile, spaceWeatherData) {
     });
   }
 
-  // Анализ магнитных бурь
-  if (spaceWeatherData && spaceWeatherData.length > 0) {
-    const currentStorm = spaceWeatherData.find(item => {
-      const stormDate = new Date(item.message_issue_time);
-      const today = new Date();
-      return stormDate.toDateString() === today.toDateString();
-    });
-
-    if (currentStorm && (conditions.includes('cardiovascular') || conditions.includes('hypertension'))) {
+  // Анализ для метеозависимых - комплексный подход
+  if (conditions.includes('meteoropathy') || conditions.includes('migraine')) {
+    const triggers = [];
+    
+    if (humidity >= HEALTH_THRESHOLDS.humidity.very_high) {
+      triggers.push('высокая влажность');
+    }
+    
+    if (windSpeed >= HEALTH_THRESHOLDS.wind.strong) {
+      triggers.push('сильный ветер');
+    }
+    
+    if (temp >= HEALTH_THRESHOLDS.temperature.very_hot) {
+      triggers.push('сильная жара');
+    }
+    
+    if (Array.isArray(weatherDesc) && weatherDesc.length > 0 && 
+        weatherDesc.some(desc => desc.main && desc.main.includes('Rain'))) {
+      triggers.push('дождь');
+    }
+    
+    if (triggers.length >= 2) {
       alerts.push({
-        id: 'magnetic',
+        id: 'meteoropathy_high_risk',
         type: 'warning',
-        icon: '🌌',
-        title: 'Магнитная буря',
-        description: 'Геомагнитная активность повышена',
-        details: 'Магнитные бури могут влиять на сердечно-сосудистую систему и артериальное давление',
-        recommendation: 'Контролируйте давление, избегайте стрессов, больше отдыхайте',
-        color: '#ec4899',
-        bgColor: 'rgba(236, 72, 153, 0.1)'
+        icon: '🤕',
+        title: 'Высокий риск для метеозависимых',
+        description: `Несколько неблагоприятных факторов: ${triggers.join(', ')}`,
+        details: 'Комбинация погодных факторов может значительно ухудшить самочувствие',
+        recommendation: 'Подготовьте лекарства заранее, избегайте стрессовых ситуаций',
+        color: '#8b5cf6',
+        bgColor: 'rgba(139, 92, 246, 0.1)'
+      });
+    } else if (triggers.length === 1) {
+      alerts.push({
+        id: 'meteoropathy_moderate_risk',
+        type: 'info',
+        icon: '💡',
+        title: 'Возможен дискомфорт',
+        description: `Выявлен неблагоприятный фактор: ${triggers[0]}`,
+        details: 'Один фактор риска может вызвать легкое недомогание',
+        recommendation: 'Имейте при себе лекарства, пейте достаточно воды',
+        color: '#6366f1',
+        bgColor: 'rgba(99, 102, 241, 0.1)'
       });
     }
   }
 
+  console.log(`✅ Анализ завершен. Найдено ${alerts.length} рисков для здоровья`);
+  
   return alerts;
 }
 
@@ -143,18 +303,28 @@ export default function HealthAlerts({ weather, userProfile, spaceWeatherData })
   const [lastUpdate, setLastUpdate] = useState(null);
 
   useEffect(() => {
-    if (!weather || !userProfile) return;
+    if (!weather || !userProfile) {
+      setHealthAlerts([]);
+      return;
+    }
 
     setLoading(true);
     setError(null);
 
     try {
+      console.log('🏥 HealthAlerts: Запуск анализа здоровья');
+      console.log('📊 Данные погоды:', weather);
+      console.log('👤 Профиль пользователя:', userProfile);
+      
       const alerts = analyzeHealthRisks(weather, userProfile, spaceWeatherData);
       setHealthAlerts(alerts);
       setLastUpdate(new Date());
+      
+      console.log('✅ HealthAlerts: Получено алертов:', alerts.length);
     } catch (err) {
-      console.error('Ошибка анализа здоровья:', err);
+      console.error('❌ Ошибка анализа здоровья:', err);
       setError('Ошибка анализа данных о здоровье');
+      setHealthAlerts([]);
     } finally {
       setLoading(false);
     }
@@ -165,8 +335,12 @@ export default function HealthAlerts({ weather, userProfile, spaceWeatherData })
     return null;
   }
 
-  // Если нет медицинских состояний в профиле
-  if (!userProfile.medicalConditions || userProfile.medicalConditions.length === 0) {
+  // Проверяем наличие данных о здоровье в любом из полей
+  const hasHealthData = (userProfile.health && Array.isArray(userProfile.health) && userProfile.health.length > 0) ||
+                       (userProfile.medicalConditions && Array.isArray(userProfile.medicalConditions) && userProfile.medicalConditions.length > 0);
+
+  // Если нет данных о здоровье
+  if (!hasHealthData) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -175,10 +349,10 @@ export default function HealthAlerts({ weather, userProfile, spaceWeatherData })
           background: 'rgba(255, 255, 255, 0.9)',
           borderRadius: 16,
           padding: 16,
-          margin: "16px auto 0", // ← ИСПРАВЛЕНО: теперь как у других блоков
-          maxWidth: 340, // ← ИСПРАВЛЕНО: убрали кавычки
+          margin: "16px auto 0",
+          maxWidth: 340,
           width: "100%",
-          boxSizing: "border-box", // ← ДОБАВЛЕНО
+          boxSizing: "border-box",
           backdropFilter: 'blur(10px)',
           boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
           textAlign: 'center'
@@ -214,10 +388,10 @@ export default function HealthAlerts({ weather, userProfile, spaceWeatherData })
           backdropFilter: 'blur(20px)',
           borderRadius: 16,
           padding: 16,
-          margin: "16px auto 0", // ← ИСПРАВЛЕНО: теперь как у других блоков
-          maxWidth: 340, // ← ИСПРАВЛЕНО: убрали кавычки
+          margin: "16px auto 0",
+          maxWidth: 340,
           width: "100%",
-          boxSizing: "border-box", // ← ДОБАВЛЕНО
+          boxSizing: "border-box",
           boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
           border: '1px solid rgba(255,255,255,0.3)',
           textAlign: 'center'
@@ -264,10 +438,10 @@ export default function HealthAlerts({ weather, userProfile, spaceWeatherData })
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       style={{ 
-        margin: "16px auto 0", // ← ИСПРАВЛЕНО: теперь как у других блоков
-        maxWidth: 340, // ← ИСПРАВЛЕНО: убрали кавычки
+        margin: "16px auto 0",
+        maxWidth: 340,
         width: "100%",
-        boxSizing: "border-box" // ← ДОБАВЛЕНО
+        boxSizing: "border-box"
       }}
     >
       {/* Заголовок блока с индикатором обновления */}

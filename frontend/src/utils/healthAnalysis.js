@@ -1,4 +1,4 @@
-// 🏥 healthAnalysis.js - Исправленная система анализа здоровья
+// 🏥 healthAnalysis.js - ПОЛНОСТЬЮ УНИФИЦИРОВАННАЯ система анализа здоровья
 
 // Медицинские пороги для различных состояний
 const HEALTH_THRESHOLDS = {
@@ -38,7 +38,7 @@ const HEALTH_THRESHOLDS = {
   }
 };
 
-// ИСПРАВЛЕНО: Подключаем реальный API магнитных бурь
+// Подключение реального API магнитных бурь
 async function getSpaceWeatherData() {
   try {
     console.log('🌌 Получаем реальные данные космической погоды...');
@@ -56,7 +56,7 @@ async function getSpaceWeatherData() {
     console.warn('⚠️ API недоступен, используем fallback данные');
     return {
       kp_index: {
-        current_kp: 2.5, // Спокойное состояние
+        current_kp: 2.5,
         activity_level: 'quiet',
         trend: 'stable'
       }
@@ -64,8 +64,6 @@ async function getSpaceWeatherData() {
     
   } catch (error) {
     console.error('❌ Ошибка получения космической погоды:', error);
-    
-    // Fallback при ошибке
     return {
       kp_index: {
         current_kp: 2.0,
@@ -91,23 +89,36 @@ function getActivityLevelRu(level) {
   return levels[level] || 'Неизвестно';
 }
 
-// ИСПРАВЛЕНО: Маппинг состояний здоровья с защитой от undefined
+// УНИФИЦИРОВАННАЯ функция маппинга состояний здоровья
 function mapHealthConditions(userProfile) {
   const conditions = [];
   
-  // ЗАЩИТА ОТ UNDEFINED - главное исправление!
-  if (!userProfile || !userProfile.health || !Array.isArray(userProfile.health)) {
-    console.log('⚠️ Профиль пользователя или health не определены:', userProfile);
+  // ЗАЩИТА ОТ UNDEFINED
+  if (!userProfile) {
+    console.log('⚠️ Профиль пользователя не определен');
     return conditions;
   }
-  
-  userProfile.health.forEach(condition => {
+
+  // Поддерживаем оба поля для совместимости
+  let healthArray = [];
+  if (userProfile.health && Array.isArray(userProfile.health)) {
+    healthArray = userProfile.health;
+  } else if (userProfile.medicalConditions && Array.isArray(userProfile.medicalConditions)) {
+    healthArray = userProfile.medicalConditions;
+  } else {
+    console.log('⚠️ Не найдены данные о здоровье:', userProfile);
+    return conditions;
+  }
+
+  healthArray.forEach(condition => {
     switch (condition) {
       case 'meteosensitive':
+      case 'meteoropathy':
         conditions.push('meteoropathy', 'migraine');
         break;
       case 'pressure':
-        // Определяем тип проблем с давлением
+      case 'hypertension':
+      case 'cardiovascular':
         const bpType = userProfile.bloodPressure?.type;
         if (bpType === 'high') conditions.push('hypertension');
         if (bpType === 'low') conditions.push('hypotension');
@@ -126,10 +137,10 @@ function mapHealthConditions(userProfile) {
     }
   });
   
-  return conditions;
+  return [...new Set(conditions)]; // Убираем дубликаты
 }
 
-// УЛУЧШЕНО: Анализ изменений давления с валидацией данных
+// Анализ изменений давления с улучшенной валидацией
 function analyzePressureChanges(forecastData, currentPressure) {
   if (!forecastData || !Array.isArray(forecastData) || forecastData.length < 2) {
     return { maxChange: 0, trend: 'stable', periods: [] };
@@ -139,7 +150,7 @@ function analyzePressureChanges(forecastData, currentPressure) {
   let maxChange = 0;
   
   // Анализируем изменения за последние 24 часа
-  for (let i = 1; i < Math.min(forecastData.length, 8); i++) { // 8 точек = 24 часа (каждые 3 часа)
+  for (let i = 1; i < Math.min(forecastData.length, 8); i++) {
     const prev = forecastData[i - 1];
     const curr = forecastData[i];
     
@@ -170,7 +181,7 @@ function analyzePressureChanges(forecastData, currentPressure) {
   };
 }
 
-// УЛУЧШЕНО: Анализ магнитной активности с детальной обработкой
+// Анализ магнитной активности с детальной обработкой
 function analyzeMagneticActivity(spaceWeather, conditions) {
   if (!spaceWeather?.kp_index || !conditions.includes('meteoropathy')) {
     return [];
@@ -248,11 +259,11 @@ function analyzeMagneticActivity(spaceWeather, conditions) {
   return alerts;
 }
 
-// ОСНОВНАЯ ФУНКЦИЯ АНАЛИЗА ЗДОРОВЬЯ
+// ОСНОВНАЯ ФУНКЦИЯ АНАЛИЗА ЗДОРОВЬЯ - ПОЛНОСТЬЮ УНИФИЦИРОВАННАЯ
 export async function analyzeHealthRisks(weather, userProfile, forecastData = null) {
   console.log('🏥 Начинаем анализ рисков для здоровья...');
   
-  // ДОБАВЛЕНА ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА
+  // КОМПЛЕКСНАЯ ЗАЩИТА ОТ UNDEFINED
   if (!weather) {
     console.log('⚠️ Нет данных о погоде');
     return [];
@@ -263,8 +274,12 @@ export async function analyzeHealthRisks(weather, userProfile, forecastData = nu
     return [];
   }
   
-  if (!userProfile.health || !Array.isArray(userProfile.health) || userProfile.health.length === 0) {
-    console.log('⚠️ Не указаны проблемы со здоровьем или health не является массивом');
+  // Проверяем наличие данных о здоровье в любом из полей
+  const hasHealthData = (userProfile.health && Array.isArray(userProfile.health) && userProfile.health.length > 0) ||
+                       (userProfile.medicalConditions && Array.isArray(userProfile.medicalConditions) && userProfile.medicalConditions.length > 0);
+
+  if (!hasHealthData) {
+    console.log('⚠️ Не указаны проблемы со здоровьем');
     return [];
   }
   
@@ -278,13 +293,13 @@ export async function analyzeHealthRisks(weather, userProfile, forecastData = nu
   
   console.log('📋 Анализируемые состояния:', conditions);
   
-  const { 
-    temp, 
-    pressure, 
-    humidity, 
-    wind_speed: windSpeed = 0,
-    weather: weatherDesc = []
-  } = weather;
+  // УНИФИЦИРОВАННОЕ извлечение данных о погоде
+  const temp = weather.temp || weather.temperature || 20;
+  const pressure = weather.pressure || weather.details?.pressure || 760;
+  const humidity = weather.humidity || weather.details?.humidity || 50;
+  const windSpeed = weather.wind_speed || 
+                   (weather.details?.wind ? parseFloat(weather.details.wind.replace(' м/с', '')) : 0) || 0;
+  const weatherDesc = weather.weather || weather.description || [];
 
   // Анализ атмосферного давления
   if (pressure && (conditions.includes('hypertension') || conditions.includes('hypotension') || conditions.includes('meteoropathy'))) {
@@ -381,7 +396,8 @@ export async function analyzeHealthRisks(weather, userProfile, forecastData = nu
       migraineTriggers.push('сильная жара');
     }
     
-    if (weatherDesc.length > 0 && weatherDesc[0].main && weatherDesc[0].main.includes('Rain')) {
+    if (Array.isArray(weatherDesc) && weatherDesc.length > 0 && 
+        weatherDesc.some(desc => desc.main && desc.main.includes('Rain'))) {
       migraineTriggers.push('дождь');
     }
     
@@ -461,7 +477,7 @@ export async function analyzeHealthRisks(weather, userProfile, forecastData = nu
     }
   }
 
-  // ИСПРАВЛЕНО: Анализ перепадов давления с улучшенной валидацией
+  // Анализ перепадов давления с улучшенной валидацией
   if (forecastData && Array.isArray(forecastData) && forecastData.length > 0 && 
       (conditions.includes('meteoropathy') || conditions.includes('migraine'))) {
     
@@ -505,7 +521,7 @@ export async function analyzeHealthRisks(weather, userProfile, forecastData = nu
     }
   }
 
-  // ИСПРАВЛЕНО: Получаем РЕАЛЬНЫЕ данные о магнитных бурях
+  // Получаем РЕАЛЬНЫЕ данные о магнитных бурях
   if (conditions.includes('meteoropathy')) {
     try {
       console.log('🌌 Получаем данные о магнитных бурях...');
@@ -530,10 +546,18 @@ export async function analyzeHealthRisks(weather, userProfile, forecastData = nu
   return sortedAlerts;
 }
 
-// Экспорт для тестирования
+// ДОБАВЛЯЕМ ФУНКЦИЮ-АЛИАС ДЛЯ СОВМЕСТИМОСТИ
+export async function analyzeWeatherForHealth(weather, userProfile, forecast) {
+  console.log('🔗 Вызов analyzeWeatherForHealth (алиас для analyzeHealthRisks)');
+  return await analyzeHealthRisks(weather, userProfile, forecast);
+}
+
+// Экспорт для тестирования и использования в других компонентах
 export { 
   mapHealthConditions, 
   analyzePressureChanges, 
   analyzeMagneticActivity,
-  HEALTH_THRESHOLDS 
+  HEALTH_THRESHOLDS,
+  getSpaceWeatherData,
+  getActivityLevelRu
 };
