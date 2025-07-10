@@ -337,7 +337,7 @@ function analyzeTravelConditions(weather, userProfile, forecastData, uvData) {
       type: 'info',
       icon: '💧',
       title: 'Риск обезвоживания',
-      message: `${temp}°C, сухой воздух - пейте больше`,
+      message: `${temp}°C, пейте больше`,
       color: '#06b6d4',
       bgColor: '#06b6d415',
       priority: 7,
@@ -637,7 +637,7 @@ export default function TravelAlerts({ weather, userProfile, forecastData, uvDat
               ✈️ {mainAlert.title}
             </div>
             <div style={{
-              fontSize: 13,
+              fontSize: 14,
               color: '#64748b',
               fontFamily: 'Montserrat, Arial, sans-serif',
               lineHeight: '1.3'
@@ -646,7 +646,7 @@ export default function TravelAlerts({ weather, userProfile, forecastData, uvDat
             </div>
             {alerts.length > 1 && (
               <div style={{
-                fontSize: 12,
+                fontSize: 13,
                 color: theme.mainColor,
                 fontFamily: 'Montserrat, Arial, sans-serif',
                 marginTop: 2,
@@ -697,7 +697,7 @@ export default function TravelAlerts({ weather, userProfile, forecastData, uvDat
               }}>
                 <span style={{ fontSize: 16 }}>{alert.icon}</span>
                 <span style={{
-                  fontSize: 13,
+                  fontSize: 15,
                   fontWeight: 600,
                   color: alert.color,
                   fontFamily: 'Montserrat, Arial, sans-serif'
@@ -707,7 +707,7 @@ export default function TravelAlerts({ weather, userProfile, forecastData, uvDat
               </div>
               
               <div style={{
-                fontSize: 12,
+                fontSize: 14,
                 color: '#4b5563',
                 fontFamily: 'Montserrat, Arial, sans-serif',
                 marginBottom: 8,
@@ -718,7 +718,7 @@ export default function TravelAlerts({ weather, userProfile, forecastData, uvDat
               
               {alert.advice && (
                 <div style={{
-                  fontSize: 11,
+                  fontSize: 13,
                   color: '#6b7280',
                   fontFamily: 'Montserrat, Arial, sans-serif'
                 }}>

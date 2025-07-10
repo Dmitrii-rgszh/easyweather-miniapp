@@ -49,7 +49,7 @@ function analyzeGardenConditions(weather, userProfile, forecastData, uvData) {
     alerts.push({
       id: 'watering_needed',
       type: 'info',
-      icon: '💧',
+      icon: '🚿',
       title: 'Время полива',
       message: `Сухо ${humidity}%, нужен ${intensity} полив`,
       color: '#06b6d4',

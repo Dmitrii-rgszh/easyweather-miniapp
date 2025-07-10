@@ -6,6 +6,8 @@ import { motion } from 'framer-motion';
 function analyzePhotoConditions(weather, userProfile, forecastData, uvData, astronomyData) {
   if (!weather || !userProfile || !userProfile.interests) return [];
   
+  console.log('📷 PhotoAlerts: Начинаем анализ фото условий');
+  
   // Проверяем есть ли интерес к фотографии
   const hasPhotography = userProfile.interests.some(interest => 
     interest.includes('фотография') || 
@@ -21,310 +23,15 @@ function analyzePhotoConditions(weather, userProfile, forecastData, uvData, astr
   const humidity = weather.main?.humidity || weather.humidity || 0;
   const windSpeed = Math.round((weather.wind?.speed || 0) * 3.6);
   const clouds = weather.clouds?.all || 0;
-  const visibility = weather.visibility ? Math.round(weather.visibility / 1000) : 10;
-  const uvIndex = uvData?.uvi || 0;
+
+  console.log('📷 PhotoAlerts: Данные погоды:', { temp, humidity, windSpeed, clouds });
   
   const now = new Date();
-  const sunrise = astronomyData?.sunrise ? new Date(astronomyData.sunrise * 1000) : null;
-  const sunset = astronomyData?.sunset ? new Date(astronomyData.sunset * 1000) : null;
+  const currentHour = now.getHours();
   
-  // 📸 ЗОЛОТОЙ ЧАС
-  if (sunrise && sunset) {
-    const goldenHourMorning = new Date(sunrise.getTime() + 30 * 60000); // 30 мин после восхода
-    const goldenHourEvening = new Date(sunset.getTime() - 30 * 60000); // 30 мин до заката
-    
-    const timeToMorningGolden = goldenHourMorning.getTime() - now.getTime();
-    const timeToEveningGolden = goldenHourEvening.getTime() - now.getTime();
-    
-    // Утренний золотой час
-    if (timeToMorningGolden > 0 && timeToMorningGolden < 3600000) { // В течение часа
-      const minutesLeft = Math.round(timeToMorningGolden / 60000);
-      alerts.push({
-        id: 'golden_hour_morning',
-        type: 'excellent',
-        icon: '🌅',
-        title: 'Золотой час близко!',
-        message: `Через ${minutesLeft}мин - идеальный свет`,
-        color: '#f59e0b',
-        bgColor: '#f59e0b20',
-        priority: 15,
-        advice: [
-          'Подготовьте камеру и объективы',
-          'Найдите интересную композицию',
-          'Проверьте уровень заряда батареи'
-        ]
-      });
-    }
-    
-    // Вечерний золотой час
-    if (timeToEveningGolden > 0 && timeToEveningGolden < 3600000) {
-      const minutesLeft = Math.round(timeToEveningGolden / 60000);
-      alerts.push({
-        id: 'golden_hour_evening',
-        type: 'excellent',
-        icon: '🌇',
-        title: 'Вечерний золотой час',
-        message: `Через ${minutesLeft}мин - волшебное освещение`,
-        color: '#f59e0b',
-        bgColor: '#f59e0b20',
-        priority: 15,
-        advice: [
-          'Ищите силуэты и контражур',
-          'Снимайте портреты в мягком свете',
-          'Пейзажи будут особенно красивы'
-        ]
-      });
-    }
-  }
-  
-  // 🌙 СИНИЙ ЧАС
-  if (sunset) {
-    const blueHourStart = new Date(sunset.getTime() + 15 * 60000); // 15 мин после заката
-    const timeToBlueHour = blueHourStart.getTime() - now.getTime();
-    
-    if (timeToBlueHour > 0 && timeToBlueHour < 1800000) { // В течение 30 мин
-      const minutesLeft = Math.round(timeToBlueHour / 60000);
-      alerts.push({
-        id: 'blue_hour',
-        type: 'excellent',
-        icon: '🌆',
-        title: 'Синий час приближается',
-        message: `Через ${minutesLeft}мин - мистическое освещение`,
-        color: '#3b82f6',
-        bgColor: '#3b82f620',
-        priority: 14,
-        advice: [
-          'Включите освещение в кадре',
-          'Используйте штатив',
-          'Снимайте городские пейзажи'
-        ]
-      });
-    }
-  }
-  
-  // ☁️ ОБЛАЧНОСТЬ ДЛЯ ДРАМАТИЧНОСТИ
-  if (clouds >= 30 && clouds <= 70 && windSpeed < 20) {
-    alerts.push({
-      id: 'dramatic_clouds',
-      type: 'excellent',
-      icon: '☁️',
-      title: 'Драматичные облака',
-      message: `${clouds}% облачности - идеально для пейзажей`,
-      color: '#6b7280',
-      bgColor: '#6b728020',
-      priority: 12,
-      advice: [
-        'Снимайте широкоугольным объективом',
-        'Используйте поляризационный фильтр',
-        'Ищите игру света в облаках'
-      ]
-    });
-  }
-  
-  // 🌧️ ПОСЛЕ ДОЖДЯ
-  const recentRain = weather.rain?.['1h'] || 0;
-  if (recentRain > 0 && recentRain < 2 && clouds < 80) {
-    alerts.push({
-      id: 'after_rain',
-      type: 'excellent',
-      icon: '🌈',
-      title: 'После дождичка',
-      message: 'Чистый воздух и возможные радуги!',
-      color: '#10b981',
-      bgColor: '#10b98120',
-      priority: 13,
-      advice: [
-        'Ищите радуги на востоке',
-        'Капли на листьях - макросъёмка',
-        'Отражения в лужах'
-      ]
-    });
-  }
-  
-  // ❄️ СНЕГ
-  const snow = weather.snow?.['1h'] || 0;
-  if (snow > 0 && snow < 5 && windSpeed < 15) {
-    alerts.push({
-      id: 'gentle_snow',
-      type: 'excellent',
-      icon: '❄️',
-      title: 'Мягкий снегопад',
-      message: 'Сказочная атмосфера для съёмки',
-      color: '#06b6d4',
-      bgColor: '#06b6d420',
-      priority: 13,
-      advice: [
-        'Защитите камеру от влаги',
-        'Снимайте крупные хлопья',
-        'Ищите контраст с тёмным фоном'
-      ]
-    });
-  }
-  
-  // 🌫️ ТУМАН
-  if (humidity > 90 && visibility < 3 && windSpeed < 10) {
-    alerts.push({
-      id: 'mystical_fog',
-      type: 'excellent',
-      icon: '🌫️',
-      title: 'Мистический туман',
-      message: `Видимость ${visibility}км - атмосферные кадры`,
-      color: '#8b5cf6',
-      bgColor: '#8b5cf620',
-      priority: 14,
-      advice: [
-        'Снимайте силуэты в тумане',
-        'Используйте длиннофокусный объектив',
-        'Ищите лучи света'
-      ]
-    });
-  }
-  
-  // ☀️ ЯРКОЕ СОЛНЦЕ - хорошо и плохо
-  if (clouds < 20 && uvIndex > 7) {
-    alerts.push({
-      id: 'bright_sun_caution',
-      type: 'warning',
-      icon: '☀️',
-      title: 'Яркое солнце',
-      message: 'Резкие тени, высокий контраст',
-      color: '#f59e0b',
-      bgColor: '#f59e0b15',
-      priority: 8,
-      advice: [
-        'Используйте рефлектор для теней',
-        'Снимайте в тени или с фильтром',
-        'Ищите интересные тени'
-      ]
-    });
-  }
-  
-  // 💨 СИЛЬНЫЙ ВЕТЕР
-  if (windSpeed > 25) {
-    alerts.push({
-      id: 'windy_conditions',
-      type: 'warning',
-      icon: '💨',
-      title: 'Сильный ветер',
-      message: `${windSpeed} км/ч - сложно для штатива`,
-      color: '#f59e0b',
-      bgColor: '#f59e0b15',
-      priority: 9,
-      advice: [
-        'Утяжелите штатив',
-        'Снимайте движение ветра',
-        'Укройте камеру от пыли'
-      ]
-    });
-  }
-  
-  // 🥶 ХОЛОД
-  if (temp < -10) {
-    alerts.push({
-      id: 'extreme_cold',
-      type: 'warning',
-      icon: '🥶',
-      title: 'Экстремальный холод',
-      message: `${temp}°C - берегите технику`,
-      color: '#ef4444',
-      bgColor: '#ef444415',
-      priority: 11,
-      advice: [
-        'Держите батареи в тепле',
-        'Избегайте резких перепадов температур',
-        'Дайте камере акклиматизироваться'
-      ]
-    });
-  }
-  
-  // 🔍 АНАЛИЗ ЛУЧШЕГО ВРЕМЕНИ ДЛЯ СЪЁМКИ
-  if (forecastData && forecastData.length > 0) {
-    let bestTime = null;
-    let bestScore = 0;
-    
-    forecastData.slice(0, 8).forEach((item, index) => { // Ближайшие 24 часа
-      const itemTime = new Date(item.dt * 1000);
-      const itemHour = itemTime.getHours();
-      
-      // 🌙 ПРОПУСКАЕМ НОЧНОЕ ВРЕМЯ (22:00 - 06:00)
-      if (itemHour >= 22 || itemHour <= 6) {
-        return; // Не рекомендуем фотосессии ночью
-      }
-      
-      const itemClouds = item.clouds?.all || 0;
-      const itemWind = Math.round(item.wind?.speed * 3.6) || 0;
-      const itemTemp = Math.round(item.main.temp);
-      
-      // Вычисляем оценку условий для фотосъёмки
-      let score = 0;
-      
-      // Облачность (30-70% лучше всего)
-      if (itemClouds >= 30 && itemClouds <= 70) score += 40;
-      else if (itemClouds < 30) score += 20;
-      
-      // Ветер (меньше лучше)
-      if (itemWind < 15) score += 30;
-      else if (itemWind < 25) score += 15;
-      
-      // Температура (комфорт фотографа)
-      if (itemTemp >= 0 && itemTemp <= 25) score += 20;
-      else if (itemTemp >= -5 && itemTemp <= 30) score += 10;
-      
-      // Проверяем близость к золотому часу
-      if (sunset && sunrise) {
-        const itemHour = itemTime.getHours();
-        const sunriseHour = sunrise.getHours();
-        const sunsetHour = sunset.getHours();
-        
-        if (Math.abs(itemHour - sunriseHour) <= 1 || Math.abs(itemHour - sunsetHour) <= 1) {
-          score += 50; // Бонус за золотой час
-        }
-      }
-      
-      if (score > bestScore && itemTime > now) {
-        bestScore = score;
-        const timeDiffMs = itemTime.getTime() - now.getTime();
-        const hoursDiff = Math.round(timeDiffMs / (1000 * 60 * 60));
-        
-        bestTime = {
-          time: itemTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
-          hoursDiff,
-          clouds: itemClouds,
-          wind: itemWind,
-          temp: itemTemp
-        };
-      }
-    });
-    
-    if (bestTime && bestScore > 60) {
-      let timeMessage;
-      if (bestTime.hoursDiff <= 1) {
-        timeMessage = `в ${bestTime.time}`;
-      } else {
-        timeMessage = `через ${bestTime.hoursDiff}ч в ${bestTime.time}`;
-      }
-      
-      alerts.push({
-        id: 'best_photo_time',
-        type: 'prediction',
-        icon: '📷',
-        title: `Лучшее время ${timeMessage}`,
-        message: `${bestTime.temp}°C, облачность ${bestTime.clouds}%`,
-        color: '#8b5cf6',
-        bgColor: '#8b5cf615',
-        priority: 7,
-        advice: [
-          'Запланируйте фотосессию',
-          'Проверьте локации заранее',
-          'Подготовьте оборудование'
-        ]
-      });
-    }
-  }
-  
-  // 🌟 АСТРОФОТОГРАФИЯ (ночное время)
-  if (now.getHours() >= 22 || now.getHours() <= 5) {
-    if (clouds < 30 && humidity < 80) {
+  // 🌙 НОЧНОЕ ВРЕМЯ
+  if (currentHour >= 22 || currentHour <= 6) {
+    if (clouds < 30) {
       alerts.push({
         id: 'astrophotography',
         type: 'excellent',
@@ -341,10 +48,43 @@ function analyzePhotoConditions(weather, userProfile, forecastData, uvData, astr
         ]
       });
     }
+  } else {
+    // ДНЕВНОЕ ВРЕМЯ
+    if (temp > 30) {
+      alerts.push({
+        id: 'extreme_heat',
+        type: 'warning',
+        icon: '🔥',
+        title: 'Экстремальная жара',
+        message: `${temp}°C - защитите технику`,
+        color: '#ef4444',
+        bgColor: '#ef444415',
+        priority: 10,
+        advice: [
+          'Снимайте рано утром или вечером',
+          'Защитите камеру от перегрева'
+        ]
+      });
+    } else if (temp >= 10 && temp <= 30) {
+      alerts.push({
+        id: 'good_conditions',
+        type: 'info',
+        icon: '📸',
+        title: 'Хорошие условия для съёмки',
+        message: `${temp}°C, подходящая погода`,
+        color: '#8b5cf6',
+        bgColor: '#8b5cf615',
+        priority: 7,
+        advice: [
+          'Используйте естественное освещение',
+          'Экспериментируйте с композицией'
+        ]
+      });
+    }
   }
   
-  // Сортируем по приоритету
-  return alerts.sort((a, b) => b.priority - a.priority);
+  console.log('📷 PhotoAlerts: Найдено алертов:', alerts.length);
+  return alerts.sort((a, b) => (b.priority || 0) - (a.priority || 0));
 }
 
 // Функция получения цветовой темы
