@@ -55,20 +55,25 @@ const HealthAlerts = ({ weather, userProfile, forecastData = [] }) => {
   // Если пользователь не указал проблемы со здоровьем
   if (!userProfile?.health?.length || (userProfile.health.includes('healthy') && userProfile.health.length === 1)) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        style={{
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(20px)',
-          borderRadius: 16,
-          padding: 16,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-          border: '1px solid rgba(255,255,255,0.3)',
-          textAlign: 'center',
-          width: '100%' // ← Используем ширину родительского контейнера
-        }}
-      >
+      <div style={{ 
+        margin: '10px auto',
+        maxWidth: '340px',
+        width: '100%'
+      }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: 16,
+            padding: 16,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+            border: '1px solid rgba(255,255,255,0.3)',
+            textAlign: 'center',
+            width: '100%'
+          }}
+        >
         <div style={{
           fontSize: 16,
           color: '#10b981',
