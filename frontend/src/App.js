@@ -37,6 +37,9 @@ import HealthAlerts from "./HealthAlerts";
 import ProfilePage from "./ProfilePage";
 import SportAlerts from "./SportAlerts";
 import MoodTracker from "./MoodTracker";
+import GardenAlerts from "./GardenAlerts";    // 🆕 НОВЫЙ
+import PhotoAlerts from "./PhotoAlerts";      // 🆕 НОВЫЙ  
+import TravelAlerts from "./TravelAlerts";
 
 import AchievementsSystem, { 
   recordWeatherCheck, 
@@ -1394,6 +1397,31 @@ const handleGeoWeather = () => {
                 uvData={uvData}
               />
             )}
+
+            {/* 🆕 Алерты для садоводов */}
+            <GardenAlerts 
+              weather={activeWeatherData}
+              userProfile={userProfile}
+              forecastData={forecastData}
+              uvData={uvData}
+            />
+
+            {/* 🆕 Алерты для фотографов */}
+            <PhotoAlerts 
+              weather={activeWeatherData}
+              userProfile={userProfile}
+              forecastData={forecastData}
+              uvData={uvData}
+              astronomyData={{ sunrise: null, sunset: null }}
+            />
+
+            {/* 🆕 Алерты для путешественников */}
+            <TravelAlerts 
+              weather={activeWeatherData}
+              userProfile={userProfile}
+              forecastData={forecastData}
+              uvData={uvData}
+            />
 
             {activeWeatherData && (
               <MoodTracker
