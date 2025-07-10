@@ -63,10 +63,10 @@ const HealthAlerts = ({ weather, userProfile, forecastData = [] }) => {
           backdropFilter: 'blur(20px)',
           borderRadius: 16,
           padding: 16,
-          margin: '10px 0',
           boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
           border: '1px solid rgba(255,255,255,0.3)',
-          textAlign: 'center'
+          textAlign: 'center',
+          width: '100%' // ← Используем ширину родительского контейнера
         }}
       >
         <div style={{
@@ -99,10 +99,12 @@ const HealthAlerts = ({ weather, userProfile, forecastData = [] }) => {
           backdropFilter: 'blur(20px)',
           borderRadius: 16,
           padding: 16,
-          margin: '10px 0',
+          margin: '10px auto', // ← Изменили на auto для центрирования
           boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
           border: '1px solid rgba(255,255,255,0.3)',
-          textAlign: 'center'
+          textAlign: 'center',
+          maxWidth: '340px', // ← Ограничиваем максимальную ширину как у других блоков
+          width: '100%' // ← Полная ширина в рамках maxWidth
         }}
       >
         <div style={{
@@ -145,7 +147,11 @@ const HealthAlerts = ({ weather, userProfile, forecastData = [] }) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      style={{ margin: '10px 0' }}
+      style={{ 
+        margin: '10px auto', // ← Центрируем основной контейнер
+        maxWidth: '340px', // ← Ограничиваем ширину как у других блоков
+        width: '100%'
+      }}
     >
       {/* Заголовок блока с индикатором обновления */}
       <div style={{

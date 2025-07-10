@@ -515,10 +515,6 @@ useEffect(() => {
             // 🆕 ДОБАВИТЬ ЭТУ СТРОКУ:
             localStorage.removeItem('gameStats'); // Сброс достижений
 
-            setPremiumUser(false);
-            setUsageStats(getUsageStats()); // Обновляем статистику
-            console.log('✅ Премиум статус сброшен (weatherUsage удален)');
-
             // 3. Сброс избранного
             localStorage.removeItem('weatherFavorites');
             setFavorites([]);
@@ -545,29 +541,6 @@ useEffect(() => {
           } catch (error) {
             console.error('❌ DEV: Ошибка при сбросе:', error);
             alert('❌ Ошибка при сбросе данных');
-          }
-        }
-      }
-    
-      // Ctrl + Shift + P = Reset только Premium
-      if (e.ctrlKey && e.shiftKey && e.key === 'P') {
-        e.preventDefault();
-      
-        if (window.confirm('💎 DEV: Сбросить только премиум статус?')) {
-          try {
-            // ПРАВИЛЬНЫЙ сброс - удаляем ключ weatherUsage
-            localStorage.removeItem('weatherUsage');
-            localStorage.removeItem('weatherPremiumUser');
-            localStorage.removeItem('weatherRequestCount');
-            localStorage.removeItem('weatherLastRequestDate');
-          
-            setPremiumUser(false);
-            setUsageStats(getUsageStats());
-          
-            console.log('💎 DEV: Премиум статус сброшен (weatherUsage очищен)');
-            alert('💎 Премиум статус сброшен! Теперь 5/5 запросов.');
-          } catch (error) {
-            console.error('❌ DEV: Ошибка сброса премиума:', error);
           }
         }
       }
@@ -600,9 +573,6 @@ useEffect(() => {
           const value = localStorage.getItem(key);
           console.log(`${key}:`, value);
         }
-      
-        const usage = getUsageStats();
-        console.log('📊 Текущие лимиты:', usage);
       }
     };
 
@@ -630,9 +600,6 @@ useEffect(() => {
           localStorage.removeItem('weatherPremiumUser');
           localStorage.removeItem('weatherRequestCount');
           localStorage.removeItem('weatherLastRequestDate');
-          setPremiumUser(false);
-          setUsageStats(getUsageStats());
-          console.log('💎 DEV: Премиум сброшен (лимит 5/5)');
         },
       
         favorites: () => {
@@ -645,14 +612,11 @@ useEffect(() => {
         debug: () => {
           console.log('🔍 DEV DEBUG:');
           console.log('localStorage keys:', Object.keys(localStorage));
-          console.log('usageStats:', getUsageStats());
           console.log('weatherUsage:', localStorage.getItem('weatherUsage'));
   
           // 🆕 ДОБАВИТЬ ЭТИ СТРОКИ:
           console.log('gameStats:', localStorage.getItem('gameStats'));
           console.log('gameStats state:', gameStats);
-  
-          console.log('premiumUser state:', premiumUser);
         }
       };
     
@@ -678,7 +642,7 @@ useEffect(() => {
     
       return () => window.removeEventListener('keydown', handleDevReset);
     }
-  }, [setUserProfile, setShowProfileModal, setPremiumUser, setUsageStats, setFavorites, setWeather, setSelectedWeatherData, setForecastData, setAirQualityData, setUvData, premiumUser]);
+  }, [setUserProfile, setShowProfileModal, setFavorites, setWeather, setSelectedWeatherData, setForecastData, setAirQualityData, setUvData, ]);
 
   // Дополнительно - показываем DEV статус в заголовке (опционально)
   useEffect(() => {
@@ -821,7 +785,7 @@ const handleShowWeather = async () => {
         setForecastData(forecastList);
         
         // Записываем достижения для прогнозов
-        const achievementResult = recordWeatherCheck(city, forecastWeather, premiumUser);
+        const achievementResult = recordWeatherCheck(city, forecastWeather);
         setGameStats(achievementResult.stats);
 
         achievementResult.newAchievements.forEach((achievementId, index) => {
@@ -845,12 +809,7 @@ const handleShowWeather = async () => {
 
 // 🔧 ИСПРАВЛЕННАЯ функция handleGeoWeather
 const handleGeoWeather = () => {
-  const requestCheck = canMakeRequest();
 
-  if (!requestCheck.canMake) {
-    setShowPremiumModal(true);
-    return;
-  }
 
   if (!navigator.geolocation) {
     alert("Геолокация не поддерживается браузером");
@@ -858,8 +817,6 @@ const handleGeoWeather = () => {
   }
 
   setLoading(true);
-  recordRequest();
-  setUsageStats(getUsageStats());
 
   navigator.geolocation.getCurrentPosition(
     async (position) => {
@@ -910,7 +867,7 @@ const handleGeoWeather = () => {
         }
 
         // 🆕 ЗАПИСЫВАЕМ ДОСТИЖЕНИЯ ДЛЯ ГЕОЛОКАЦИИ (ИСПРАВЛЕНО - БЕЗ ДУБЛИРОВАНИЯ)
-        const achievementResult = recordWeatherCheck(data.name, currentWeather, premiumUser);
+        const achievementResult = recordWeatherCheck(data.name, currentWeather);
         setGameStats(achievementResult.stats);
 
         achievementResult.newAchievements.forEach((achievementId, index) => {
@@ -947,67 +904,7 @@ const handleGeoWeather = () => {
   // 🆕 Используем выбранные данные для всех блоков
   const activeWeatherData = selectedWeatherData || weather;
   // Компонент показа статистики использования
-  const renderUsageIndicator = () => {
-    if (premiumUser) {
-      return (
-        <motion.div
-          style={{
-            position: 'absolute',
-            top: logoTop + 50, // На том же уровне что и логотип
-            right: '20px',
-            background: 'linear-gradient(135deg, #ffd700 0%, #ffed4e 100%)',
-            color: '#1a1a1a',
-            padding: '8px 16px',
-            borderRadius: '20px',
-            fontSize: '12px',
-            fontWeight: '600',
-            fontFamily: 'Montserrat, Arial, sans-serif',
-            zIndex: 100,
-            boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
-          }}
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 1 }}
-        >
-          💎 Premium | 🏆 {gameStats.totalPoints}
-        </motion.div>
-      );
-    }
-
-    const percentage = usageStats.percentage;
-    const isLow = usageStats.remaining <= 1;
   
-    return (
-      <motion.div
-        style={{
-          position: 'absolute',
-          top: logoTop + 50, // На том же уровне что и логотип
-          right: '20px',
-          background: isLow 
-            ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
-            : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-          color: 'white',
-          padding: '8px 16px',
-          borderRadius: '20px',
-          fontSize: '12px',
-          fontWeight: '600',
-          fontFamily: 'Montserrat, Arial, sans-serif',
-          zIndex: 100,
-          boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)',
-          cursor: isLow ? 'pointer' : 'default'
-        }}
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 1 }}
-        onClick={isLow ? () => setShowPremiumModal(true) : undefined}
-        whileHover={isLow ? { scale: 1.05 } : {}}
-      >
-        {isLow && '🔥 '}
-        {usageStats.remaining}/{usageStats.limit} | 🏆 {gameStats.totalPoints}
-      </motion.div>
-    );
-  };
-
   return (
     <ThemeProvider theme={theme}>
       <motion.div
@@ -1015,7 +912,7 @@ const handleGeoWeather = () => {
         style={{
           minHeight: '100vh',
           paddingTop: "max(36px, env(safe-area-inset-top))",
-          paddingBottom: 120,
+          paddingBottom: 160,
           position: "relative",
           overflow: "hidden",
           fontFamily: 'Montserrat, Arial, sans-serif'
@@ -1429,10 +1326,7 @@ const handleGeoWeather = () => {
             />
           </div>
         )}
-
-        {/* Индикатор использования */}
-        {renderUsageIndicator()}
-
+        
         {/* 🆕 ДОБАВЬТЕ ЭТОТ БЛОК: */}
         <UserProfileModal 
           isVisible={showProfileModal}
