@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 // 📊 Компонент серверной аналитики баннера
+// 📊 УЛУЧШЕННЫЙ Компонент серверной аналитики баннера с графиками
 const BannerAnalytics = ({ adminData }) => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -33,7 +34,178 @@ const BannerAnalytics = ({ adminData }) => {
   // Загружаем статистику при монтировании
   useEffect(() => {
     loadStats();
+    
+    // Автообновление каждые 30 секунд
+    const interval = setInterval(loadStats, 30000);
+    return () => clearInterval(interval);
   }, [adminData]);
+
+  // 📊 ФУНКЦИЯ СОЗДАНИЯ ГРАФИКА ПО ЧАСАМ
+  const createHourlyChart = (hourlyData) => {
+    if (!hourlyData || hourlyData.length === 0) {
+      return <div style={{ color: '#6c757d', fontSize: '12px', textAlign: 'center', padding: '10px' }}>
+        📊 Нет данных для графика
+      </div>;
+    }
+
+    const maxClicks = Math.max(...hourlyData.map(d => d.clicks));
+    const chartHeight = 60;
+    
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'end',
+        gap: '4px',
+        padding: '10px',
+        background: 'rgba(0,123,255,0.05)',
+        borderRadius: '8px',
+        border: '1px solid rgba(0,123,255,0.1)',
+        marginBottom: '12px'
+      }}>
+        <div style={{ fontSize: '12px', fontWeight: '600', color: '#007bff', marginRight: '8px' }}>
+          📊 По часам:
+        </div>
+        {hourlyData.map((item, index) => {
+          const height = maxClicks > 0 ? (item.clicks / maxClicks) * chartHeight : 5;
+          const isActive = item.clicks > 0;
+          
+          return (
+            <div
+              key={index}
+              style={{
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                cursor: 'pointer'
+              }}
+              title={`${item.hour}:00 - ${item.clicks} кликов`}
+            >
+              {/* Столбец */}
+              <div
+                style={{
+                  width: '20px',
+                  height: `${Math.max(height, 5)}px`,
+                  background: isActive 
+                    ? `linear-gradient(to top, #007bff 0%, #0056b3 100%)` 
+                    : '#e9ecef',
+                  borderRadius: '3px 3px 0 0',
+                  border: isActive ? '1px solid #0056b3' : '1px solid #dee2e6',
+                  transition: 'all 0.3s ease',
+                  boxShadow: isActive ? '0 2px 4px rgba(0,123,255,0.3)' : 'none'
+                }}
+              />
+              
+              {/* Подпись */}
+              <div style={{
+                fontSize: '9px',
+                color: isActive ? '#007bff' : '#6c757d',
+                fontWeight: isActive ? '600' : '400',
+                marginTop: '2px',
+                textAlign: 'center'
+              }}>
+                {item.hour}
+              </div>
+              
+              {/* Значение кликов */}
+              {item.clicks > 0 && (
+                <div style={{
+                  fontSize: '8px',
+                  color: '#007bff',
+                  fontWeight: '700',
+                  background: 'white',
+                  padding: '1px 3px',
+                  borderRadius: '2px',
+                  border: '1px solid #007bff',
+                  position: 'absolute',
+                  top: `-${height + 15}px`,
+                  whiteSpace: 'nowrap'
+                }}>
+                  {item.clicks}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // 📈 ФУНКЦИЯ СОЗДАНИЯ ГРАФИКА ПО ДНЯМ
+  const createDailyChart = (dailyData) => {
+    if (!dailyData || dailyData.length === 0) {
+      return <div style={{ color: '#6c757d', fontSize: '12px', textAlign: 'center', padding: '10px' }}>
+        📅 Нет данных за последние дни
+      </div>;
+    }
+
+    const maxClicks = Math.max(...dailyData.map(d => d.clicks));
+    
+    return (
+      <div style={{
+        background: 'rgba(40,167,69,0.05)',
+        borderRadius: '8px',
+        border: '1px solid rgba(40,167,69,0.1)',
+        padding: '10px',
+        marginBottom: '12px'
+      }}>
+        <div style={{ fontSize: '12px', fontWeight: '600', color: '#28a745', marginBottom: '8px' }}>
+          📅 По дням (последние 7):
+        </div>
+        {dailyData.map((item, index) => {
+          const percentage = maxClicks > 0 ? (item.clicks / maxClicks) * 100 : 0;
+          const date = new Date(item.date).toLocaleDateString('ru-RU', { 
+            day: '2-digit', 
+            month: '2-digit' 
+          });
+          
+          return (
+            <div key={index} style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              marginBottom: '4px',
+              fontSize: '11px'
+            }}>
+              <div style={{ 
+                minWidth: '35px', 
+                color: '#28a745', 
+                fontWeight: '600' 
+              }}>
+                {date}
+              </div>
+              
+              <div style={{
+                flex: 1,
+                height: '16px',
+                background: '#e9ecef',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                margin: '0 8px',
+                position: 'relative'
+              }}>
+                <div style={{
+                  width: `${percentage}%`,
+                  height: '100%',
+                  background: 'linear-gradient(to right, #28a745, #20c997)',
+                  borderRadius: '8px',
+                  transition: 'width 0.5s ease'
+                }} />
+              </div>
+              
+              <div style={{ 
+                minWidth: '25px', 
+                textAlign: 'right',
+                color: '#155724',
+                fontWeight: '700'
+              }}>
+                {item.clicks}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   // Функция форматирования времени
   const formatTime = (timestamp) => {
@@ -142,8 +314,20 @@ const BannerAnalytics = ({ adminData }) => {
         fontFamily: 'Montserrat, Arial, sans-serif',
         fontSize: '16px',
         fontWeight: '600'
-      }}>🎯 Статистика баннера (серверная)</h5>
+      }}>🎯 Статистика баннера (серверная) 
+        <span style={{
+          backgroundColor: stats?.totalClicks > 0 ? '#28a745' : '#6c757d',
+          color: 'white',
+          padding: '2px 6px',
+          borderRadius: '10px',
+          fontSize: '10px',
+          marginLeft: '8px'
+        }}>
+          LIVE
+        </span>
+      </h5>
       
+      {/* ОСНОВНЫЕ МЕТРИКИ */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
@@ -189,7 +373,7 @@ const BannerAnalytics = ({ adminData }) => {
         </div>
       </div>
 
-      {/* Дополнительная статистика */}
+      {/* ДОПОЛНИТЕЛЬНЫЕ МЕТРИКИ */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
@@ -234,8 +418,14 @@ const BannerAnalytics = ({ adminData }) => {
           </div>
         </div>
       </div>
+
+      {/* 📊 ГРАФИК ПО ЧАСАМ */}
+      {createHourlyChart(stats?.hourlyStats)}
+
+      {/* 📅 ГРАФИК ПО ДНЯМ */}
+      {createDailyChart(stats?.dailyStats)}
       
-      {/* Кнопки управления */}
+      {/* КНОПКИ УПРАВЛЕНИЯ */}
       <div style={{ 
         display: 'flex',
         gap: '8px',
@@ -267,10 +457,17 @@ const BannerAnalytics = ({ adminData }) => {
           const exportData = `📊 Статистика баннера EasyWeather (серверная):
 🎯 Всего кликов: ${stats?.totalClicks || 0}
 👥 Уникальные IP (24ч): ${stats?.uniqueIPs24h || 0}
-🕒 Последний клик: ${stats?.lastClick?.timestamp ? new Date(stats.lastClick.timestamp).toLocaleString('ru-RU') : 'Нет данных'}
+🕒 Последний клик: ${stats?.lastClick?.timestamp ? 
+  new Date(stats.lastClick.timestamp).toLocaleString('ru-RU') : 'Нет данных'}
 📅 За сегодня: ${stats?.hourlyStats?.reduce((sum, hour) => sum + hour.clicks, 0) || 0}
 📱 Администратор: ${adminData?.first_name} (@${adminData?.username})
-🗓️ Экспорт: ${new Date().toLocaleString('ru-RU')}`;
+🗓️ Экспорт: ${new Date().toLocaleString('ru-RU')}
+
+📊 По часам:
+${stats?.hourlyStats?.map(h => `${h.hour}:00 - ${h.clicks} кликов`).join('\n') || 'Нет данных'}
+
+📅 По дням:
+${stats?.dailyStats?.map(d => `${d.date} - ${d.clicks} кликов`).join('\n') || 'Нет данных'}`;
           
           navigator.clipboard.writeText(exportData).then(() => {
             alert('📋 Статистика скопирована в буфер обмена');
@@ -292,6 +489,32 @@ const BannerAnalytics = ({ adminData }) => {
           fontFamily: 'Montserrat, Arial, sans-serif'
         }} onClick={loadStats}>
           🔄 Обновить
+        </button>
+
+        <button style={{
+          padding: '6px 12px',
+          backgroundColor: '#17a2b8',
+          color: 'white',
+          border: 'none',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          fontSize: '12px',
+          fontFamily: 'Montserrat, Arial, sans-serif'
+        }} onClick={() => {
+          // Детальная статистика
+          fetch(`http://localhost:3001/api/analytics/banner/detailed-stats?admin_id=${adminData.telegram_id}&period=1d`)
+            .then(r => r.json())
+            .then(data => {
+              if (data.success) {
+                console.log('🔍 Детальная статистика:', data);
+                alert('🔍 Детальная статистика выведена в консоль (F12)');
+              } else {
+                alert('❌ Детальная статистика недоступна: ' + data.error);
+              }
+            })
+            .catch(e => alert('❌ Endpoint детальной статистики не найден'));
+        }}>
+          🔍 Детали
         </button>
       </div>
     </div>
@@ -331,6 +554,10 @@ const TelegramAnalytics = ({ adminData }) => {
   // Загружаем статистику при монтировании
   useEffect(() => {
     loadTelegramStats();
+    
+    // Автообновление каждые 60 секунд
+    const interval = setInterval(loadTelegramStats, 60000);
+    return () => clearInterval(interval);
   }, [adminData]);
 
   // Функция форматирования длительности
@@ -341,23 +568,99 @@ const TelegramAnalytics = ({ adminData }) => {
     const remainingSeconds = seconds % 60;
     
     if (minutes === 0) return `${remainingSeconds} сек`;
-    if (remainingSeconds === 0) return `${minutes} мин`;
+    if (minutes < 60) return `${minutes} мин ${remainingSeconds} сек`;
     
-    return `${minutes} мин ${remainingSeconds} сек`;
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    return `${hours}ч ${remainingMinutes}м`;
+  };
+
+  // 📊 Создание графика топ действий
+  const createTopActionsChart = (topActions) => {
+    if (!topActions || topActions.length === 0) {
+      return <div style={{ color: '#6c757d', fontSize: '12px', textAlign: 'center', padding: '10px' }}>
+        🎬 Нет данных о действиях
+      </div>;
+    }
+
+    const maxCount = Math.max(...topActions.map(a => a.count));
+
+    return (
+      <div style={{
+        background: 'rgba(156,39,176,0.05)',
+        borderRadius: '8px',
+        border: '1px solid rgba(156,39,176,0.1)',
+        padding: '10px',
+        marginBottom: '12px'
+      }}>
+        <div style={{ fontSize: '12px', fontWeight: '600', color: '#7b1fa2', marginBottom: '8px' }}>
+          🎬 Топ действий в Mini App:
+        </div>
+        {topActions.slice(0, 5).map((action, index) => {
+          const percentage = maxCount > 0 ? (action.count / maxCount) * 100 : 0;
+          
+          return (
+            <div key={index} style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              marginBottom: '4px',
+              fontSize: '11px'
+            }}>
+              <div style={{ 
+                minWidth: '80px', 
+                color: '#7b1fa2', 
+                fontWeight: '600',
+                fontSize: '10px'
+              }}>
+                {action.action_type}
+              </div>
+              
+              <div style={{
+                flex: 1,
+                height: '14px',
+                background: '#f3e5f5',
+                borderRadius: '7px',
+                overflow: 'hidden',
+                margin: '0 8px',
+                position: 'relative'
+              }}>
+                <div style={{
+                  width: `${percentage}%`,
+                  height: '100%',
+                  background: 'linear-gradient(to right, #7b1fa2, #9c27b0)',
+                  borderRadius: '7px',
+                  transition: 'width 0.5s ease'
+                }} />
+              </div>
+              
+              <div style={{ 
+                minWidth: '20px', 
+                textAlign: 'right',
+                color: '#4a148c',
+                fontWeight: '700',
+                fontSize: '10px'
+              }}>
+                {action.count}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   if (loading) {
     return (
       <div style={{
-        background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
-        border: '1px solid #90caf9',
+        background: 'linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%)',
+        border: '1px solid #28a745',
         borderRadius: '12px',
         padding: '16px',
         margin: '10px 0',
         textAlign: 'center',
-        color: '#1976d2'
+        color: '#155724'
       }}>
-        🔄 Загрузка телеграм статистики...
+        🤖 Загрузка телеграм аналитики...
       </div>
     );
   }
@@ -365,21 +668,21 @@ const TelegramAnalytics = ({ adminData }) => {
   if (error) {
     return (
       <div style={{
-        background: 'linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%)',
-        border: '1px solid #ef5350',
+        background: 'linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%)',
+        border: '1px solid #feb2b2',
         borderRadius: '12px',
         padding: '16px',
         margin: '10px 0',
         textAlign: 'center',
-        color: '#c62828'
+        color: '#c53030'
       }}>
-        ❌ {error}
+        ❌ Ошибка телеграм аналитики: {error}
         <br />
         <button onClick={loadTelegramStats} style={{
           marginTop: '8px',
           padding: '4px 8px',
           fontSize: '12px',
-          backgroundColor: '#1976d2',
+          backgroundColor: '#3182ce',
           color: 'white',
           border: 'none',
           borderRadius: '4px',
@@ -393,29 +696,40 @@ const TelegramAnalytics = ({ adminData }) => {
 
   return (
     <div style={{
-      background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
-      border: '1px solid #90caf9',
+      background: 'linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%)',
+      border: '1px solid #28a745',
       borderRadius: '12px',
       padding: '16px',
       margin: '10px 0',
-      boxShadow: '0 2px 8px rgba(25, 118, 210, 0.2)'
+      boxShadow: '0 2px 8px rgba(40,167,69,0.1)'
     }}>
       <h5 style={{
         margin: '0 0 12px 0',
-        color: '#1976d2',
+        color: '#155724',
         fontFamily: 'Montserrat, Arial, sans-serif',
         fontSize: '16px',
         fontWeight: '600'
-      }}>🤖 Телеграм аналитика</h5>
+      }}>🤖 Телеграм аналитика 
+        <span style={{
+          backgroundColor: stats?.totalUsers > 0 ? '#007bff' : '#6c757d',
+          color: 'white',
+          padding: '2px 6px',
+          borderRadius: '10px',
+          fontSize: '10px',
+          marginLeft: '8px'
+        }}>
+          BOT
+        </span>
+      </h5>
       
-      {/* Основные метрики */}
+      {/* ОСНОВНЫЕ МЕТРИКИ ТЕЛЕГРАМ */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+        gridTemplateColumns: '1fr 1fr',
         gap: '12px',
         fontSize: '14px',
         fontFamily: 'Montserrat, Arial, sans-serif',
-        marginBottom: '16px'
+        marginBottom: '12px'
       }}>
         <div style={{
           background: 'rgba(76, 175, 80, 0.1)',
@@ -498,70 +812,22 @@ const TelegramAnalytics = ({ adminData }) => {
       {stats?.activeSessions > 0 && (
         <div style={{
           background: 'rgba(76, 175, 80, 0.1)',
-          padding: '12px',
-          borderRadius: '8px',
+          padding: '8px 12px',
+          borderRadius: '6px',
           border: '1px solid rgba(76, 175, 80, 0.3)',
           marginBottom: '12px',
-          textAlign: 'center'
+          textAlign: 'center',
+          fontSize: '12px',
+          color: '#2e7d32'
         }}>
-          <div style={{ color: '#388e3c', fontWeight: '600', marginBottom: '4px' }}>
-            🟢 Активные сессии сейчас
-          </div>
-          <div style={{ 
-            fontSize: '20px', 
-            fontWeight: '700', 
-            color: '#1b5e20' 
-          }}>
-            {stats.activeSessions}
-          </div>
+          🟢 Сейчас онлайн: {stats.activeSessions} пользователей
         </div>
       )}
 
-      {/* Топ действий */}
-      {stats?.topActions && stats.topActions.length > 0 && (
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.7)',
-          padding: '12px',
-          borderRadius: '8px',
-          border: '1px solid rgba(25, 118, 210, 0.2)',
-          marginBottom: '12px'
-        }}>
-          <div style={{
-            fontSize: '14px',
-            fontWeight: '600',
-            color: '#1976d2',
-            marginBottom: '8px',
-            fontFamily: 'Montserrat, Arial, sans-serif'
-          }}>
-            🎬 Популярные действия:
-          </div>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
-            gap: '8px',
-            fontSize: '12px',
-            fontFamily: 'Montserrat, Arial, sans-serif'
-          }}>
-            {stats.topActions.slice(0, 4).map((action, index) => (
-              <div key={index} style={{
-                background: 'rgba(25, 118, 210, 0.1)',
-                padding: '8px',
-                borderRadius: '6px',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontWeight: '600', color: '#1976d2' }}>
-                  {action.action_type}
-                </div>
-                <div style={{ color: '#0d47a1' }}>
-                  {action.count}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Кнопки управления */}
+      {/* 🎬 График топ действий */}
+      {createTopActionsChart(stats?.topActions)}
+      
+      {/* КНОПКИ УПРАВЛЕНИЯ ТЕЛЕГРАМ */}
       <div style={{ 
         display: 'flex',
         gap: '8px',
@@ -569,36 +835,7 @@ const TelegramAnalytics = ({ adminData }) => {
       }}>
         <button style={{
           padding: '6px 12px',
-          backgroundColor: '#1976d2',
-          color: 'white',
-          border: 'none',
-          borderRadius: '6px',
-          cursor: 'pointer',
-          fontSize: '12px',
-          fontFamily: 'Montserrat, Arial, sans-serif'
-        }} onClick={() => {
-          const exportData = `📊 Телеграм аналитика EasyWeather:
-👥 Всего пользователей: ${stats?.totalUsers || 0}
-🎯 Активных сегодня: ${stats?.todayUsers || 0}
-📱 Всего сессий: ${stats?.totalSessions || 0}
-🟢 Активные сессии: ${stats?.activeSessions || 0}
-⏱️ Среднее время в приложении: ${formatDuration(stats?.avgSessionDuration)}
-🎬 Топ действий: ${stats?.topActions?.map(a => `${a.action_type} (${a.count})`).join(', ') || 'Нет данных'}
-📱 Администратор: ${adminData?.first_name} (@${adminData?.username})
-🗓️ Экспорт: ${new Date().toLocaleString('ru-RU')}`;
-          
-          navigator.clipboard.writeText(exportData).then(() => {
-            alert('📋 Телеграм статистика скопирована в буфер обмена');
-          }).catch(() => {
-            alert('📊 Телеграм статистика:\n' + exportData);
-          });
-        }}>
-          📋 Экспорт
-        </button>
-        
-        <button style={{
-          padding: '6px 12px',
-          backgroundColor: '#388e3c',
+          backgroundColor: '#28a745',
           color: 'white',
           border: 'none',
           borderRadius: '6px',
@@ -611,7 +848,7 @@ const TelegramAnalytics = ({ adminData }) => {
         
         <button style={{
           padding: '6px 12px',
-          backgroundColor: '#f57c00',
+          backgroundColor: '#007bff',
           color: 'white',
           border: 'none',
           borderRadius: '6px',
@@ -619,24 +856,41 @@ const TelegramAnalytics = ({ adminData }) => {
           fontSize: '12px',
           fontFamily: 'Montserrat, Arial, sans-serif'
         }} onClick={() => {
-          const detailsWindow = window.open('', '_blank', 'width=800,height=600');
-          detailsWindow.document.write(`
-            <html>
-              <head>
-                <title>Детальная телеграм статистика</title>
-                <style>
-                  body { font-family: Arial, sans-serif; padding: 20px; }
-                  pre { background: #f5f5f5; padding: 15px; border-radius: 5px; }
-                </style>
-              </head>
-              <body>
-                <h2>📊 Детальная телеграм статистика</h2>
-                <pre>${JSON.stringify(stats, null, 2)}</pre>
-              </body>
-            </html>
-          `);
+          const exportData = `🤖 Телеграм аналитика EasyWeather:
+👥 Всего пользователей: ${stats?.totalUsers || 0}
+🎯 Активных сегодня: ${stats?.todayUsers || 0}
+📱 Всего сессий: ${stats?.totalSessions || 0}
+🟢 Активных сессий: ${stats?.activeSessions || 0}
+⏱️ Среднее время сессии: ${formatDuration(stats?.avgSessionDuration)}
+📱 Администратор: ${adminData?.first_name} (@${adminData?.username})
+🗓️ Экспорт: ${new Date().toLocaleString('ru-RU')}
+
+🎬 Топ действий:
+${stats?.topActions?.map(a => `${a.action_type}: ${a.count}`).join('\n') || 'Нет данных'}`;
+          
+          navigator.clipboard.writeText(exportData).then(() => {
+            alert('📋 Телеграм статистика скопирована в буфер обмена');
+          }).catch(() => {
+            alert('🤖 Телеграм статистика:\n' + exportData);
+          });
         }}>
-          📊 Детали
+          📋 Экспорт
+        </button>
+        
+        <button style={{
+          padding: '6px 12px',
+          backgroundColor: '#17a2b8',
+          color: 'white',
+          border: 'none',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          fontSize: '12px',
+          fontFamily: 'Montserrat, Arial, sans-serif'
+        }} onClick={() => {
+          console.log('🤖 Полная телеграм статистика:', stats);
+          alert('🤖 Полная телеграм статистика выведена в консоль (F12)');
+        }}>
+          🔍 Детали
         </button>
       </div>
     </div>

@@ -1,0 +1,70 @@
+# docker-compose.dev.yml - для локальной разработки и сборки
+
+services:
+  # Бэкенд API (Node.js/Express) с SQLite
+  easyweather-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: easyweather-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      DATABASE_PATH: /app/data/database.db
+      JWT_SECRET: ${JWT_SECRET:-DevSecret123}
+      PORT: 3001
+      CORS_ORIGIN: http://localhost:3000
+      WEATHER_API_KEY: ${REACT_APP_WEATHER_API_KEY}
+      UNSPLASH_KEY: ${REACT_APP_UNSPLASH_KEY}
+      GEO_API_KEY: ${REACT_APP_GEO_API_KEY}
+    ports:
+      - "3001:3001"
+    volumes:
+      - sqlite_data:/app/data
+      - backend_logs:/app/logs
+    networks:
+      - easyweather-network
+
+  # Фронтенд (React)
+  easyweather-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_WEATHER_API_KEY: ${REACT_APP_WEATHER_API_KEY}
+        REACT_APP_UNSPLASH_KEY: ${REACT_APP_UNSPLASH_KEY}
+        REACT_APP_GEO_API_KEY: ${REACT_APP_GEO_API_KEY}
+        REACT_APP_API_URL: http://localhost:3001
+    container_name: easyweather-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    networks:
+      - easyweather-network
+    depends_on:
+      - easyweather-backend
+
+  # Telegram бот
+  easyweather-bot:
+    build:
+      context: ./bot
+      dockerfile: Dockerfile
+    container_name: easyweather-bot
+    restart: unless-stopped
+    environment:
+      TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
+      API_URL: http://easyweather-backend:3001
+    networks:
+      - easyweather-network
+    depends_on:
+      - easyweather-backend
+
+volumes:
+  sqlite_data:
+    driver: local
+  backend_logs:
+    driver: local
+
+networks:
+  easyweather-network:
+    driver: bridge

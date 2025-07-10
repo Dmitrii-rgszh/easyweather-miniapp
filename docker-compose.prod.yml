@@ -1,0 +1,74 @@
+services:
+  # Бэкенд API - ГОТОВЫЙ ОБРАЗ ИЗ DOCKER HUB
+  easyweather-backend:
+    image: ${DOCKER_USERNAME}/easyweather-backend:${IMAGE_TAG:-latest}
+    container_name: easyweather-backend
+    restart: unless-stopped
+    user: "0:0"
+    environment:
+      NODE_ENV: production
+      DATABASE_PATH: /app/data/database.db
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: 3001
+      CORS_ORIGIN: http://localhost
+      REACT_APP_WEATHER_API_KEY: ${REACT_APP_WEATHER_API_KEY}
+      REACT_APP_UNSPLASH_KEY: ${REACT_APP_UNSPLASH_KEY}
+      REACT_APP_GEO_API_KEY: ${REACT_APP_GEO_API_KEY}
+    volumes:
+      - sqlite_data:/app/data
+      - backend_logs:/app/logs
+    networks:
+      - easyweather-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+
+  # Фронтенд - ГОТОВЫЙ ОБРАЗ ИЗ DOCKER HUB
+  easyweather-frontend:
+    image: ${DOCKER_USERNAME}/easyweather-frontend:${IMAGE_TAG:-latest}
+    container_name: easyweather-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"  # Прямой доступ к frontend nginx
+    networks:
+      - easyweather-network
+    depends_on:
+      - easyweather-backend
+
+  # Telegram бот - ГОТОВЫЙ ОБРАЗ ИЗ DOCKER HUB
+  easyweather-bot:
+    image: ${DOCKER_USERNAME}/easyweather-bot:${IMAGE_TAG:-latest}
+    container_name: easyweather-bot
+    restart: unless-stopped
+    environment:
+      TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
+      API_URL: http://easyweather-backend:3001
+    networks:
+      - easyweather-network
+    depends_on:
+      - easyweather-backend
+
+  # Redis для кэширования
+  redis:
+    image: redis:7-alpine
+    container_name: easyweather-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - easyweather-network
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+volumes:
+  sqlite_data:
+    driver: local
+  backend_logs:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  easyweather-network:
+    driver: bridge

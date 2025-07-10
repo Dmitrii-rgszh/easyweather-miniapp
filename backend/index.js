@@ -47,6 +47,12 @@ db.serialize(() => {
     user_agent TEXT,
     referrer TEXT,
     session_id TEXT,
+    ip_address TEXT,
+    page_url TEXT,
+    click_coordinates TEXT,
+    banner_id TEXT DEFAULT 'vtb_card',
+    campaign_id TEXT,
+    user_id TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`, (err) => {
     if (err) {
@@ -182,7 +188,42 @@ db.serialize(() => {
       console.log('✅ Таблица daily_stats готова');
     }
   });
+  
+  // ===== МИГРАЦИЯ БАЗЫ ДАННЫХ =====
+// Добавляем новые поля в существующую таблицу banner_analytics
 
+console.log('🔄 Проверка и обновление структуры таблицы banner_analytics...');
+
+// Функция безопасного добавления столбца
+const addColumnSafely = (tableName, columnName, columnType, defaultValue = '') => {
+  return new Promise((resolve) => {
+    const defaultClause = defaultValue ? ` DEFAULT '${defaultValue}'` : '';
+    db.run(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnType}${defaultClause}`, (err) => {
+      if (err) {
+        if (err.message.includes('duplicate column')) {
+          console.log(`✅ Поле ${columnName} уже существует`);
+        } else {
+          console.log(`❌ Ошибка добавления поля ${columnName}:`, err.message);
+        }
+      } else {
+        console.log(`✅ Поле ${columnName} добавлено успешно`);
+      }
+      resolve();
+    });
+  });
+};
+
+// Добавляем новые поля
+db.serialize(async () => {
+  await addColumnSafely('banner_analytics', 'ip_address', 'TEXT');
+  await addColumnSafely('banner_analytics', 'page_url', 'TEXT');
+  await addColumnSafely('banner_analytics', 'click_coordinates', 'TEXT');
+  await addColumnSafely('banner_analytics', 'banner_id', 'TEXT', 'vtb_card');
+  await addColumnSafely('banner_analytics', 'campaign_id', 'TEXT');
+  await addColumnSafely('banner_analytics', 'user_id', 'TEXT');
+  
+  console.log('🎯 Миграция таблицы banner_analytics завершена');
+});
   // ===== ИНДЕКСЫ =====
   
   // Существующие индексы
@@ -453,6 +494,408 @@ app.get('/api/analytics/banner-stats', async (req, res) => {
     res.status(500).json({ 
       success: false, 
       error: 'Ошибка сервера при получении статистики' 
+    });
+  }
+});
+
+// ===== РАСШИРЕННАЯ АНАЛИТИКА БАННЕРА =====
+
+// 🎯 POST /api/analytics/banner/click - Расширенное отслеживание кликов
+app.post('/api/analytics/banner/click', async (req, res) => {
+  try {
+    const { 
+      banner_id = 'vtb_card',
+      click_coordinates,
+      page_url,
+      session_duration,
+      user_id,
+      campaign_id 
+    } = req.body;
+
+    const clientIP = getClientIP(req);
+    const userAgent = req.headers['user-agent'] || '';
+    const referrer = req.headers['referer'] || '';
+    
+    console.log(`🎯 Клик по баннеру ${banner_id}:`, {
+      ip: clientIP,
+      coordinates: click_coordinates,
+      page: page_url
+    });
+
+    // Записываем в базу данных с дополнительными полями
+    const result = await new Promise((resolve, reject) => {
+      db.run(
+        `INSERT INTO banner_analytics 
+         (user_ip, user_agent, referrer, session_id, ip_address, page_url, click_coordinates, banner_id, campaign_id, user_id) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [clientIP, userAgent, referrer, 
+         `banner_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+         clientIP, page_url, click_coordinates, banner_id, campaign_id, user_id],
+        function(err) {
+          if (err) reject(err);
+          else resolve({ id: this.lastID, rowsAffected: this.changes });
+        }
+      );
+    });
+
+    res.json({ 
+      success: true, 
+      message: 'Клик по баннеру записан',
+      click_id: result.id,
+      banner_id: banner_id
+    });
+
+  } catch (error) {
+    console.error('❌ Ошибка записи клика по баннеру:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Ошибка сервера при записи клика' 
+    });
+  }
+});
+
+// 📊 POST /api/analytics/banner/impression - Отслеживание показов баннера
+app.post('/api/analytics/banner/impression', async (req, res) => {
+  try {
+    const { 
+      banner_id = 'vtb_card',
+      page_url,
+      viewport_size,
+      banner_position,
+      session_id 
+    } = req.body;
+
+    const clientIP = getClientIP(req);
+    
+    console.log(`👁️ Показ баннера ${banner_id} на странице:`, page_url);
+
+    // Создаем запись о показе
+    await new Promise((resolve, reject) => {
+      db.run(
+        `INSERT INTO banner_analytics 
+         (user_ip, user_agent, referrer, session_id, page_url, banner_id, ip_address) 
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [clientIP, 'impression_tracking', '', session_id || generateSessionId(), page_url, banner_id, clientIP],
+        function(err) {
+          if (err) reject(err);
+          else resolve({ id: this.lastID });
+        }
+      );
+    });
+
+    res.json({ 
+      success: true, 
+      message: 'Показ баннера записан' 
+    });
+
+  } catch (error) {
+    console.error('❌ Ошибка записи показа баннера:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Ошибка сервера при записи показа' 
+    });
+  }
+});
+
+// 📈 GET /api/analytics/banner/detailed-stats - Детальная статистика баннера
+app.get('/api/analytics/banner/detailed-stats', async (req, res) => {
+  try {
+    const adminId = req.query.admin_id;
+    const period = req.query.period || '7d'; // 1d, 7d, 30d, all
+    const bannerId = req.query.banner_id || 'vtb_card';
+
+    if (!adminId) {
+      return res.status(401).json({ success: false, error: 'Требуется авторизация' });
+    }
+
+    // Проверяем админские права
+    const adminCheck = await new Promise((resolve, reject) => {
+      db.get('SELECT * FROM admins WHERE telegram_id = ?', [parseInt(adminId)], (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+
+    if (!adminCheck) {
+      return res.status(403).json({ success: false, error: 'Нет прав администратора' });
+    }
+
+    // Определяем временной период
+    let timeFilter = '';
+    switch(period) {
+      case '1d':
+        timeFilter = "AND clicked_at >= datetime('now', '-1 day')";
+        break;
+      case '7d':
+        timeFilter = "AND clicked_at >= datetime('now', '-7 days')";
+        break;
+      case '30d':
+        timeFilter = "AND clicked_at >= datetime('now', '-30 days')";
+        break;
+      default:
+        timeFilter = '';
+    }
+
+    // Получаем общую статистику
+    const stats = await new Promise((resolve, reject) => {
+      db.get(
+        `SELECT 
+           COUNT(*) as total_clicks,
+           COUNT(DISTINCT user_ip) as unique_users,
+           COUNT(DISTINCT session_id) as unique_sessions,
+           AVG(CASE WHEN user_agent != 'impression_tracking' THEN 1 ELSE 0 END) as click_rate
+         FROM banner_analytics 
+         WHERE 1=1 ${timeFilter}`,
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
+    });
+
+    // Статистика по часам
+    const hourlyData = await new Promise((resolve, reject) => {
+      db.all(
+        `SELECT 
+           strftime('%H', clicked_at) as hour,
+           COUNT(*) as clicks,
+           COUNT(DISTINCT user_ip) as unique_users
+         FROM banner_analytics 
+         WHERE user_agent != 'impression_tracking' ${timeFilter}
+         GROUP BY strftime('%H', clicked_at)
+         ORDER BY hour`,
+        (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows);
+        }
+      );
+    });
+
+    // География кликов (по IP)
+    const geoData = await new Promise((resolve, reject) => {
+      db.all(
+        `SELECT 
+           user_ip,
+           COUNT(*) as clicks,
+           MAX(clicked_at) as last_click
+         FROM banner_analytics 
+         WHERE user_agent != 'impression_tracking' ${timeFilter}
+         GROUP BY user_ip
+         ORDER BY clicks DESC
+         LIMIT 20`,
+        (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows);
+        }
+      );
+    });
+
+    // Устройства и браузеры
+    const deviceData = await new Promise((resolve, reject) => {
+      db.all(
+        `SELECT 
+           CASE 
+             WHEN user_agent LIKE '%Mobile%' THEN 'Mobile'
+             WHEN user_agent LIKE '%Tablet%' THEN 'Tablet'
+             ELSE 'Desktop'
+           END as device_type,
+           COUNT(*) as clicks
+         FROM banner_analytics 
+         WHERE user_agent != 'impression_tracking' ${timeFilter}
+         GROUP BY device_type`,
+        (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows);
+        }
+      );
+    });
+
+    // Координаты кликов
+    const clickCoordinates = await new Promise((resolve, reject) => {
+      db.all(
+        `SELECT 
+           click_coordinates,
+           COUNT(*) as frequency
+         FROM banner_analytics 
+         WHERE click_coordinates IS NOT NULL AND click_coordinates != '' ${timeFilter}
+         GROUP BY click_coordinates
+         ORDER BY frequency DESC
+         LIMIT 50`,
+        (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows);
+        }
+      );
+    });
+
+    res.json({
+      success: true,
+      banner_id: bannerId,
+      period: period,
+      stats: {
+        overview: stats,
+        hourly: hourlyData,
+        geography: geoData,
+        devices: deviceData,
+        click_coordinates: clickCoordinates,
+        generated_at: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Ошибка получения детальной статистики:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Ошибка сервера при получении статистики' 
+    });
+  }
+});
+
+// 🔧 GET /api/analytics/banner/conversion - Анализ конверсии баннера
+app.get('/api/analytics/banner/conversion', async (req, res) => {
+  try {
+    const adminId = req.query.admin_id;
+    
+    if (!adminId) {
+      return res.status(401).json({ success: false, error: 'Требуется авторизация' });
+    }
+
+    // Проверяем права
+    const adminCheck = await new Promise((resolve, reject) => {
+      db.get('SELECT * FROM admins WHERE telegram_id = ?', [parseInt(adminId)], (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+
+    if (!adminCheck) {
+      return res.status(403).json({ success: false, error: 'Нет прав администратора' });
+    }
+
+    // Показы vs клики
+    const impressions = await new Promise((resolve, reject) => {
+      db.get(
+        "SELECT COUNT(*) as total FROM banner_analytics WHERE user_agent = 'impression_tracking'",
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row.total);
+        }
+      );
+    });
+
+    const clicks = await new Promise((resolve, reject) => {
+      db.get(
+        "SELECT COUNT(*) as total FROM banner_analytics WHERE user_agent != 'impression_tracking'",
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row.total);
+        }
+      );
+    });
+
+    // CTR по дням
+    const dailyConversion = await new Promise((resolve, reject) => {
+      db.all(
+        `SELECT 
+           DATE(clicked_at) as date,
+           COUNT(CASE WHEN user_agent = 'impression_tracking' THEN 1 END) as impressions,
+           COUNT(CASE WHEN user_agent != 'impression_tracking' THEN 1 END) as clicks,
+           ROUND(
+             COUNT(CASE WHEN user_agent != 'impression_tracking' THEN 1 END) * 100.0 / 
+             NULLIF(COUNT(CASE WHEN user_agent = 'impression_tracking' THEN 1 END), 0), 
+             2
+           ) as ctr
+         FROM banner_analytics 
+         WHERE clicked_at >= datetime('now', '-30 days')
+         GROUP BY DATE(clicked_at)
+         ORDER BY date DESC`,
+        (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows);
+        }
+      );
+    });
+
+    const overallCTR = impressions > 0 ? ((clicks / impressions) * 100).toFixed(2) : 0;
+
+    res.json({
+      success: true,
+      conversion: {
+        total_impressions: impressions,
+        total_clicks: clicks,
+        overall_ctr: parseFloat(overallCTR),
+        daily_conversion: dailyConversion,
+        generated_at: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Ошибка анализа конверсии:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Ошибка сервера при анализе конверсии' 
+    });
+  }
+});
+
+// 📊 GET /api/analytics/banner/heatmap - Тепловая карта кликов
+app.get('/api/analytics/banner/heatmap', async (req, res) => {
+  try {
+    const adminId = req.query.admin_id;
+    
+    if (!adminId) {
+      return res.status(401).json({ success: false, error: 'Требуется авторизация' });
+    }
+
+    // Проверяем права
+    const adminCheck = await new Promise((resolve, reject) => {
+      db.get('SELECT * FROM admins WHERE telegram_id = ?', [parseInt(adminId)], (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+
+    if (!adminCheck) {
+      return res.status(403).json({ success: false, error: 'Нет прав администратора' });
+    }
+
+    // Получаем координаты кликов для тепловой карты
+    const heatmapData = await new Promise((resolve, reject) => {
+      db.all(
+        `SELECT 
+           click_coordinates,
+           COUNT(*) as frequency,
+           AVG(strftime('%s', clicked_at)) as avg_timestamp
+         FROM banner_analytics 
+         WHERE click_coordinates IS NOT NULL 
+           AND click_coordinates != ''
+           AND user_agent != 'impression_tracking'
+         GROUP BY click_coordinates
+         ORDER BY frequency DESC`,
+        (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows.map(row => ({
+            x: parseInt(row.click_coordinates.split(',')[0]) || 0,
+            y: parseInt(row.click_coordinates.split(',')[1]) || 0,
+            frequency: row.frequency,
+            avg_timestamp: row.avg_timestamp
+          })));
+        }
+      );
+    });
+
+    res.json({
+      success: true,
+      heatmap_data: heatmapData,
+      total_clicks: heatmapData.reduce((sum, point) => sum + point.frequency, 0),
+      generated_at: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('❌ Ошибка получения тепловой карты:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Ошибка сервера при получении тепловой карты' 
     });
   }
 });
