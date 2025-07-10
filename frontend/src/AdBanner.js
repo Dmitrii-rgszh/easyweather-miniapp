@@ -1,11 +1,11 @@
-// 🎨 AdBanner.js - Реклама для бесплатного приложения
-
+// 🎨 AdBanner.js - Реклама с серверной аналитикой
+import analytics from './analytics';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const AdBanner = () => {
   const [isVisible, setIsVisible] = useState(true);
-  const [clickCount, setClickCount] = useState(0); // 🆕 СЧЕТЧИК КЛИКОВ
+  const [sessionId, setSessionId] = useState('');
 
   // Показываем баннер через 2 секунды после загрузки
   useEffect(() => {
@@ -16,33 +16,69 @@ const AdBanner = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // 🆕 ЗАГРУЖАЕМ СЧЕТЧИК ПРИ СТАРТЕ КОМПОНЕНТА
+  // 🆕 ГЕНЕРИРУЕМ SESSION ID ПРИ СТАРТЕ
   useEffect(() => {
-    const savedClicks = localStorage.getItem('bannerClicks');
-    if (savedClicks) {
-      setClickCount(parseInt(savedClicks));
+    // Проверяем есть ли уже session ID в localStorage
+    let currentSessionId = localStorage.getItem('userSessionId');
+    
+    if (!currentSessionId) {
+      // Генерируем новый session ID
+      currentSessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('userSessionId', currentSessionId);
     }
+    
+    setSessionId(currentSessionId);
   }, []);
 
-  // 🆕 ФУНКЦИЯ ОБРАБОТКИ КЛИКА ПО БАННЕРУ
-  const handleBannerClick = () => {
-    // Увеличиваем счетчик
-    const newCount = clickCount + 1;
-    setClickCount(newCount);
-    
-    // Сохраняем в localStorage
-    localStorage.setItem('bannerClicks', newCount.toString());
-    
-    // Логируем в консоль для отладки
-    console.log('🎯 Клик по баннеру! Всего кликов:', newCount);
-    
-    // Добавляем метку времени клика
-    const clickTime = new Date().toISOString();
-    localStorage.setItem('lastBannerClick', clickTime);
-    
-    // Открываем ссылку
-    window.open('https://vtb.ru/l/m6e34kae', '_blank');
+  // 🚀 ФУНКЦИЯ ОТПРАВКИ КЛИКА НА СЕРВЕР
+  const sendClickToServer = async (sessionId) => {
+    try {
+      const response = await fetch('/api/analytics/banner-click', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionId: sessionId,
+          timestamp: new Date().toISOString(),
+          // Браузер автоматически добавит User-Agent и Referer в заголовки
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log('✅ Клик по баннеру записан на сервер:', result);
+      } else {
+        console.error('❌ Ошибка записи клика:', result.error);
+      }
+    } catch (error) {
+      console.error('❌ Ошибка отправки аналитики:', error);
+      // Продолжаем работу даже если аналитика не работает
+    }
   };
+
+  // 🎯 ОБНОВЛЕННАЯ ФУНКЦИЯ ОБРАБОТКИ КЛИКА
+  const handleBannerClick = async () => {
+  console.log('🎯 Клик по баннеру!');
+  
+  // 🆕 ОТСЛЕЖИВАЕМ КЛИК ПО БАННЕРУ В ТЕЛЕГРАМ АНАЛИТИКЕ
+  analytics.trackBannerClick('vtb_card');
+  
+  // Отправляем аналитику на сервер (асинхронно)
+  if (sessionId) {
+    sendClickToServer(sessionId);
+  }
+  
+  // 📊 ДУБЛИРУЕМ В LOCALSTORAGE ДЛЯ СОВМЕСТИМОСТИ 
+  const savedClicks = localStorage.getItem('bannerClicks') || '0';
+  const newCount = parseInt(savedClicks) + 1;
+  localStorage.setItem('bannerClicks', newCount.toString());
+  localStorage.setItem('lastBannerClick', new Date().toISOString());
+  
+  // Открываем ссылку
+  window.open('https://vtb.ru/l/m6e34kae', '_blank');
+};
 
   // Не показываем только если пользователь закрыл
   if (!isVisible) return null;
@@ -81,7 +117,7 @@ const AdBanner = () => {
             color: 'white',
             boxShadow: '0 8px 32px rgba(0, 102, 204, 0.3)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
-            cursor: 'pointer', // 🆕 УКАЗАТЕЛЬ МЫШИ
+            cursor: 'pointer',
             position: 'relative',
             overflow: 'hidden',
             width: '100%',
@@ -89,7 +125,7 @@ const AdBanner = () => {
             minWidth: '320px',
             pointerEvents: 'auto'
           }}
-          onClick={handleBannerClick} // 🆕 ОБРАБОТЧИК КЛИКА
+          onClick={handleBannerClick}
         >
           {/* Фоновый эффект */}
           <div style={{
@@ -137,24 +173,11 @@ const AdBanner = () => {
               <div style={{
                 fontSize: '13px',
                 opacity: 0.9,
-                marginBottom: '6px',
                 fontFamily: 'Montserrat, Arial, sans-serif',
                 lineHeight: '1.2'
               }}>
                 ⭐ Автор EasyWeather делится секретом
               </div>
-
-              {/* 🆕 ПОКАЗЫВАЕМ СЧЕТЧИК КЛИКОВ (ТОЛЬКО В DEV РЕЖИМЕ) */}
-              {process.env.NODE_ENV === 'development' && (
-                <div style={{
-                  fontSize: '10px',
-                  opacity: 0.7,
-                  fontFamily: 'Montserrat, Arial, sans-serif',
-                  marginTop: '2px'
-                }}>
-                  🎯 Кликов: {clickCount}
-                </div>
-              )}
             </div>
 
             {/* Кнопка */}

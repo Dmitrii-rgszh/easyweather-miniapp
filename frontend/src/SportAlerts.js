@@ -522,7 +522,7 @@ export default function SportAlerts({ weather, userProfile, forecastData, uvData
               🏃 Спорт {excellentCount > 0 && <span style={{ color: theme.mainColor }}>🎯</span>}
             </div>
             <div style={{
-              fontSize: 13,
+              fontSize: 14,
               color: "#6b7280",
               fontFamily: "Montserrat, Arial, sans-serif"
             }}>
@@ -581,7 +581,7 @@ export default function SportAlerts({ weather, userProfile, forecastData, uvData
                       </div>
                       {alert.score && (
                         <div style={{
-                          fontSize: 11,
+                          fontSize: 13,
                           color: "#6b7280",
                           fontFamily: "Montserrat, Arial, sans-serif"
                         }}>
@@ -593,7 +593,7 @@ export default function SportAlerts({ weather, userProfile, forecastData, uvData
                   
                   {/* Описание */}
                   <div style={{
-                    fontSize: 14,
+                    fontSize: 15,
                     color: "#374151",
                     fontFamily: "Montserrat, Arial, sans-serif",
                     marginBottom: 10,
@@ -609,7 +609,7 @@ export default function SportAlerts({ weather, userProfile, forecastData, uvData
                     padding: "8px 10px"
                   }}>
                     <div style={{
-                      fontSize: 12,
+                      fontSize: 14,
                       fontWeight: 600,
                       color: "#6b7280",
                       marginBottom: 6,
@@ -619,7 +619,7 @@ export default function SportAlerts({ weather, userProfile, forecastData, uvData
                     </div>
                     {alert.advice.map((tip, tipIndex) => (
                       <div key={tipIndex} style={{
-                        fontSize: 12,
+                        fontSize: 14,
                         color: "#374151",
                         fontFamily: "Montserrat, Arial, sans-serif",
                         marginBottom: tipIndex < alert.advice.length - 1 ? 2 : 0

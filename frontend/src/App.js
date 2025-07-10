@@ -1,4 +1,5 @@
 // Обновленный App.js с WeatherCarousel и системой передачи данных всем блокам
+import analytics from './analytics';
 import AdminPanel from './AdminPanel';
 import React, { useState, useEffect, useCallback } from "react";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
@@ -414,11 +415,14 @@ function getBgGradient(desc, isNight) {
   return "linear-gradient(160deg, #7fcfff 0%, #e7e9fd 100%)";
 }
 
+// Найди в App.js строки 420-435 и ЗАМЕНИ их на это:
+
 function App() {
+  const [weather, setWeather] = useState(null);
+  const [coords, setCoords] = useState(null);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [city, setCity] = useState("Москва");
   const [date, setDate] = useState(new Date());
-  const [weather, setWeather] = useState(null);
   const [forecastData, setForecastData] = useState([]); // 🆕 Для передачи в карусель
   const [loading, setLoading] = useState(false);
   const [photoUrl, setPhotoUrl] = useState("");
@@ -435,7 +439,6 @@ function App() {
   });
   const [airQualityData, setAirQualityData] = useState(null);
   const [uvData, setUvData] = useState(null);
-  const [coords, setCoords] = useState(null);
   const [initialDesc, setInitialDesc] = useState(""); // Для фона
   const [initialIsNight, setInitialIsNight] = useState(false); // Для фона
   const [selectedWeatherData, setSelectedWeatherData] = useState(null);
@@ -448,6 +451,13 @@ function App() {
   const [showMoodTracker, setShowMoodTracker] = useState(false);
   // 🆕 Состояния для системы достижений
   const [gameStats, setGameStats] = useState(getGameStats());
+
+  // 🆕 ДОБАВЛЯЕМ ОТСЛЕЖИВАНИЕ ГЛАВНОЙ СТРАНИЦЫ
+  useEffect(() => {
+    analytics.trackPageView('weather_main');
+  }, []);
+
+  // ... остальной код функции App остается без изменений
 
   // Функции обработки остаются без изменений
   const handleShareWeather = (weather) => {
@@ -503,9 +513,11 @@ function App() {
     </div>
   );
   
-  // ИСПРАВЛЕННЫЙ DEV хоткей для App.js
+  useEffect(() => {
+    analytics.trackPageView('weather_main');
+  }, []);
 
-useEffect(() => {
+  useEffect(() => {
     // Исправленный хоткей для полного сброса в dev режиме
     const handleDevReset = (e) => {
       // Ctrl + Shift + R = Full Reset (опрос + премиум + избранное)

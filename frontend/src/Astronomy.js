@@ -87,17 +87,6 @@ function calculateSunTimes(lat, lon, date) {
   return { sunrise, sunset, dayLength };
 }
 
-// Функция для золотого часа
-function getGoldenHour(sunrise, sunset) {
-  const goldenHourStart = new Date(sunset);
-  goldenHourStart.setMinutes(goldenHourStart.getMinutes() - 60);
-  
-  const goldenHourMorning = new Date(sunrise);
-  goldenHourMorning.setMinutes(goldenHourMorning.getMinutes() + 60);
-  
-  return { morning: goldenHourMorning, evening: goldenHourStart };
-}
-
 // SVG стрелка
 const ChevronIcon = ({ isOpen }) => (
   <motion.svg
@@ -145,7 +134,6 @@ export default function Astronomy({ weatherData, coords, date = new Date() }) {
   }
 
   const moonPhase = getMoonPhase(currentDate);
-  const goldenHour = getGoldenHour(sunrise, sunset);
   const theme = getTimeTheme(sunrise, sunset);
   
   const formatTime = (time) => time.toLocaleTimeString('ru-RU', { 
@@ -424,77 +412,6 @@ export default function Astronomy({ weatherData, coords, date = new Date() }) {
                     }}>
                       {moonPhase.description}
                     </div>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Золотой час */}
-              <motion.div
-                style={{
-                  background: "linear-gradient(135deg, #fbbf2415, #f59e0b08)",
-                  borderRadius: 12,
-                  padding: "12px",
-                  border: "2px solid #f59e0b30",
-                  position: "relative",
-                  overflow: "hidden"
-                }}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4, delay: 0.3 }}
-              >
-                {/* Цветная полоска снизу */}
-                <div style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: 2,
-                  background: "#f59e0b",
-                  borderRadius: "0 0 12px 12px"
-                }} />
-
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  marginBottom: 8
-                }}>
-                  <span style={{ 
-                    fontSize: 18, // Увеличили размер иконки
-                    filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))"
-                  }}>📸</span>
-                  <div style={{
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: "#374151",
-                    fontFamily: "Montserrat, Arial, sans-serif"
-                  }}>
-                    Золотой час для крутых снимков
-                  </div>
-                </div>
-
-                <div style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 8
-                }}>
-                  <div style={{
-                    textAlign: "center",
-                    fontSize: 14,
-                    color: "#374151",
-                    fontFamily: "Montserrat, Arial, sans-serif"
-                  }}>
-                    🌅 <strong>{formatTime(goldenHour.morning)}</strong><br />
-                    <span style={{ color: "#6b7280" }}>Утром</span>
-                  </div>
-                  <div style={{
-                    textAlign: "center",
-                    fontSize: 14,
-                    color: "#374151",
-                    fontFamily: "Montserrat, Arial, sans-serif"
-                  }}>
-                    🌇 <strong>{formatTime(goldenHour.evening)}</strong><br />
-                    <span style={{ color: "#6b7280" }}>Вечером</span>
                   </div>
                 </div>
               </motion.div>
