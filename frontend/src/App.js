@@ -19,8 +19,19 @@ import Astronomy from "./Astronomy";
 import WeatherTrends from "./WeatherTrends";
 import { 
   fetchWeatherFromBackend, 
-  checkBackendHealth 
+  fetchForecastFromBackend,
+  checkBackendHealth,
+  clearAllBackendCache,
+  getBackendCacheInfo
 } from './backendApi';
+
+// Импорт прямого API как fallback
+import { 
+  fetchWeather as fetchWeatherDirect, 
+  fetchForecast as fetchForecastDirect,
+  clearAllCache as clearDirectCache
+} from './weatherApi';
+
 import UserProfileModal from "./UserProfileModal";
 import HealthAlerts from "./HealthAlerts";
 import ProfilePage from "./ProfilePage";
@@ -700,7 +711,28 @@ const handleShowWeather = async () => {
   try {
     if (isToday(date)) {
       // Получаем текущую погоду
-      const data = await fetchWeatherFromBackend(city);
+      let data;
+      try {
+        // Проверяем доступность бэкенда
+        const isBackendHealthy = await checkBackendHealth();
+  
+        if (isBackendHealthy) {
+          console.log('✅ Используем бэкенд для погоды');
+          data = await fetchWeatherFromBackend(city);
+        } else {
+          console.log('⚠️ Бэкенд недоступен, используем прямой API');
+          data = await fetchWeatherDirect(city);
+        }
+      } catch (error) {
+        console.error('❌ Ошибка бэкенда, переключаемся на прямой API:', error.message);
+        try {
+          data = await fetchWeatherDirect(city);
+          console.log('✅ Используем прямой API как fallback');
+        } catch (directError) {
+          console.error('❌ Ошибка прямого API:', directError.message);
+          throw new Error('Не удалось получить данные о погоде');
+        }
+      }
       const details = {
         feels: Math.round(data.main.feels_like),
         pressure: Math.round(data.main.pressure * 0.750062),
@@ -730,16 +762,39 @@ const handleShowWeather = async () => {
       setGameStats(achievementResult.stats);
 
       // Диспатчим события для AchievementsSystem
-      achievementResult.newAchievements.forEach((achievementId, index) => {
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('newAchievement', {
-            detail: { achievement: achievementId }
-          }));
-        }, index * 1000);
-      });
+      if (achievementResult.newAchievements && Array.isArray(achievementResult.newAchievements)) {
+        achievementResult.newAchievements.forEach((achievementId, index) => {
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('newAchievement', {
+              detail: { achievement: achievementId }
+            }));
+          }, index * 1000);
+        });
+      }
 
       // Получаем почасовой прогноз
-      const { list: forecastList } = await fetchForecast(city);
+      let forecastList;
+      try {
+        const isBackendHealthy = await checkBackendHealth();
+  
+        if (isBackendHealthy) {
+          const forecastData = await fetchForecastFromBackend(city);
+          forecastList = forecastData.list;
+        } else {
+          const forecastData = await fetchForecastDirect(city);
+          forecastList = forecastData.list;
+        }
+      } catch (error) {
+        console.error('❌ Ошибка получения прогноза:', error.message);
+        try {
+          const forecastData = await fetchForecastDirect(city);
+          forecastList = forecastData.list;
+        } catch (directError) {
+          console.error('❌ Ошибка прямого API для прогноза:', directError.message);
+          // Можно оставить пустой массив или показать ошибку
+          forecastList = [];
+        }
+      }
       setForecastData(forecastList);
 
       // Получаем дополнительные данные
