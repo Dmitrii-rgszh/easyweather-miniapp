@@ -392,33 +392,6 @@ const HeaderAchievements = ({ gameStats: propStats }) => {
           </motion.div>
         </motion.div>
         
-        {/* Подсказка о следующем уровне */}
-        <AnimatePresence>
-          {isHovered && levelProgress.nextLevel && (
-            <motion.div
-              initial={{ opacity: 0, y: 8, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 8, scale: 0.9 }}
-              style={{
-                position: 'absolute',
-                top: '14px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                fontSize: '12px', // Увеличили с 9px до 11px
-                color: '#64748b',
-                fontFamily: 'Montserrat, Arial, sans-serif',
-                whiteSpace: 'nowrap',
-                background: 'rgba(255,255,255,0.95)',
-                padding: '4px 8px',
-                borderRadius: '6px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                border: '1px solid rgba(255,255,255,0.8)'
-              }}
-            >
-              Еще {levelProgress.pointsNeeded} до {levelProgress.nextLevel.icon} {levelProgress.nextLevel.title}
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
       
       {/* Правая часть - достижения */}

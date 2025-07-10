@@ -17,9 +17,9 @@ function analyzePhotoConditions(weather, userProfile, forecastData, uvData, astr
   if (!hasPhotography) return [];
   
   const alerts = [];
-  const temp = Math.round(weather.main.temp);
-  const humidity = weather.main.humidity;
-  const windSpeed = Math.round(weather.wind?.speed * 3.6) || 0;
+  const temp = Math.round(weather.main?.temp || weather.temp || 0);
+  const humidity = weather.main?.humidity || weather.humidity || 0;
+  const windSpeed = Math.round((weather.wind?.speed || 0) * 3.6);
   const clouds = weather.clouds?.all || 0;
   const visibility = weather.visibility ? Math.round(weather.visibility / 1000) : 10;
   const uvIndex = uvData?.uvi || 0;
@@ -244,6 +244,13 @@ function analyzePhotoConditions(weather, userProfile, forecastData, uvData, astr
     
     forecastData.slice(0, 8).forEach((item, index) => { // Ближайшие 24 часа
       const itemTime = new Date(item.dt * 1000);
+      const itemHour = itemTime.getHours();
+      
+      // 🌙 ПРОПУСКАЕМ НОЧНОЕ ВРЕМЯ (22:00 - 06:00)
+      if (itemHour >= 22 || itemHour <= 6) {
+        return; // Не рекомендуем фотосессии ночью
+      }
+      
       const itemClouds = item.clouds?.all || 0;
       const itemWind = Math.round(item.wind?.speed * 3.6) || 0;
       const itemTemp = Math.round(item.main.temp);
@@ -506,7 +513,7 @@ export default function PhotoAlerts({ weather, userProfile, forecastData, uvData
           {/* Текст */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: 600,
               color: '#1e293b',
               fontFamily: 'Montserrat, Arial, sans-serif',
@@ -516,7 +523,7 @@ export default function PhotoAlerts({ weather, userProfile, forecastData, uvData
               📷 {mainAlert.title}
             </div>
             <div style={{
-              fontSize: 12,
+              fontSize: 14,
               color: '#64748b',
               fontFamily: 'Montserrat, Arial, sans-serif',
               lineHeight: '1.3'
@@ -525,7 +532,7 @@ export default function PhotoAlerts({ weather, userProfile, forecastData, uvData
             </div>
             {alerts.length > 1 && (
               <div style={{
-                fontSize: 10,
+                fontSize: 12,
                 color: theme.mainColor,
                 fontFamily: 'Montserrat, Arial, sans-serif',
                 marginTop: 2,
@@ -576,7 +583,7 @@ export default function PhotoAlerts({ weather, userProfile, forecastData, uvData
               }}>
                 <span style={{ fontSize: 16 }}>{alert.icon}</span>
                 <span style={{
-                  fontSize: 13,
+                  fontSize: 15,
                   fontWeight: 600,
                   color: alert.color,
                   fontFamily: 'Montserrat, Arial, sans-serif'
@@ -585,19 +592,9 @@ export default function PhotoAlerts({ weather, userProfile, forecastData, uvData
                 </span>
               </div>
               
-              <div style={{
-                fontSize: 12,
-                color: '#4b5563',
-                fontFamily: 'Montserrat, Arial, sans-serif',
-                marginBottom: 8,
-                lineHeight: '1.4'
-              }}>
-                {alert.message}
-              </div>
-              
               {alert.advice && (
                 <div style={{
-                  fontSize: 11,
+                  fontSize: 15,
                   color: '#6b7280',
                   fontFamily: 'Montserrat, Arial, sans-serif'
                 }}>

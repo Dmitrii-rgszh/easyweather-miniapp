@@ -17,10 +17,10 @@ function analyzeGardenConditions(weather, userProfile, forecastData, uvData) {
   if (!hasGardening) return [];
   
   const alerts = [];
-  const temp = Math.round(weather.main.temp);
-  const humidity = weather.main.humidity;
-  const windSpeed = Math.round(weather.wind?.speed * 3.6) || 0;
-  const pressure = weather.main.pressure;
+  const temp = Math.round(weather.main?.temp || weather.temp || 0);
+  const humidity = weather.main?.humidity || weather.humidity || 0;
+  const windSpeed = Math.round((weather.wind?.speed || 0) * 3.6);
+  const pressure = weather.main?.pressure || 1013;
   const rain = weather.rain?.['1h'] || 0;
   const uvIndex = uvData?.uvi || 0;
   
@@ -325,7 +325,7 @@ export default function GardenAlerts({ weather, userProfile, forecastData, uvDat
         <div style={{ fontSize: 16, color: '#6b7280' }}>
           🌱 Садоводство
         </div>
-        <div style={{ fontSize: 12, color: '#9ca3af' }}>
+        <div style={{ fontSize: 14, color: '#9ca3af' }}>
           Анализируем условия...
         </div>
       </div>
@@ -406,7 +406,7 @@ export default function GardenAlerts({ weather, userProfile, forecastData, uvDat
           {/* Текст */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: 600,
               color: '#1e293b',
               fontFamily: 'Montserrat, Arial, sans-serif',
@@ -416,7 +416,7 @@ export default function GardenAlerts({ weather, userProfile, forecastData, uvDat
               🌱 {mainAlert.title}
             </div>
             <div style={{
-              fontSize: 12,
+              fontSize: 13,
               color: '#64748b',
               fontFamily: 'Montserrat, Arial, sans-serif',
               lineHeight: '1.3'
@@ -425,7 +425,7 @@ export default function GardenAlerts({ weather, userProfile, forecastData, uvDat
             </div>
             {alerts.length > 1 && (
               <div style={{
-                fontSize: 10,
+                fontSize: 12,
                 color: theme.mainColor,
                 fontFamily: 'Montserrat, Arial, sans-serif',
                 marginTop: 2,
@@ -476,7 +476,7 @@ export default function GardenAlerts({ weather, userProfile, forecastData, uvDat
               }}>
                 <span style={{ fontSize: 16 }}>{alert.icon}</span>
                 <span style={{
-                  fontSize: 13,
+                  fontSize: 15,
                   fontWeight: 600,
                   color: alert.color,
                   fontFamily: 'Montserrat, Arial, sans-serif'
@@ -485,19 +485,9 @@ export default function GardenAlerts({ weather, userProfile, forecastData, uvDat
                 </span>
               </div>
               
-              <div style={{
-                fontSize: 12,
-                color: '#4b5563',
-                fontFamily: 'Montserrat, Arial, sans-serif',
-                marginBottom: 8,
-                lineHeight: '1.4'
-              }}>
-                {alert.message}
-              </div>
-              
               {alert.advice && (
                 <div style={{
-                  fontSize: 11,
+                  fontSize: 15,
                   color: '#6b7280',
                   fontFamily: 'Montserrat, Arial, sans-serif'
                 }}>

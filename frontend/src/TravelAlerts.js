@@ -627,7 +627,7 @@ export default function TravelAlerts({ weather, userProfile, forecastData, uvDat
           {/* Текст */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: 600,
               color: '#1e293b',
               fontFamily: 'Montserrat, Arial, sans-serif',
@@ -637,7 +637,7 @@ export default function TravelAlerts({ weather, userProfile, forecastData, uvDat
               ✈️ {mainAlert.title}
             </div>
             <div style={{
-              fontSize: 12,
+              fontSize: 13,
               color: '#64748b',
               fontFamily: 'Montserrat, Arial, sans-serif',
               lineHeight: '1.3'
@@ -646,7 +646,7 @@ export default function TravelAlerts({ weather, userProfile, forecastData, uvDat
             </div>
             {alerts.length > 1 && (
               <div style={{
-                fontSize: 10,
+                fontSize: 12,
                 color: theme.mainColor,
                 fontFamily: 'Montserrat, Arial, sans-serif',
                 marginTop: 2,
