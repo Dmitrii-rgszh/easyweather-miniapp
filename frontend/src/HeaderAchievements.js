@@ -199,7 +199,7 @@ const HeaderAchievements = ({ gameStats: propStats }) => {
         background: 'rgba(255,255,255,0.95)',
         backdropFilter: 'blur(20px)',
         borderRadius: '16px',
-        padding: '12px 16px', // Уменьшили правый отступ для точного соответствия кнопке
+        padding: '8px 16px', // Уменьшили правый отступ для точного соответствия кнопке
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',

@@ -525,7 +525,7 @@ useEffect(() => {
             localStorage.removeItem('weatherLastRequestDate'); // Старый ключ
 
             // 🆕 ДОБАВИТЬ ЭТУ СТРОКУ:
-            localStorage.removeItem('gameStats'); // Сброс достижений
+            localStorage.removeItem('gameProgress'); // Сброс достижений
 
             // 3. Сброс избранного
             localStorage.removeItem('weatherFavorites');
@@ -779,6 +779,8 @@ const handleShowWeather = async () => {
       const achievementResult = recordWeatherCheck(currentWeather.city, currentWeather, false);
       setGameStats(achievementResult.stats);
 
+      console.log('🎯 Показать погоду: очки начислены =', achievementResult.pointsEarned);
+
       // Диспатчим события для AchievementsSystem
       if (achievementResult.newAchievements && Array.isArray(achievementResult.newAchievements)) {
         achievementResult.newAchievements.forEach((achievementId, index) => {
@@ -940,8 +942,10 @@ const handleGeoWeather = () => {
         }
 
         // 🆕 ЗАПИСЫВАЕМ ДОСТИЖЕНИЯ ДЛЯ ГЕОЛОКАЦИИ (ИСПРАВЛЕНО - БЕЗ ДУБЛИРОВАНИЯ)
-        const achievementResult = recordWeatherCheck(data.name, currentWeather);
+        const achievementResult = recordWeatherCheck(data.name, currentWeather, true);
         setGameStats(achievementResult.stats);
+
+        console.log('🎯 Геолокация: очки начислены =', achievementResult.pointsEarned);
 
         achievementResult.newAchievements.forEach((achievementId, index) => {
           setTimeout(() => {
@@ -1078,7 +1082,7 @@ const handleGeoWeather = () => {
               onClick={handleShowWeather}
               disabled={loading}
               sx={{
-                marginTop: 1,
+                marginTop: -1.5,
                 marginBottom: 0,
                 borderRadius: 3,
                 height: 46,

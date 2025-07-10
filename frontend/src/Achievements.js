@@ -98,14 +98,40 @@ const saveGameStats = (stats) => {
   }
 };
 
+// Функция проверки достижений - возвращает массив новых достижений
+const checkAchievements = (stats) => {
+  const newAchievements = [];
+  
+  Object.values(ACHIEVEMENTS).forEach(achievement => {
+    if (!stats.unlockedAchievements.includes(achievement.id) && achievement.condition(stats)) {
+      stats.unlockedAchievements.push(achievement.id);
+      stats.totalPoints += achievement.points;
+      newAchievements.push(achievement.id);
+      
+      console.log(`🏆 Новое достижение: ${achievement.title} (+${achievement.points} очков)!`);
+    }
+  });
+  
+  return newAchievements;
+};
+
 // Функция записи проверки погоды
-const recordWeatherCheck = (weather) => {
+const recordWeatherCheck = (cityName, weather, isGeoLocation = false) => {
   const stats = getGameStats();
   const now = new Date();
   const today = now.toDateString();
   
+  // Проверяем, была ли уже проверка сегодня для избежания дублирования очков
+  const wasCheckedToday = stats.lastCheckDate === today;
+  
   // Обновляем статистику
   stats.totalChecks += 1;
+  
+  // 🎯 ОСНОВНОЕ НАЧИСЛЕНИЕ ОЧКОВ: +5 за каждую проверку погоды
+  if (!wasCheckedToday) {
+    stats.totalPoints += 5;
+    console.log('🏆 Получено +5 очков за проверку погоды!');
+  }
   
   // Проверяем последовательные дни
   if (stats.lastCheckDate) {
@@ -114,6 +140,16 @@ const recordWeatherCheck = (weather) => {
     
     if (daysDiff === 1) {
       stats.consecutiveDays += 1;
+      // Бонус за последовательность (неделя)
+      if (stats.consecutiveDays === 7) {
+        stats.totalPoints += 25;
+        console.log('🔥 Бонус +25 очков за неделю подряд!');
+      }
+      // Бонус за месяц
+      if (stats.consecutiveDays === 30) {
+        stats.totalPoints += 100;
+        console.log('🎆 Мега-бонус +100 очков за месяц!');
+      }
     } else if (daysDiff > 1) {
       stats.consecutiveDays = 1;
     }
@@ -123,12 +159,17 @@ const recordWeatherCheck = (weather) => {
   
   stats.lastCheckDate = today;
   
-  // Проверяем экстремальную погоду
-  if (weather && (weather.temp < -15 || weather.temp > 35 || weather.wind_speed > 15)) {
+  // Проверяем экстремальную погоду (+15 бонус)
+  if (weather && (weather.temp < -15 || weather.temp > 35 || 
+      (weather.details && weather.details.wind && parseFloat(weather.details.wind) > 15))) {
     stats.extremeWeatherChecks += 1;
+    if (!wasCheckedToday) {
+      stats.totalPoints += 15;
+      console.log('⛈️ Бонус +15 очков за экстремальную погоду!');
+    }
   }
   
-  // Проверяем время
+  // Проверяем время (бонусы за раннее/позднее время)
   const hour = now.getHours();
   if (hour < 7) {
     stats.earlyChecks += 1;
@@ -137,27 +178,16 @@ const recordWeatherCheck = (weather) => {
   }
   
   // Проверяем достижения
-  checkAchievements(stats);
+  const newAchievements = checkAchievements(stats);
   
+  // Сохраняем статистику
   saveGameStats(stats);
-  return stats;
-};
-
-// Проверка достижений
-const checkAchievements = (stats) => {
-  Object.values(ACHIEVEMENTS).forEach(achievement => {
-    if (!stats.unlockedAchievements.includes(achievement.id) && achievement.condition(stats)) {
-      stats.unlockedAchievements.push(achievement.id);
-      stats.totalPoints += achievement.points;
-      
-      // Отправляем событие нового достижения
-      setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('newAchievement', { 
-          detail: { achievement: achievement.id } 
-        }));
-      }, 1000);
-    }
-  });
+  
+  return {
+    stats,
+    newAchievements,
+    pointsEarned: wasCheckedToday ? 0 : 5
+  };
 };
 
 // Получение текущего уровня пользователя
@@ -259,10 +289,10 @@ const Achievements = ({ stats }) => {
       backdropFilter: 'blur(20px)',
       borderRadius: 16,
       padding: 16,
-      margin: "16px auto 0", // ← ИСПРАВЛЕНО: теперь как у других блоков
-      maxWidth: 340, // ← ДОБАВЛЕНО: ограничение ширины как у других блоков
-      width: "100%", // ← ДОБАВЛЕНО: полная ширина в рамках maxWidth
-      boxSizing: "border-box", // ← ДОБАВЛЕНО: правильный расчет размеров
+      margin: "16px auto 0",
+      maxWidth: 340,
+      width: "100%",
+      boxSizing: "border-box",
       boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
       border: '1px solid rgba(255,255,255,0.3)'
     }}>
