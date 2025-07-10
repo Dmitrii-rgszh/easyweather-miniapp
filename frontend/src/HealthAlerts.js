@@ -9,9 +9,9 @@ const HEALTH_THRESHOLDS = {
     very_low: 735,
     low: 745,
     normal_low: 750,
-    normal_high: 765,
-    high: 770,
-    very_high: 780
+    normal_high: 760,  // ✅ Понижаем верхнюю границу нормы
+    high: 765,         // ✅ Теперь 764 попадет в "высокое"
+    very_high: 775     // ✅ Корректируем очень высокое
   },
   humidity: {
     low: 30,
@@ -121,7 +121,7 @@ function analyzeHealthRisks(weather, userProfile, spaceWeatherData) {
         type: 'critical',
         icon: '📉',
         title: 'Критически низкое давление',
-        description: `${Math.round(pressure)} мм рт.ст. - опасно для гипотоников`,
+        description: `${Math.round(pressure)} мм рт.ст. - неблагоприятно для здоровья`,
         details: 'Может вызывать головные боли, слабость и ухудшение самочувствия у людей с гипотонией',
         recommendation: 'Выпейте крепкий кофе или чай, избегайте резких движений',
         color: '#dc2626',
@@ -151,7 +151,7 @@ function analyzeHealthRisks(weather, userProfile, spaceWeatherData) {
         color: '#dc2626',
         bgColor: 'rgba(220, 38, 38, 0.1)'
       });
-    } else if (pressure >= HEALTH_THRESHOLDS.pressure.high) {
+    } else if (pressure > HEALTH_THRESHOLDS.pressure.normal_high) {
       alerts.push({
         id: 'pressure_high',
         type: 'warning',

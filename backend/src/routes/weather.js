@@ -1,54 +1,118 @@
 const express = require('express');
 const router = express.Router();
 
-// Mock API для погоды (пока без реального API)
-router.post('/current', async (req, res) => {
-    try {
-        console.log('📋 Получен запрос:', req.body);
-        console.log('📋 Headers:', req.headers['content-type']);
-        
-        const { query, city_name, city } = req.body;
-        const cityName = query || city_name || city || 'Москва';
-        
-        console.log('🌤️ Запрос погоды для:', cityName);
-        console.log('🔍 query:', query);
-        console.log('🔍 city_name:', city_name);  
-        console.log('🔍 city:', city);
-        
-        // Простой mock ответ
-        const mockWeatherData = {
-            name: cityName,
-            main: {
-                temp: Math.floor(Math.random() * 20) + 10, // Случайная температура 10-30
-                feels_like: Math.floor(Math.random() * 20) + 8,
-                pressure: 1013,
-                humidity: 65
-            },
-            weather: [{
-                description: 'переменная облачность',
-                icon: '02d'
-            }],
-            wind: {
-                speed: 3.5
-            },
-            coord: {
-                lat: 55.7558,
-                lon: 37.6176
-            }
-        };
+// API ключ для погоды
+const WEATHER_API_KEY = process.env.WEATHER_API_KEY || process.env.REACT_APP_WEATHER_API_KEY;
 
-        // Возвращаем в формате который ожидает frontend
-        res.json({
-            success: true,
-            data: mockWeatherData
-        });
-    } catch (error) {
-        console.error('❌ Ошибка API погоды:', error);
-        res.status(500).json({ 
-            success: false,
-            error: 'Ошибка получения данных о погоде' 
-        });
+console.log('🌤️ Weather router загружен');
+console.log('🔑 Weather API Key:', WEATHER_API_KEY ? 'Настроен ✅' : 'НЕ НАЙДЕН ❌');
+
+// Получение текущей погоды
+router.post('/current', async (req, res) => {
+  try {
+    console.log('🌡️ Запрос текущей погоды получен:', req.body);
+    
+    const { city_name } = req.body;
+    
+    if (!city_name) {
+      return res.status(400).json({
+        success: false,
+        error: 'Название города обязательно'
+      });
     }
+
+    if (!WEATHER_API_KEY) {
+      console.error('❌ API ключ не найден');
+      return res.status(500).json({
+        success: false,
+        error: 'API ключ не настроен'
+      });
+    }
+
+    // 🌐 URL с units=metric для получения температуры в Celsius
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city_name)}&appid=${WEATHER_API_KEY}&units=metric&lang=ru`;
+    
+    console.log('🌐 Запрос к OpenWeatherMap для города:', city_name);
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      console.error('❌ Ошибка OpenWeatherMap API:', response.status);
+      throw new Error(`OpenWeatherMap API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    // 🌡️ Логируем температуру для отладки
+    console.log('🌡️ Температура от API:', data.main.temp, '°C');
+    console.log('🏙️ Город:', data.name);
+    
+    res.json({
+      success: true,
+      data: data,
+      source: 'backend'
+    });
+    
+  } catch (error) {
+    console.error('❌ Ошибка получения погоды:', error);
+    res.status(500).json({
+      success: false,
+      error: `Ошибка получения данных: ${error.message}`
+    });
+  }
+});
+
+// 🆕 Получение прогноза погоды (НОВЫЙ РОУТ)
+router.post('/forecast', async (req, res) => {
+  try {
+    console.log('🔮 Запрос прогноза погоды получен:', req.body);
+    
+    const { city_name, days = 5 } = req.body;
+    
+    if (!city_name) {
+      return res.status(400).json({
+        success: false,
+        error: 'Название города обязательно'
+      });
+    }
+
+    if (!WEATHER_API_KEY) {
+      console.error('❌ API ключ не найден');
+      return res.status(500).json({
+        success: false,
+        error: 'API ключ не настроен'
+      });
+    }
+
+    // 🌐 URL с units=metric для прогноза
+    const url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(city_name)}&appid=${WEATHER_API_KEY}&units=metric&lang=ru`;
+    
+    console.log('🔮 Запрос прогноза к OpenWeatherMap для города:', city_name);
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      console.error('❌ Ошибка OpenWeatherMap API для прогноза:', response.status);
+      throw new Error(`OpenWeatherMap API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    console.log('📊 Прогноз получен, количество записей:', data.list.length);
+    
+    res.json({
+      success: true,
+      data: data,
+      source: 'backend'
+    });
+    
+  } catch (error) {
+    console.error('❌ Ошибка получения прогноза:', error);
+    res.status(500).json({
+      success: false,
+      error: `Ошибка получения прогноза: ${error.message}`
+    });
+  }
 });
 
 module.exports = router;

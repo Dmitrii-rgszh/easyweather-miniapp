@@ -190,8 +190,19 @@ const UserProfileModal = ({ isVisible, onComplete, onClose }) => {
 
   // Сохранение и закрытие
   const handleComplete = () => {
+    // Конвертируем возрастную группу в число
+    let numericAge = 30; // значение по умолчанию
+    switch(profile.age) {
+      case 'young': numericAge = 16; break;    // До 18
+      case 'adult': numericAge = 26; break;    // 18-35 (среднее = 26.5)
+      case 'middle': numericAge = 45; break;   // 35-55 (среднее = 45)
+      case 'senior': numericAge = 65; break;   // 55+ (примерно 65)
+    }
+  
     const finalProfile = {
       ...profile,
+      age: numericAge,           // ✅ Сохраняем как число
+      ageGroup: profile.age,     // ✅ Сохраняем группу отдельно
       setupCompleted: true,
       setupDate: new Date().toISOString().split('T')[0]
     };

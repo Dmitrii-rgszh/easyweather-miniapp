@@ -56,7 +56,7 @@ function CloudsEffect() {
         style={{
           position: "absolute",
           right: "10%",
-          top: "10%",
+          top: "5%",
           width: 120,
           height: 120,
           borderRadius: "50%",
@@ -86,7 +86,7 @@ function CloudsEffect() {
           style={{
             position: "absolute",
             right: "23%",
-            top: "25%",
+            top: "5%",
             width: 2,
             height: 40 + getStableRandom(i, 10) * 30,
             background: "linear-gradient(180deg, rgba(255, 223, 0, 0.7) 0%, rgba(255, 235, 59, 0.4) 50%, transparent 100%)",
@@ -277,7 +277,7 @@ function SunEffect() {
         style={{
           position: "absolute",
           right: "10%",
-          top: "15%",
+          top: "5%",
           width: 120,
           height: 120,
           borderRadius: "50%",

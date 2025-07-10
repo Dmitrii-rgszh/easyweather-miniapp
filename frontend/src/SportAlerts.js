@@ -402,8 +402,50 @@ export default function SportAlerts({ weather, userProfile, forecastData, uvData
   const theme = getSportTheme(alerts);
   
   // Если нет алертов или профиля, не показываем блок
-  if (!userProfile || alerts.length === 0) {
+  if (!userProfile) {
     return null;
+  }
+
+  // Проверяем есть ли у пользователя спортивная активность
+  const hasActivity = userProfile.activity && Array.isArray(userProfile.activity) && userProfile.activity.length > 0;
+
+  // Фильтруем только спортивные активности, исключая "домоседов"
+  const sportActivities = hasActivity ? userProfile.activity.filter(activity => 
+    activity !== 'домосед' && 
+    activity !== 'домашний' &&
+    activity !== 'homebody' &&
+    activity !== 'дом' &&
+    activity !== 'Домосед' &&
+    activity !== 'children' &&    // ✅ Дети - НЕ спорт
+    activity !== 'дети' &&        // ✅ На русском
+    activity !== 'семья'          // ✅ Семейная активность
+  ) : [];
+
+  // Если только "домосед" или нет спортивных активностей - не показываем блок
+  if (!hasActivity || sportActivities.length === 0) {
+    console.log('🏃 SportAlerts: Пользователь домосед или нет спорта - блок скрыт');
+    return null;
+  }
+
+  // Если есть активность, но нет алертов - показываем нейтральное сообщение
+  if (alerts.length === 0) {
+    return (
+      <div style={{
+        background: "rgba(255, 255, 255, 0.9)",
+        borderRadius: 16,
+        padding: 16,
+        margin: "16px auto 0",
+        maxWidth: 340,
+        textAlign: 'center'
+      }}>
+        <div style={{ fontSize: 16, color: '#6b7280' }}>
+          🏃 Спорт
+        </div>
+        <div style={{ fontSize: 12, color: '#9ca3af' }}>
+          Анализируем условия...
+        </div>
+      </div>
+    );
   }
 
   // Главный алерт для превью

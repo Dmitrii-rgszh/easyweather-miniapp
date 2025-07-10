@@ -6,9 +6,9 @@ const HEALTH_THRESHOLDS = {
     very_low: 735,
     low: 745,
     normal_low: 750,
-    normal_high: 765,
-    high: 770,
-    very_high: 780
+    normal_high: 760,  // ✅ Должно быть 760, не 765
+    high: 765,         // ✅ Должно быть 765, не 770  
+    very_high: 775     // ✅ Должно быть 775, не 780
   },
   humidity: {
     low: 30,
