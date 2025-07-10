@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const AdBanner = () => {
   const [isVisible, setIsVisible] = useState(true);
+  const [clickCount, setClickCount] = useState(0); // 🆕 СЧЕТЧИК КЛИКОВ
 
   // Показываем баннер через 2 секунды после загрузки
   useEffect(() => {
@@ -14,6 +15,34 @@ const AdBanner = () => {
 
     return () => clearTimeout(timer);
   }, []);
+
+  // 🆕 ЗАГРУЖАЕМ СЧЕТЧИК ПРИ СТАРТЕ КОМПОНЕНТА
+  useEffect(() => {
+    const savedClicks = localStorage.getItem('bannerClicks');
+    if (savedClicks) {
+      setClickCount(parseInt(savedClicks));
+    }
+  }, []);
+
+  // 🆕 ФУНКЦИЯ ОБРАБОТКИ КЛИКА ПО БАННЕРУ
+  const handleBannerClick = () => {
+    // Увеличиваем счетчик
+    const newCount = clickCount + 1;
+    setClickCount(newCount);
+    
+    // Сохраняем в localStorage
+    localStorage.setItem('bannerClicks', newCount.toString());
+    
+    // Логируем в консоль для отладки
+    console.log('🎯 Клик по баннеру! Всего кликов:', newCount);
+    
+    // Добавляем метку времени клика
+    const clickTime = new Date().toISOString();
+    localStorage.setItem('lastBannerClick', clickTime);
+    
+    // Открываем ссылку
+    window.open('https://vtb.ru/l/m6e34kae', '_blank');
+  };
 
   // Не показываем только если пользователь закрыл
   if (!isVisible) return null;
@@ -52,7 +81,7 @@ const AdBanner = () => {
             color: 'white',
             boxShadow: '0 8px 32px rgba(0, 102, 204, 0.3)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
-            cursor: 'pointer',
+            cursor: 'pointer', // 🆕 УКАЗАТЕЛЬ МЫШИ
             position: 'relative',
             overflow: 'hidden',
             width: '100%',
@@ -60,7 +89,7 @@ const AdBanner = () => {
             minWidth: '320px',
             pointerEvents: 'auto'
           }}
-          onClick={() => window.open('https://vtb.ru/l/m6e34kae', '_blank')}
+          onClick={handleBannerClick} // 🆕 ОБРАБОТЧИК КЛИКА
         >
           {/* Фоновый эффект */}
           <div style={{
@@ -114,6 +143,18 @@ const AdBanner = () => {
               }}>
                 ⭐ Автор EasyWeather делится секретом
               </div>
+
+              {/* 🆕 ПОКАЗЫВАЕМ СЧЕТЧИК КЛИКОВ (ТОЛЬКО В DEV РЕЖИМЕ) */}
+              {process.env.NODE_ENV === 'development' && (
+                <div style={{
+                  fontSize: '10px',
+                  opacity: 0.7,
+                  fontFamily: 'Montserrat, Arial, sans-serif',
+                  marginTop: '2px'
+                }}>
+                  🎯 Кликов: {clickCount}
+                </div>
+              )}
             </div>
 
             {/* Кнопка */}
