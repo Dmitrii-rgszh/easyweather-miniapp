@@ -1,6 +1,6 @@
 // Обновленный App.js с WeatherCarousel и системой передачи данных всем блокам
 import AdminPanel from './AdminPanel';
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
@@ -435,9 +435,9 @@ function App() {
   const [initialDesc, setInitialDesc] = useState(""); // Для фона
   const [initialIsNight, setInitialIsNight] = useState(false); // Для фона
   const [selectedWeatherData, setSelectedWeatherData] = useState(null);
-  const handleWeatherChange = (weatherData) => {
+  const handleWeatherChange = useCallback((weatherData) => {
     setSelectedWeatherData(weatherData);
-  };
+  }, []);
   const [userProfile, setUserProfile] = useState(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showProfilePage, setShowProfilePage] = useState(false);
@@ -701,6 +701,23 @@ useEffect(() => {
     } else {
       setShowProfileModal(true); // Показать опрос
     }
+  }, []);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      // Добавляем отладочные функции в window
+      window.clearBackendCache = clearAllBackendCache;
+      window.clearDirectCache = clearDirectCache;
+      window.getBackendCacheInfo = getBackendCacheInfo;
+      window.checkBackend = checkBackendHealth;
+    
+      console.log('🔧 DEV MODE: Доступные команды:');
+      console.log('- window.clearBackendCache() - очистить кэш бэкенда');
+      console.log('- window.clearDirectCache() - очистить кэш прямого API');
+      console.log('- window.getBackendCacheInfo() - информация о кэше');
+      console.log('- window.checkBackend() - проверить бэкенд');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 🔧 ОБНОВЛЕННАЯ ЛОГИКА ЗАГРУЗКИ ПОГОДЫ

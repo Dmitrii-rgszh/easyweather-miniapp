@@ -177,7 +177,8 @@ export default function WeatherCarousel({
       console.log('Sending weather data for index:', activeIndex, hourlyData[activeIndex]);
       onWeatherChange(hourlyData[activeIndex]);
     }
-  }, [activeIndex, hourlyData, onWeatherChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeIndex, city, temp]);
 
   // Сброс к первому элементу при изменении данных
   useEffect(() => {
