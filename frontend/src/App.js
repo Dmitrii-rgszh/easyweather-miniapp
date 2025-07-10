@@ -21,8 +21,6 @@ import {
   fetchWeatherFromBackend, 
   checkBackendHealth 
 } from './backendApi';
-import { canMakeRequest, recordRequest, getUsageStats, activatePremium } from './usageLimit';
-import PremiumModal from './PremiumModal';
 import UserProfileModal from "./UserProfileModal";
 import HealthAlerts from "./HealthAlerts";
 import ProfilePage from "./ProfilePage";
@@ -429,9 +427,6 @@ function App() {
   const handleWeatherChange = (weatherData) => {
     setSelectedWeatherData(weatherData);
   };
-  const [usageStats, setUsageStats] = useState(getUsageStats());
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [premiumUser, setPremiumUser] = useState(getUsageStats().isPremium);
   const [userProfile, setUserProfile] = useState(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showProfilePage, setShowProfilePage] = useState(false);
@@ -736,16 +731,7 @@ useEffect(() => {
   // 🔧 ОБНОВЛЕННАЯ ЛОГИКА ЗАГРУЗКИ ПОГОДЫ
   // 🔧 ИСПРАВЛЕННАЯ функция handleShowWeather
 const handleShowWeather = async () => {
-  const requestCheck = canMakeRequest();
-
-  if (!requestCheck.canMake) {
-    setShowPremiumModal(true);
-    return;
-  }
-
   setLoading(true);
-  recordRequest();
-  setUsageStats(getUsageStats());
 
   try {
     if (isToday(date)) {
@@ -776,7 +762,7 @@ const handleShowWeather = async () => {
       }
 
       // 🆕 ЗАПИСЫВАЕМ ДОСТИЖЕНИЯ (ИСПРАВЛЕНО)
-      const achievementResult = recordWeatherCheck(data.name, currentWeather, premiumUser);
+      const achievementResult = recordWeatherCheck(currentWeather.city, currentWeather, false);
       setGameStats(achievementResult.stats);
 
       // Диспатчим события для AchievementsSystem
@@ -1447,58 +1433,6 @@ const handleGeoWeather = () => {
         {/* Индикатор использования */}
         {renderUsageIndicator()}
 
-        {/* Premium Modal */}
-        <PremiumModal 
-          isVisible={showPremiumModal}
-          onClose={() => setShowPremiumModal(false)}
-          onUpgrade={() => {
-            activatePremium();
-            setPremiumUser(true);
-            setUsageStats(getUsageStats());
-            setShowPremiumModal(false);
-            // Записываем достижение Premium
-            const achievementResult = recordWeatherCheck(weather?.city || city, weather, true);
-            setGameStats(achievementResult.stats);
-
-            achievementResult.newAchievements.forEach((achievementId, index) => {
-              setTimeout(() => {
-                window.dispatchEvent(new CustomEvent('newAchievement', {
-                  detail: { achievement: achievementId }
-                }));
-              }, index * 1000);
-            });
-  
-            alert('🎉 Premium активирован! Добро пожаловать в мир безлимитной погоды!');
-          }}
-          usageStats={usageStats}
-        />
-
-        {/* Premium Modal */}
-        <PremiumModal 
-          isVisible={showPremiumModal}
-          onClose={() => setShowPremiumModal(false)}
-          onUpgrade={() => {
-            activatePremium();
-            setPremiumUser(true);
-            setUsageStats(getUsageStats());
-            setShowPremiumModal(false);
-            // Записываем достижение Premium
-            const achievementResult = recordWeatherCheck(weather?.city || city, weather, true);
-            setGameStats(achievementResult.stats);
-
-            achievementResult.newAchievements.forEach((achievementId, index) => {
-              setTimeout(() => {
-                window.dispatchEvent(new CustomEvent('newAchievement', {
-                  detail: { achievement: achievementId }
-                }));
-              }, index * 1000);
-            });
-
-            alert('🎉 Premium активирован! Добро пожаловать в мир безлимитной погоды!');
-          }}
-          usageStats={usageStats}
-        />
-
         {/* 🆕 ДОБАВЬТЕ ЭТОТ БЛОК: */}
         <UserProfileModal 
           isVisible={showProfileModal}
@@ -1513,7 +1447,7 @@ const handleGeoWeather = () => {
           }}
         />
 
-        <AdBanner isPremium={premiumUser} />
+        <AdBanner />
         {/* Панель администратора */}
         <AdminPanel 
           isVisible={showAdminPanel} 

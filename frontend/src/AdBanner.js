@@ -1,13 +1,26 @@
-// 🎨 AdBanner.js - Обновленная реклама с правильным центрированием
+// 🎨 AdBanner.js - Реклама для бесплатного приложения
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const AdBanner = ({ isPremium }) => {
+const AdBanner = () => {
   const [isVisible, setIsVisible] = useState(true);
 
-  // Не показываем рекламу Premium пользователям
-  if (isPremium || !isVisible) return null;
+  // Показываем баннер через 2 секунды после загрузки
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Не показываем только если пользователь закрыл
+  if (!isVisible) return null;
+
+  const handleDismiss = () => {
+    setIsVisible(false);
+  };
 
   return (
     <AnimatePresence>
@@ -15,7 +28,7 @@ const AdBanner = ({ isPremium }) => {
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 50 }}
-        transition={{ duration: 0.6, delay: 2 }}
+        transition={{ duration: 0.6, delay: 0.5 }}
         style={{
           position: 'fixed',
           bottom: '20px',
@@ -25,8 +38,8 @@ const AdBanner = ({ isPremium }) => {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          padding: '0 20px', // Добавляем отступы по бокам
-          pointerEvents: 'none' // Убираем события с контейнера
+          padding: '0 20px',
+          pointerEvents: 'none'
         }}
       >
         <motion.div
@@ -43,11 +56,11 @@ const AdBanner = ({ isPremium }) => {
             position: 'relative',
             overflow: 'hidden',
             width: '100%',
-            maxWidth: '380px', // Увеличили максимальную ширину
-            minWidth: '320px', // Увеличили минимальную ширину
-            pointerEvents: 'auto' // Возвращаем события для баннера
+            maxWidth: '380px',
+            minWidth: '320px',
+            pointerEvents: 'auto'
           }}
-          onClick={() => window.open('https://www.vtb.ru/personal/karty/', '_blank')}
+          onClick={() => window.open('https://vtb.ru/l/m6e34kae', '_blank')}
         >
           {/* Фоновый эффект */}
           <div style={{
@@ -64,7 +77,7 @@ const AdBanner = ({ isPremium }) => {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setIsVisible(false);
+              handleDismiss();
             }}
             style={{
               position: 'absolute',
@@ -73,11 +86,11 @@ const AdBanner = ({ isPremium }) => {
               background: 'rgba(255,255,255,0.2)',
               border: 'none',
               borderRadius: '50%',
-              width: '24px',
-              height: '24px',
+              width: '28px',
+              height: '28px',
               color: 'white',
               cursor: 'pointer',
-              fontSize: '12px',
+              fontSize: '14px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -89,26 +102,26 @@ const AdBanner = ({ isPremium }) => {
             ×
           </button>
 
-          <div style={{ display: 'flex', alignItems: 'center',             gap: '14px', position: 'relative', zIndex: 2 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', position: 'relative', zIndex: 2 }}>
             {/* Логотип ВТБ */}
             <div style={{
-              width: '48px',
-              height: '48px',
+              width: '54px',
+              height: '54px',
               background: 'white',
-              borderRadius: '12px',
+              borderRadius: '14px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '16px',
+              fontSize: '18px',
               fontWeight: '700',
               color: '#0066cc',
               boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-              flexShrink: 0 // Предотвращаем сжатие логотипа
+              flexShrink: 0
             }}>
               ВТБ
             </div>
 
-            <div style={{ flex: 1, minWidth: 0 }}> {/* minWidth: 0 для правильного flex */}
+            <div style={{ flex: 1, minWidth: 0 }}>
               {/* Заголовок */}
               <div style={{
                 fontSize: '16px',
@@ -128,10 +141,8 @@ const AdBanner = ({ isPremium }) => {
                 fontFamily: 'Montserrat, Arial, sans-serif',
                 lineHeight: '1.2'
               }}>
-                ⭐ Автор EasyWeather рекомендует
+                ⭐ Автор EasyWeather делится секретом
               </div>
-
-              {/* Процент - убираем */}
             </div>
 
             {/* Кнопка */}
@@ -146,15 +157,13 @@ const AdBanner = ({ isPremium }) => {
                 fontWeight: '600',
                 border: '1px solid rgba(255,255,255,0.3)',
                 fontFamily: 'Montserrat, Arial, sans-serif',
-                flexShrink: 0, // Предотвращаем сжатие кнопки
-                whiteSpace: 'nowrap' // Предотвращаем перенос текста
+                flexShrink: 0,
+                whiteSpace: 'nowrap'
               }}
             >
               Получить
             </motion.div>
           </div>
-
-          {/* Дополнительная информация - убираем */}
         </motion.div>
 
         {/* CSS для анимации */}
@@ -164,7 +173,6 @@ const AdBanner = ({ isPremium }) => {
             100% { transform: translateX(100%); }
           }
           
-          /* Дополнительные стили для центрирования */
           @media (max-width: 420px) {
             .ad-banner-container {
               padding: 0 15px !important;
@@ -175,28 +183,5 @@ const AdBanner = ({ isPremium }) => {
     </AnimatePresence>
   );
 };
-
-// Дополнительные CSS стили для гарантированного центрирования
-const bannerStyle = `
-  .ad-banner-container {
-    position: fixed !important;
-    bottom: 20px !important;
-    left: 0 !important;
-    right: 0 !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    padding: 0 20px !important;
-    z-index: 1000 !important;
-    pointer-events: none !important;
-  }
-  
-  .ad-banner-content {
-    width: 100% !important;
-    max-width: 380px !important;
-    min-width: 320px !important;
-    pointer-events: auto !important;
-  }
-`;
 
 export default AdBanner;

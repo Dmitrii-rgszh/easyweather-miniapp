@@ -1,8 +1,8 @@
-// 🏥 HealthAlerts.js - Расширенные медицинские алерты с реальными магнитными бурями
+// 🏥 HealthAlerts.js - Обновленные медицинские алерты с новой системой анализа
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { analyzeWeatherForHealth, getTimeBasedHealthAdvice } from './utils/healthAnalysis';
+import { analyzeWeatherForHealth } from './utils/healthAnalysis';
 
 const HealthAlerts = ({ weather, userProfile, forecastData = [] }) => {
   const [healthAlerts, setHealthAlerts] = useState([]);
@@ -24,28 +24,25 @@ const HealthAlerts = ({ weather, userProfile, forecastData = [] }) => {
         // Получаем алерты с учетом магнитных бурь
         const alerts = await analyzeWeatherForHealth(weather, userProfile, forecastData);
         
-        // Добавляем рекомендации по времени дня
-        const currentHour = new Date().getHours();
-        const timeAdvice = getTimeBasedHealthAdvice(
-          userProfile.health || [], 
-          currentHour
-        );
-        
         setHealthAlerts(alerts);
         setLastUpdate(new Date());
         
         console.log('✅ Анализ здоровья завершен:', { 
-          alertsCount: alerts.length, 
-          timeAdvice: timeAdvice.length 
+          alertsCount: alerts.length
         });
         
       } catch (error) {
         console.error('❌ Ошибка анализа здоровья:', error);
-        setError('Не удалось получить данные о космической погоде. Показываем базовые рекомендации.');
+        setError('Не удалось полностью проанализировать влияние погоды на здоровье');
         
         // Показываем базовые алерты даже при ошибке
-        const basicAlerts = await analyzeWeatherForHealth(weather, userProfile, []);
-        setHealthAlerts(basicAlerts);
+        try {
+          const basicAlerts = await analyzeWeatherForHealth(weather, userProfile, []);
+          setHealthAlerts(basicAlerts);
+        } catch (basicError) {
+          console.error('❌ Критическая ошибка:', basicError);
+          setHealthAlerts([]);
+        }
         
       } finally {
         setLoading(false);
@@ -56,7 +53,7 @@ const HealthAlerts = ({ weather, userProfile, forecastData = [] }) => {
   }, [weather, userProfile, forecastData]);
 
   // Если пользователь не указал проблемы со здоровьем
-  if (!userProfile?.health?.length || userProfile.health.includes('healthy') && userProfile.health.length === 1) {
+  if (!userProfile?.health?.length || (userProfile.health.includes('healthy') && userProfile.health.length === 1)) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -197,7 +194,7 @@ const HealthAlerts = ({ weather, userProfile, forecastData = [] }) => {
         )}
       </div>
 
-      {/* Ошибка космической погоды */}
+      {/* Ошибка API */}
       {error && (
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
