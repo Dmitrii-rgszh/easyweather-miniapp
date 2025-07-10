@@ -31,8 +31,7 @@ import MoodTracker from "./MoodTracker";
 
 import AchievementsSystem, { 
   recordWeatherCheck, 
-  getGameStats, 
-  ACHIEVEMENTS 
+  getGameStats
 } from "./Achievements";
 
 // Все эффекты остаются без изменений

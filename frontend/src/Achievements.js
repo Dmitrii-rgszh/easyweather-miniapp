@@ -521,7 +521,7 @@ const Achievements = ({ stats }) => {
 
 // Компонент-обертка с уведомлениями
 export default function AchievementsSystem() {
-  const [stats] = useState(getGameStats());
+  const [stats, setStats] = useState(getGameStats());
   const [notification, setNotification] = useState(null);
 
   // Слушаем события новых достижений
@@ -532,6 +532,28 @@ export default function AchievementsSystem() {
 
     window.addEventListener('newAchievement', handleNewAchievement);
     return () => window.removeEventListener('newAchievement', handleNewAchievement);
+  }, []);
+
+  useEffect(() => {
+    const handleStatsUpdate = () => {
+      setStats(getGameStats());
+    };
+
+    // Слушаем события обновления статистики
+    window.addEventListener('statsUpdated', handleStatsUpdate);
+    
+    // Также обновляем статистику при получении достижений
+    const handleNewAchievement = (event) => {
+      setNotification(event.detail.achievement);
+      setStats(getGameStats()); // Обновляем статистику
+    };
+
+    window.addEventListener('newAchievement', handleNewAchievement);
+    
+    return () => {
+      window.removeEventListener('newAchievement', handleNewAchievement);
+      window.removeEventListener('statsUpdated', handleStatsUpdate);
+    };
   }, []);
 
   return (
